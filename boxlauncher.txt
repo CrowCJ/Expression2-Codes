@@ -1,0 +1,65 @@
+@name BoxLauncher
+@inputs 
+@outputs 
+@persist Data:table
+@trigger 
+@strict
+@model models/props_junk/wood_crate001a.mdl
+
+if (first()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    Data = table()
+    Data = table(
+        "tick"  = 0,
+        "limit" = 25,
+        "delay" = 0.25,
+        "range" = 0.0,
+        "force" = 25000,
+        #"mdl"   = "models/props_junk/wood_crate001a.mdl",
+        "mdl"   = "models/props_phx/ball.mdl",
+        "cache" = array()
+    )
+    
+    function number sizeof(Array:array) {
+        return Array:count()
+    }
+}
+
+event tick() {
+    local Tick = Data["tick", number]
+    local Cur  = systime()
+    
+    if (!entity():isPlayerHolding()) {
+        entity():setAng((owner():aimPos() - entity():pos()):toAngle() + ang(90, 0, 0))
+    }
+    
+    if (Cur > Tick + Data["delay", number] & owner():keyAttack1()) {
+        Data["tick", number] = Cur
+        
+        if (propCanCreate()) {
+            local Mdl = Data["mdl", string]
+            local Max = Data["limit", number]
+            local Force = Data["force", number]
+            
+            local Box = propSpawn(Mdl, entity():pos() + entity():up()*48, entity():angles(), 0)
+            local R = Data["range", number]
+            local X = random(-R, R)
+            local Y = random(-R, R)
+            
+            #Box:setMass(250)
+            Box:propDrag(0)
+            Box:propGravity(0)
+            Box:applyForce((vec(X, Y, 0) + entity():up())* Box:mass() * Force)
+            Data["cache", array]:pushEntity(Box)
+            
+            if (sizeof(Data["cache", array]) > Max) {
+                if (Data["cache", array][1, entity]:isValid()) {
+                    Data["cache", array]:shiftEntity():propDelete()
+                } else {
+                    Data["cache", array]:shift()
+                }
+            }
+        }
+    }
+}

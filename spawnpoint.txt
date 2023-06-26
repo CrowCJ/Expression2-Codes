@@ -1,0 +1,35 @@
+@name SpawnPoint
+@inputs 
+@outputs 
+@persist Pod:entity
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    if (propCanCreate()) {
+        Pod = seatSpawn("models/nova/airboat_seat.mdl", entity():pos(), ang(), 1)
+        Pod:noCollideAll(1)
+        Pod:setAlpha(0)
+        Pod:propNotSolid(1)
+    }
+}
+
+event tick() {
+    if (Pod:driver():isValid() & Pod:driver() != owner()) {
+        Pod:killPod()
+    }
+}
+
+event playerDeath(Victim:entity, _:entity, _:entity) {
+    if (Victim == owner()) {
+        Pod:setAng(Victim:angles())
+    }
+}
+
+event playerSpawn(Player:entity) {
+    if (Player == owner()) {
+        Pod:use()
+        Pod:ejectPod()
+    }
+}

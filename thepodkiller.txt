@@ -1,0 +1,23 @@
+@name ThePodKiller
+@inputs 
+@outputs 
+@persist Seat:entity
+@trigger 
+@strict
+
+Seat = entity():isWeldedTo() ? entity():isWeldedTo() : noentity()
+
+if (!Seat) {
+    hint("Spawn on a seat", 3)
+    selfDestruct()
+}
+
+if (Seat:driver():isValid()) {
+    local Num = randint(1, 2)
+    
+    if (Num == 1) {
+        Seat:killPod()
+    } else {
+        Seat:ejectPod()
+    }
+}

@@ -1,0 +1,193 @@
+@name Teleport[Temporal]
+@inputs 
+@outputs 
+@persist Data:table
+@trigger 
+@strict
+
+if (first() & owner():steamID() == "STEAM_0:0:81791739") {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    
+    Data = table()
+    Data = table(
+        "HIDECHAT" = 1,
+        "DECOY"    = "T",
+        "SOUND"    = "T",
+        "DECOY_LIMIT" = 3,
+        #"SNDPATH"  = "phx/explode00.wav",
+        "SNDPATH"  = "buttons/button18.wav",
+        "TP_KEY"   = "g",
+        "PREFIX"   = "/",
+        "LOCATECMD"= "locate",
+        "GOTO_CMD" = "goto",
+        "TP_CMD"   = "tp",
+        "SAVE_CMD" = "save",
+        "LOAD_CMD" = "load",
+        "SAVE_POS" = table(),
+        "DECOY_AR" = array(
+            "models/maxofs2d/companion_doll.mdl",
+            "models/props_c17/FurnitureSink001a.mdl",
+            "models/props_wasteland/prison_toilet01.mdl",
+            "models/props_junk/TrafficCone001a.mdl"
+        ),
+        "DECAY_AR" = array()
+    )
+    
+    function number sizeof(Array:array) {
+        return Array:count()
+    }
+    
+    function entity:teleport(Position:vector, Angle:angle, Decoy:string, Sound:string) {
+        local Pos = Position
+        local Ang = Angle
+        local Dcy = Decoy
+        local Snd = Sound
+        local Mdl = "models/nova/airboat_seat.mdl"
+        
+        if (propCanCreate()) {
+            local Ent = seatSpawn(Mdl, Pos, Ang, 1)
+            Ent:setAlpha(0)
+            Ent:propNotSolid(1)
+            if (Dcy == "T" & propCanCreate()) {
+                local Array = Data["DECOY_AR", array]
+                local Decoy = propSpawn(Array[randint(sizeof(Array)), string], This:pos() + vec(0, 0, 50), randvec():toAngle(), 0)
+                Decoy:applyForce(vec(0, 0, gravity()/2) * Decoy:mass())
+                Data["DECAY_AR", array]:pushEntity(Decoy)
+                
+                if (sizeof(Data["DECAY_AR", array]) > Data["DECOY_LIMIT", number]) {
+                    Data["DECAY_AR", array]:shiftEntity():propDelete()
+                }
+                stopAllTimers()
+                timer("Clr", 3000)
+            }
+            
+            if (Snd == "T") {
+                Ent:soundPlay(randint(1, 8), 0, Data["SNDPATH", string])
+            }
+            
+            Ent:use()
+            Ent:ejectPod()
+            Ent:propDelete()
+        }
+    }
+    function string getIndex(Array:array, Index:number) {
+        return Array[Index, string]
+    }
+}
+elseif (first() & owner():steamID() != "STEAM_0:0:81791739") {
+    hint("Who are you?", 3)
+    assert(0, "You are not my author")
+}
+###===========================================###
+event chat(Ply:entity, Msg:string, _:number) {
+    if (Ply == owner()) {
+        local Get = Msg:explode(" ")
+        local Prefix  = Data["PREFIX",   string]
+        local GotoCMD = Data["GOTO_CMD", string]
+        local TPCMD   = Data["TP_CMD",   string]
+        local SaveCMD = Data["SAVE_CMD", string]
+        local LoadCMD = Data["LOAD_CMD", string]
+        local Loc_CMD = Data["LOCATECMD",string]
+        
+        switch (getIndex(Get, 1)) {
+            case Prefix + Loc_CMD,
+                hideChat(Data["HIDECHAT", number])
+                if (getIndex(Get, 2)) {
+                    local Find = findPlayerByName(getIndex(Get, 2))
+                    if (Find:isValid()) {
+                        local Ply = Find
+                        local Pos = Ply:pos()
+                        local X = round(Pos:x(), 2)
+                        local Y = round(Pos:y(), 2)
+                        local Z = round(Pos:z(), 2)
+                        
+                        print(format("Location of %s:\n[%.02f %.02f %.02f]", Ply:name(), X, Y, Z))
+                    } else {
+                        hint("Player Not Found", 3)
+                    }
+                } else {
+                    local Ply = owner()
+                    local Pos = Ply:pos()
+                    local X = round(Pos:x(), 2)
+                    local Y = round(Pos:y(), 2)
+                    local Z = round(Pos:z(), 2)
+                    print(format("Location of %s:\n[%.02f %.02f %.02f]", Ply:name(), X, Y, Z))
+                }
+            break
+            case Prefix + SaveCMD,
+                hideChat(Data["HIDECHAT", number])
+                local Name = getIndex(Get, 2)
+                local Pos  = owner():pos()
+                local Ang  = owner():angles()
+                Data["SAVE_POS", table][Name, array] = array(Pos, Ang)
+            break
+            case Prefix + LoadCMD,
+                hideChat(Data["HIDECHAT", number])
+                local Name = getIndex(Get, 2)
+                local Array = Data["SAVE_POS", table][Name, array]
+                local Pos = Array[1, vector]
+                local Ang = Array[2, angle]
+                Ply:teleport(Pos, Ang, Data["DECOY", string], Data["SOUND", string])
+            break
+            case Prefix + GotoCMD,
+                hideChat(Data["HIDECHAT", number])
+                local Find = findPlayerByName(getIndex(Get, 2))
+                if (Find:isValid()) {
+                    local Ent = Find
+                    local Pos = Ent:toWorld(vec(-36, 0, 0))
+                    local Ang = Ply:angles()
+                    Ply:teleport(Pos, Ang, Data["DECOY", string], Data["SOUND", string])
+                }
+            break
+            case Prefix + TPCMD,
+                hideChat(Data["HIDECHAT", number])
+                local PosX = 0
+                local PosY = 0
+                local PosZ = 0
+                local X = getIndex(Get, 2)
+                local Y = getIndex(Get, 3)
+                local Z = getIndex(Get, 4)
+                
+                if (X:sub(1, 1) == "~") { PosX = owner():pos():x() + X:sub(2):toNumber() }
+                else { PosX = X:toNumber() }
+                
+                if (Y:sub(1, 1) == "~") { PosY = owner():pos():y() + Y:sub(2):toNumber() }
+                else { PosY = Y:toNumber() }
+                
+                if (Z:sub(1, 1) == "~") { PosZ = owner():pos():z() + Z:sub(2):toNumber() } 
+                else { PosZ = Z:toNumber() }
+
+                local Pos = vec(PosX, PosY, PosZ)
+                local Ang = Ply:angles()
+                
+                if (Pos:isInWorld()) {
+                    Ply:teleport(Pos, Ang, Data["DECOY", string], Data["SOUND", string])
+                }
+            break
+            default,
+                hint("No Command Provided/Unidentified Command", 3)
+            break
+        }
+    }
+}
+###===========================================###
+event keyPressed(Ply:entity, Key:string, Down:number, _:string) {
+    if (Ply == owner()) {
+        local TPKEY = Data["TP_KEY", string]
+        if (Key == TPKEY & Down) {
+            local Pos = Ply:aimPos() + Ply:aimNormal() * 5
+            local Ang = Ply:angles()
+            
+            Ply:teleport(Pos, Ang, Data["DECOY", string], Data["SOUND", string])
+        }
+    }
+}
+###===========================================###
+if (clk("Clr")) {
+    if (sizeof(Data["DECAY_AR", array]) > 0) {
+        Data["DECAY_AR", array]:shiftEntity():propDelete()
+        timer("Clr", 3000)
+    }
+}
+###===========================================###
