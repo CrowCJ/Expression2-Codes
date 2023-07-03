@@ -1,0 +1,32 @@
+@name StadiumSongController
+@inputs  [Button1, Button2, Button3, Stop]
+@outputs StreamURL:string Play
+@persist Songs:table
+@trigger 
+@strict
+
+if (first() | duped()) {
+    Songs = table()
+    Songs = table(
+        "https://cdn.discordapp.com/attachments/1038126137873793047/1123267563212779651/ultimate_koopa.mp3",
+        "https://cdn.discordapp.com/attachments/1038126137873793047/1123267562562670684/finale_destination.mp3",
+        "https://cdn.discordapp.com/attachments/1038126137873793047/1122492239201964113/tomp3.cc_-_AMAS_Good_Vibes.mp3"
+    )
+}
+
+if (~Stop & Stop) {
+    Play = 0
+}
+
+if (~Button1 & Button1) {
+    Play = 1
+    StreamURL = Songs[1, string]
+}
+if (~Button2 & Button2) {
+    Play = 1
+    StreamURL = Songs[2, string]
+}
+if (~Button3 & Button3) {
+    Play = 1
+    StreamURL = Songs[3, string]
+}

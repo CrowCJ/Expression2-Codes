@@ -1,0 +1,20 @@
+@name ScoreboardController
+@inputs [Up1 Down1 Up2 Down2 Reset]
+@outputs Score1 Score2
+@persist 
+@trigger 
+@strict
+
+if (~Up1 & Up1) { Score1++ }
+if (~Down1 & Down1) { Score1-- }
+
+if (~Up2 & Up2) { Score2++ }
+if (~Down2 & Down2) { Score2-- }
+
+if (~Reset & Reset) {
+    Score1 = 0
+    Score2 = 0
+}
+
+if (Score1 < 0) { Score1 = 0 }
+if (Score2 < 0) { Score2 = 0 }

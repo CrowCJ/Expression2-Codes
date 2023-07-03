@@ -1,0 +1,30 @@
+@name probihited zone
+@persist Settings:table
+
+if (first() | duped()) {
+    Settings = table(
+        "tick"     = 0,
+        "interval" = 0.25, #Delay between calls
+        "radius"   = 1000, #Max Radius
+        "model"    = "models/props_junk/wood_crate001a.mdl"
+    )
+}
+
+event tick() {
+    local Tick     = Settings["tick", number]
+    local Interval = Settings["interval", number]
+    local CurT     = curtime()
+    if (CurT > Tick + Interval) {
+        Settings["tick", number] = CurT
+        local DetectR  = Settings["radius", number]
+        
+        findInSphere(entity():pos(), DetectR)
+        findClipToClass("player")
+        local Target = findClosest(entity():pos())
+        if (Target:isValid() & Target:isAlive() & propCanCreate()) {
+            local Prop = propSpawn(Settings["model", string], Target:boxCenterW(), ang(), 1)
+            Prop:propBreak()
+        }
+    }
+}
+

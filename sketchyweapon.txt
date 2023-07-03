@@ -1,0 +1,48 @@
+@name SketchyWeapon
+@inputs 
+@outputs 
+@persist Cache:array MaxEnts T
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    local Pos = entity():pos() + entity():up() * 36
+    holoCreate(1, Pos, vec(0), entity():angles(), vec(255), "cube")
+    holoCreate(2, Pos + entity():forward() * 16, vec(1), entity():angles(), vec(255), "models/weapons/w_rif_ak47.mdl")
+    
+    holoParent(2, 1)
+    
+    Cache = array()
+    MaxEnts = 10
+    T = 0
+}
+
+event tick() {
+    local Dir   = owner():eyeTrace():pos() - holoEntity(1):pos()
+    local Angle = Dir:toAngle()
+    holoAng(1, Angle)
+    local H = owner():isCrouch() ? 15 : 50
+    holoPos(1, owner():toWorld(vec(3, -6, H)))
+    local CurT = realtime()
+    if (CurT > T + 0.25 & owner():keyAttack1() & propCanCreate()) {
+        T = CurT
+        local Ent = propSpawn("models/gmod4phun/akmag_bg_skin.mdl", (holoEntity(2):pos() + holoEntity(2):up()*12), Angle, 0)
+        Ent:propDrag(0)
+        Ent:propGravity(0)
+        Ent:setMass(255)
+        Ent:applyForce(holoEntity(1):forward() * Ent:mass() * 5000)
+        Ent:setTrails(6, 6, 3, "trails/laser", vec(255, 0, 0), 255)
+        Ent:applyAngForce(ang(10000, 0, 0))
+        Cache:pushEntity(Ent)
+        
+        if (Cache:count() > MaxEnts) {
+            if (Cache[1, entity]:isValid()) {
+                Cache:shiftEntity():propDelete()
+            } else {
+                Cache:shift()
+            }
+        }
+    }
+}

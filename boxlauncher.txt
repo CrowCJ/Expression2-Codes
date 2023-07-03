@@ -17,7 +17,8 @@ if (first()) {
         "range" = 0.0,
         "force" = 25000,
         #"mdl"   = "models/props_junk/wood_crate001a.mdl",
-        "mdl"   = "models/props_phx/ball.mdl",
+        #"mdl"   = "models/props_phx/ball.mdl",
+        "mdl"   = "models/props_phx/mk-82.mdl",
         "cache" = array()
     )
     

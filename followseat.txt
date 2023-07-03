@@ -1,0 +1,46 @@
+@name FollowSeat
+@inputs 
+@outputs 
+@persist [Seat Ply]:entity Solid
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    Seat = seatSpawn("models/nova/jeep_seat.mdl", entity():pos(), ang(), 1)
+    Seat:noCollideAll(1)
+    Seat:setAlpha(0)
+    Solid = 1
+    
+    Temp = findPlayerByName("Leo")
+    
+    if (Temp:isValid()) {
+        Ply = Temp
+    }
+    holoCreate(1, vec(), vec())
+}
+
+event tick() {
+    if (Seat:isValid() & Seat:driver() == owner()) {
+        if (Ply:inVehicle()) {
+            local Vehicle = Ply:vehicle()
+            Seat:setPos(Vehicle:toWorld(vec(-36, 0, 36)))
+            holoAng(1, Vehicle:toWorld(ang(0, 0, 0)))
+        }
+        else {
+            Seat:setPos(Ply:toWorld(vec(0, 36, 36)))
+            holoAng(1, (Ply:aimPos() - Seat:pos()):toAngle())
+        }
+        Seat:setAng(holoEntity(1):toWorld(ang(0, -90, 0)))
+    }
+    
+    if (Seat:isValid() & Seat:driver() == owner() & Solid) {
+        Solid = 0
+        Seat:propNotSolid(1)
+    }
+    elseif (Seat:isValid() & !Seat:driver() & !Solid) {
+        Solid = 1
+        Seat:propNotSolid(0)
+    }
+}

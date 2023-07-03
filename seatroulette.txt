@@ -1,53 +1,58 @@
 @name SeatRoulette
 @inputs
 @outputs Num
-@persist Seats:array
+@persist Seats:array Max I Tick
 @trigger 
 @strict
 
 if (first()) {
+    I = 0
+    Tick = 0
     Seats = array()
     propSpawnUndo(0)
     propSpawnEffect(0)
-    if (propCanCreate()) {
-        Max = 2
-        R = 48
-        
-        for (I = 1, Max) {
-            local Sin = sin(360/Max * I) * R
-            local Cos = cos(360/Max * I) * R
-            local Pos = entity():toWorld(vec(Sin, Cos, 0))
-            local Ang = entity():toWorld(ang(0, -360/Max * I + 180, 0))
-            local Seat = seatSpawn("models/nova/chair_plastic01.mdl", Pos, Ang, 1)
-            Seat:noCollideAll(1)
-            holoCreate(I, Seat:toWorld(vec(0, 0, 70)), vec(1), Seat:angles() + ang(180, 0, 0), vec(0, 255, 0), "models/sprops/misc/alphanum/alphanum_arrow_b.mdl")
-            holoMaterial(I, "debug/debugdrawflat")
-            holoParent(I, Seat)
-            Seats:pushEntity(Seat)
-        }
-    }
+    Max = 6
 }
 event tick() {
-    local Max = Seats:count()
-    Start = 0
-    for (I = 1, Max) {
-        local Seat = Seats[I, entity]
-        if (Seat:driver()) {
-            Start++
-            
-            holoAlpha(I, 0)
-        } else {
-            holoPos(I, Seat:toWorld(vec(0, 0, 70 + sin(curtime() * 90) * 2)))
-            holoAng(I, Seat:toWorld(ang(180, curtime() * 90, 0)))
-            holoAlpha(I, 255)
-        }
+    local Cur = systime()
+    if (Cur > Tick + 0.25 & propCanCreate() & Seats:count() < Max) {
+        Tick = Cur
+        R = 48
+        I++
         
-        if (Start == Max) {
-            Num = randint(1, Max)
-            Seats[Num, entity]:killPod()
+        local Sin = sin(360/Max * I) * R
+        local Cos = cos(360/Max * I) * R
+        local Pos = entity():toWorld(vec(Sin, Cos, 0))
+        local Ang = entity():toWorld(ang(0, -360/Max * I + 180, 0))
+        local Seat = seatSpawn("models/nova/chair_plastic01.mdl", Pos, Ang, 1)
+        Seat:noCollideAll(1)
+        holoCreate(I, Seat:toWorld(vec(0, 0, 70)), vec(1), Seat:angles() + ang(180, 0, 0), vec(0, 255, 0), "models/sprops/misc/alphanum/alphanum_arrow_b.mdl")
+        holoMaterial(I, "debug/debugdrawflat")
+        holoParent(I, Seat)
+        Seats:pushEntity(Seat)
+    }
+
+    if (Seats:count() == Max) {
+        Start = 0
+        for (I = 1, Max) {
+            local Seat = Seats[I, entity]
+            if (Seat:driver()) {
+                Start++
+                
+                holoAlpha(I, 0)
+            } else {
+                holoPos(I, Seat:toWorld(vec(0, 0, 70 + sin(curtime() * 90) * 2)))
+                holoAng(I, Seat:toWorld(ang(180, curtime() * 90, 0)))
+                holoAlpha(I, 255)
+            }
             
-            print(Num)
-            break
+            if (Start == Max) {
+                Num = randint(1, Max)
+                Seats[Num, entity]:killPod()
+                
+                print(Num)
+                break
+            }
         }
     }
 }

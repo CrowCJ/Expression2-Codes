@@ -1,0 +1,123 @@
+@name RadioWebAudio
+@inputs 
+@outputs 
+@persist [Songs Holos]:table FFT:array WebAudio:webaudio Tick
+@trigger 
+@strict
+
+if (first() | duped()) {
+    FFT  = array()
+    Tick = 0
+    WebAudio = nowebaudio()
+    
+    function webaudio entity:playSong(Url:string) {
+        local WAudio = WebAudio
+        
+        if (WAudio:isValid()) {
+            WebAudio:destroy()
+        }
+        
+        if (webAudioCanCreate()) {
+            WAudio = webAudio(Url)
+            WAudio:setVolume(100)
+            WAudio:setRadius(2000)
+            WAudio:setParent(This)
+            WAudio:play()
+        }
+        
+        return WAudio
+    }
+    
+    function string array:index(Num) {
+        return This[Num, string]
+    }
+    
+    Songs = table(
+        array("https://dl.dropbox.com/s/9uygkorukmveie0/Careless%20Whisper%28Instrumental%29.mp3?dl=1", "Careless Whisper - Instrumental Only"),
+        array("https://dl.dropbox.com/s/razskdybfl1rb01/IdolxIndustry%20Baby.mp3?dl=1", "Idol x Industry Baby"),
+        array("https://dl.dropbox.com/s/d169so6iw2k4ao1/QilinsPrance.mp3?dl=1", "Qilin's Prance - Ganyu Theme(Genshin Impact)"),
+        array("https://dl.dropbox.com/s/p4deufpty19ob5q/BasshunterDotA.mp3?dl=1", "DotA - Bass Hunter"),
+        array("https://dl.dropbox.com/s/bb13l8kycgigb4e/AaronSmithDancin%28KRONORemix%29.mp3?dl=1", "Dancin - Aaron Smith(KRONO Remix)"),
+        array("https://dl.dropbox.com/s/edn1a0i7b32gkio/AmongUsTrapBassBoosted.mp3?dl=1", "Among Us - Trap Bass Boosted"),
+        array("https://dl.dropbox.com/s/pnyjzb470fb989x/Disc1GlazedMoonOvertheTidesGenshinImpact.mp3?dl=1", "Disc 1: Glazed Moon Over the Tides - Genshin Impact"),
+        array("https://dl.dropbox.com/s/k5r74lbltldq1qi/ExtraTerra.mp3?dl=1", "Extra Terra - Paradox"),
+        array("https://dl.dropbox.com/s/ez6mex2tbg12rl9/giornos_theme.mp3?dl=1", "Giorno's Theme"),
+        array("https://dl.dropbox.com/s/x59i95o522n57k9/HalogenUGotThat.mp3?dl=1", "U Got That - Halogen"),
+        array("https://dl.dropbox.com/s/hni7zyohj2y2ccs/OshiNoKo-lofimix.mp3?dl=1", "Idol - Lofi Mix"),
+        array("https://dl.dropbox.com/s/4dp7vhe3d1ef38s/Ping_Exyl.mp3?dl=1", "Ping - Exyl")
+    )
+    
+    Holos = table(
+        "max" = 36,
+        "rad" = 2,
+        "scl" = vec(0.01, 0.01, 1),
+        "mat" = "debug/debugdrawflat",
+        "mdl" = "cube"
+    )
+        
+    local Max = Holos["max", number]
+    local Rad = Holos["rad", number]
+    local Scl = Holos["scl", vector]
+    local Mdl = Holos["mdl", string]
+    local Mat = Holos["mat", string]
+    local Z   = Holos["scl", vector]:z()
+    
+    for (I = 1, Max) {
+        local Sin = sin(360/Max * I) * Rad
+        local Cos = cos(360/Max * I) * Rad
+        local Color = hsv2rgb((360/Max * I)%360, 1, 1)
+        
+        holoCreate(I, entity():toWorld(vec(Sin, Cos, -(Z/2)*12)), Scl, entity():toWorld(ang(0, -360/Max * I, 0)), Color, Mdl)
+        holoMaterial(I, Mat)
+        holoParent(I, entity())
+        
+        holoClipEnabled(I, 1)
+        holoClip(I, entity():pos(), vec(0, 0, 1), 1)
+        FFT:pushNumber(0)
+    }
+}
+
+event chat(Player:entity, Message:string, _:number) {
+    if (Player == owner()) {
+        local Explode = Message:explode(" ")
+        
+        if (Explode:index(1) == "!song") {
+            hideChat(1)
+            
+            local Num = Explode:index(2):toNumber() 
+            
+            if (Num > 0 & Num <= Songs:count()) {    
+                if (Songs[Num, array][1, string]) {
+                    local Url = Songs[Num, array][1, string]
+                
+                    WebAudio = entity():playSong(Url)
+                }
+            } else {
+                print(format("Song Out of Range[%03d - %03d]", 1, Songs:count()))
+            }
+        }
+    }
+}
+
+event tick() {
+    local Cur = systime()
+    local Del = (Cur - Tick) * 3
+    
+    if (Cur > Tick + 0.025 & WebAudio:isValid()) {
+        Tick = Cur
+        local FFTN = WebAudio:getFFT()
+        local Max  = Holos["max", number]
+        local Rad  = Holos["rad", number]
+        local Z    = Holos["scl", vector]:z()
+        
+        for (I = 1, Max) {
+            FFT[I, number] = FFT[I, number] + (FFTN[I, number] - FFT[I, number]) * Del
+            local Mag = FFT[I, number] / 255 * (Z * 12)
+            local Sin = sin(360/Max * I) * Rad
+            local Cos = cos(360/Max * I) * Rad
+            
+            holoPos(I, entity():toWorld(vec(Sin, Cos, -(Z/2)*12 + Mag)))
+        }
+    }
+}
+
