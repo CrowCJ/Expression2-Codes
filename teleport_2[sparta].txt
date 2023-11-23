@@ -1,0 +1,133 @@
+@name Teleport_2[Sparta]
+@persist Table:table [Decoys Deletes]:array
+@strict
+
+if (first()) {
+    entity():setName("Meh")
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    
+    Deletes = array()
+    Decoys  = array(
+        "models/maxofs2d/cube_tool.mdl",
+        "models/maxofs2d/companion_doll.mdl",
+        "models/props_junk/PropaneCanister001a.mdl"
+    )
+    Table = table(
+        "decoy"    = 1,
+        "sound"    = 1,
+        "prefix"   = "-",
+        "tp_key"   = "g",
+        "tp_cmd"   = "goto",
+        "loc_cmd"  = "locate",
+        "locate"   = function() {
+            local Pos = owner():pos()
+            local X = round(Pos:x())
+            local Y = round(Pos:y())
+            local Z = round(Pos:z())
+            
+            print(format("Location: [%s, %s, %s]", X, Y, Z))
+        },
+        "teleport" = function(Position:vector, Angle:angle, Decoy:number, Sound:number) {
+            local SMdl = "models/nova/chair_office01.mdl"
+            local DMdl = Decoys[randint(Decoys:count()), string]
+            if (propCanCreate()) {
+                if (Decoy) {
+                    local LocalPos = owner():boxCenterW() + vec(0, 0, 64)
+                    local DecoyAng = ang()
+                    local Temp = array()
+                    for (_ = 1, 3) {
+                        local R = randint(-180, 180)
+                        Temp:pushNumber(R)
+                    }
+                    DecoyAng = ang(Temp[1, number], Temp[2, number], Temp[3, number])
+                    local Prop = propSpawn(DMdl, LocalPos, DecoyAng, 0)
+                    Deletes:pushEntity(Prop)
+                    
+                    if (Deletes:count() > 3) {
+                        Deletes:shiftEntity():propDelete()
+                    }
+
+                    stoptimer("start_delete")
+                    timer("start_delete", 5000)
+                }
+                if (Sound) {
+                    owner():emitSound("buttons/button1.wav")
+                }
+                local Seat = seatSpawn(SMdl, Position, Angle, 1)
+                Seat:propNotSolid(1)
+                Seat:propDraw(0)
+                Seat:use()
+                Seat:propDelete()
+            }
+        },
+        "goto" = function(Target:entity) {
+            if (Target:isValid()) {
+                if (!Target:isAlive()) {
+                    print("Target is Dead!")
+                    exit()
+                }
+                
+                if (propCanCreate()) {
+                    local Position = Target:pos() + vec(Target:eye():x(), Target:eye():y(), 0):normalized() * -36
+                    local Angle = (quat(Target)/quat(Target:eyeAngles())):toAngle()
+                    local SMdl = "models/nova/chair_office01.mdl"
+                    local Seat = seatSpawn(SMdl, Position, Angle, 1)
+                    Seat:propNotSolid(1)
+                    Seat:propDraw(0)
+                    Seat:use()
+                    Seat:propDelete()
+                }
+            }
+        }
+    )
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner()) {
+        if (Key == Table["tp_key", string] & Down) {
+            local Dec = Table["decoy", number]
+            local Snd = Table["sound", number]
+            local Pos = owner():aimPos() + owner():aimNormal() * 12
+            local Ang = (quat(owner())/quat(owner():eyeAngles())):toAngle()
+            
+            Table["teleport", function](Pos, Ang, Dec, Snd)
+        }
+    }
+}
+
+event chat(Player:entity, Message:string, _:number) {
+    if (Player == owner()) {
+        local GetPrefix = Message[1]
+        if (GetPrefix == Table["prefix", string]) {
+            hideChat(1)
+            local Exp = Message:explode(" ")
+            local Len = Exp[1, string]:length()
+            local Cmd = Exp[1, string]:sub(2, Len)
+            
+            switch (Cmd) {
+                case Table["tp_cmd", string],
+                    local Target = findPlayerByName(Exp[2, string])
+                    if (Target:isValid()) {
+                        Table["goto", function](Target)
+                    } else {
+                        print("Target is not found!")
+                    }
+                break
+                case Table["loc_cmd", string],
+                    Table["locate", function]()
+                break
+                default,
+                    print("Command not found!")
+                break
+            }
+        }
+    }
+}
+
+if (clk("start_delete")) {
+    if (Deletes:count() > 0) {
+        Deletes:shiftEntity():propDelete()
+        timer("start_delete", 500)
+    }
+}
