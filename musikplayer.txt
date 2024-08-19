@@ -1,197 +1,202 @@
 @name MusikPlayer
 @inputs  EGP:wirelink [User Emitter]:entity
 @outputs FFT:array
-@persist MusicData:table WebAudio:webaudio
+@persist [MusicData SongList]:table WebAudio:webaudio
 @trigger 
 @strict
-    
-if (first() | duped() | ~EGP) {    
+
+if (first() | duped() | ~EGP) {
     WebAudio = nowebaudio()
-    
+
     MusicData = table(
-        "tick" = 0,
-        "Cooldown" = 0.5,
-        "Loop"   = 1,
-        "Volume" = 200,
-        "Radius" = 10000,
+        "tick"      = 0,
+        "Cooldown"  = 0.3,
+        "Loop"      = 1,
+        "Volume"    = 200,
+        "Radius"    = 200,
         "MaxListed" = 10,
-        "CurPage" = 1,
-        "CurSong" = 0,
-        "CurURL"  = "",
-        
-        1  = array("https://dl.dropbox.com/s/p4deufpty19ob5q/BasshunterDotA.mp3?dl=1", "DotA - Bass Hunter", 200),
-        2  = array("https://dl.dropbox.com/s/k5r74lbltldq1qi/ExtraTerra.mp3?dl=1", "Extra Terra - Paradox", 180 + 50),
-        3  = array("https://dl.dropbox.com/s/jm70hxi8c6wdzru/AvengersIWOST.mp3?dl=1", "Avengers Inf. War OST", 148.6),
-        4  = array("https://dl.dropbox.com/s/119w24a8poba7xq/syence_nice_girl.mp3?dl=1", "Nice Girl - Syence", 180 + 2),
-        5  = array("https://dl.dropbox.com/s/nb9juahd6zzaj2n/PinkPantherTheme.mp3?dl=1", "Pink Panther Theme", 120 + 38),
-        6  = array("https://dl.dropbox.com/s/x59i95o522n57k9/HalogenUGotThat.mp3?dl=1", "U Got That - Halogen", 180 + 8),
-        7  = array("https://dl.dropbox.com/s/b843r3mq3mmlhgr/Faint-LinkinPark.mp3?dl=1", "Faint - Linkin Park", 120 + 47),
-        8  = array("https://dl.dropbox.com/s/3vcayw07ambz4n5/ShenheOpera.mp3?dl=1", "Devastation and Redemption", 120 + 40),
-        9  = array("https://dl.dropbox.com/s/4xqttbga1l0opd3/waiting_for_love.mp3?dl=1", "Waiting For Love - Avicii", 180 + 48),
-        10 = array("https://dl.dropbox.com/s/ioc9ybz85cibutc/iridescentlinkinpark.mp3?dl=1", "Iridescent - Linkin Park", 240 + 5),
-        11 = array("https://dl.dropbox.com/s/edn1a0i7b32gkio/AmongUsTrapBassBoosted.mp3?dl=1", "Amongus - Bass Boosted", 60 + 15),
-        12 = array("https://dl.dropbox.com/s/zow4pcstrujnrts/JPNG.mp3?dl=1", "We Are Japanese Goblin x Write That Down", 180 + 08),
-        13 = array("https://dl.dropbox.com/s/2i0ofxa9eah5ba2/MissionImpossibleTheme.mp3?dl=1", "Mission Impossible Theme", 180 + 37),        
-        14 = array("https://dl.dropbox.com/s/d169so6iw2k4ao1/QilinsPrance.mp3?dl=1", "Qilin's Prance - Genshin Impact OST", 60 + 40),
-        15 = array("https://dl.dropbox.com/s/x6zzjjd9tqhik3c/bluedabadeefemale.mp3?dl=1", "Blue - Eiffel 65(Female Voice)", 120 + 35),
-        16 = array("https://dl.dropbox.com/s/eyiwch1s81os9gl/onemorelightlinkinpark.mp3?dl=1", "One More Light - Linkin Park", 240 + 31),
-        17 = array("https://dl.dropbox.com/s/1wegtazu4mi3lwa/unnamedtrack006ori.mp3?dl=1", "Ori & The Blind Forest - Unknown Track", 111),
-        18 = array("https://dl.dropbox.com/s/t03pr4ffk4nh2v7/CastleofGlassLinkinpark.mp3?dl=1", "Castle Of Glass - Linkin Park", 240 + 50),
-        19 = array("https://dl.dropbox.com/s/x77u69m11ejrp3i/kdapop_stars_seraphine.mp3?dl=1", "POP/STARS - KDA(Seraphine Cover)", 120 + 41),
-        20 = array("https://dl.dropbox.com/s/9hcmbtyr0n3duz2/JojoPart6OP.mp3?dl=1", "Jojo's Adventure Part 6 Stone Ocean Opening", 180 + 42),
-        21 = array("https://dl.dropbox.com/s/n1oz8dxni5h0feh/InTheEndMellenGi.mp3?dl=1", "In The End - Linkin Park(Mellen Gi Mix)", 180 + 39),
-        22 = array("https://dl.dropbox.com/s/4kpxbg5m59yzptt/UnravelTokyoGhoulOP.mp3?dl=1", "Unravel - Tokyo Ghoul OP(Piano Cover)", 240 + 8),
-        23 = array("https://dl.dropbox.com/s/ez6mex2tbg12rl9/giornos_theme.mp3?dl=1", "Giorno's Theme - Jojo's Bizzarre Adventure", 240 + 52),
-        24 = array("https://dl.dropbox.com/s/0s4turp8xlw6rwu/ThisGameNoGameNoLifeOPPiano.mp3?dl=1", "This Game - No Game No Life OP", 300 + 6),
-        25 = array("https://dl.dropbox.com/s/bx91sbj00b65xnf/senbonzakuraEng.mp3?dl=1", "Senbonsakura - Hatsune Miku(English Cover)", 360 + 12),
-        26 = array("https://dl.dropbox.com/s/pru9wt2vyr2ojq5/Prezioso%26Marvin-The%20Riddle.mp3?dl=1", "The Riddle - Prezioso & Marvin", 300 + 27),
-        27 = array("https://dl.dropbox.com/s/bb13l8kycgigb4e/AaronSmithDancin%28KRONORemix%29.mp3?dl=1", "Dancing - Aaron Smith(KRONO Remix)", 198),
-        28 = array("https://dl.dropbox.com/s/9uygkorukmveie0/Careless%20Whisper%28Instrumental%29.mp3?dl=1", "Careless Whisper - Instrumental", 300 + 4),
-        29 = array("https://dl.dropbox.com/s/rgduo6n52qvpujt/INDUSTRYBABYxWEAREJAPANESEGOBLIN.mp3?dl=1", "We Are Japanese Goblin x Industry Baby", 232),
-        30 = array("https://dl.dropbox.com/s/mjlcixitfmarz91/HaiPhutHon_Marlene%28KAIZ%20Remix%29.mp3?dl=1", "Hai Phut Hon - Phao(KAIZ Remix)", 180 + 32),
-        31 = array("https://dl.dropbox.com/s/0m0a2fjk8dkn291/fall_out_boy_centuries_trap_remix.mp3?dl=1", "Centuries - Fall Out Boy(Trap Remix)", 240 + 22),
-        32 = array("https://dl.dropbox.com/s/dxui0snizy6jdmc/pumped_up_kicks_bridge_and_law_remix.mp3?dl=1", "Pumped Up Kicks - Bridge & Law Remix", 240 + 11),
-        33 = array("https://dl.dropbox.com/s/0qfb96hhxpn06re/ZhonglixRaiden_Theme_EPIC_ORCHESTRAL.mp3?dl=1", "ZhonglixRaiden Theme EPIC ORCHESTRAL", 60*4 + 49),
-        34 = array("https://dl.dropbox.com/s/c0g1xq964im1csb/TheVerkkarsFlashbangdanceftn0thing.mp3?dl=1", "Flashbang Dance - The Verkkars ft. n0thing", 180+22),
-        35 = array("https://dl.dropbox.com/s/q1vw1ol7y1h1ygw/IchibannotakaramonoAngelBeatsOSTpiano.mp3?dl=1", "Ichiban no Takaramono - Angel Beats OST", 360 + 5), 
-        36 = array("https://dl.dropbox.com/s/ez1mwowvrs4snx7/ImagineDragons-Natural%28BassBoostedRemix%29.mp3?dl=1", "Natural - Imagine Dragons(Bass Boosted)", 180 + 6),
-        37 = array("https://dl.dropbox.com/s/ft9jtnuqu9p427t/MySoulyourBeats%21AngelBeatsOPPiano.mp3?dl=1", "My Soul Your Beats - Angel Beats OP(Piano Cover)", 240 + 16),
-        38 = array("https://dl.dropbox.com/s/2e2obimh32f1h7e/undertale_megalovania_oscar_santos_remix.mp3?dl=1", "Megalovania - Undertale(Oscar Santos Remix)", 180 + 54),
-        39 = array("https://dl.dropbox.com/s/hgvolu6vxykh8mt/Unravel-TK_TheFirstTake%28Cut%29.mp3?dl=1", "Unravel - TK from Ling Tosite Sigure THE F1RST TAKE", 240 + 30),                
-        40 = array("https://dl.dropbox.com/s/6zp8pem86nl888n/Song%20for%20Denise%20%28Maxi%20Version%29%20bass%20boosted.mp3?dl=1", "Song for Denise (Maxi Ver. Bass Boosted)", 420 + 3),
-        41 = array("https://dl.dropbox.com/s/cnw9b3gxguqcesw/%C4%90en%20-%20L%E1%BB%91i%20Nh%E1%BB%8F%20ft.%20Ph%C6%B0%C6%A1ng%20Anh%20%C4%90%C3%A0o.mp3?dl=1", "Loi Nho - Den ft. Phuong Anh Dao", 240 + 57),
-        42 = array("https://dl.dropbox.com/s/pnyjzb470fb989x/Disc1GlazedMoonOvertheTidesGenshinImpact.mp3?dl=1", "Jade Moon Upon a Sea of Clouds - Disc1: Glazed Moon Over the Tides Genshin Impact", 60*47 + 46),
-        43 = array("https://dl.dropbox.com/s/gu2zq4n17taamy7/Ori%20and%20the%20Blind%20Forest%20%28Gareth%20Coker%29%20-%20Light%20of%20Nibel%20%28Definitive%20Edition%20Mix%29.mp3?dl=1", "Ori & The Blind Forest - Light of Nibel Definitive Edition", 240),
-        44 = array("https://dl.dropbox.com/s/ld97fk3du6ce17d/Random%20Gods.mp3?dl=1", "Random Gods", 111),
-        45 = array("https://dl.dropbox.com/s/s777avuphktdhon/Mellifluous.mp3?dl=1", "Mellifluous", 111),
-        46 = array("https://dl.dropbox.com/s/razskdybfl1rb01/Idol%20x%20Industry%20Baby.mp3?dl=1", "Idol x Industry Baby", 333),
-        47 = array("https://dl.dropbox.com/scl/fi/0uo9ayljprfxslv82v8sn/YoruniKakeru-YOASOBI.mp3?rlkey=fnopwe0jm8252uvuhct1ldj7b&dl=1", "Yoru ni Kakeru - Yoasobi", 25),
-        
-        "MaxSong" = 47
+        "CurPage"   = 1,
+        "CurSong"   = 0,
+        "CurURL"    = "",
+        "MaxSong"   = 0
+    )
+
+    SongList = table(
+        array("https://dl.dropbox.com/s/p4deufpty19ob5q/BasshunterDotA.mp3?dl=1", "DotA - Bass Hunter"),
+        array("https://dl.dropbox.com/s/k5r74lbltldq1qi/ExtraTerra.mp3?dl=1", "Extra Terra - Paradox"),
+        array("https://dl.dropbox.com/s/jm70hxi8c6wdzru/AvengersIWOST.mp3?dl=1", "Avengers Inf. War OST"),
+        array("https://dl.dropbox.com/s/119w24a8poba7xq/syence_nice_girl.mp3?dl=1", "Nice Girl - Syence"),
+        array("https://dl.dropbox.com/s/nb9juahd6zzaj2n/PinkPantherTheme.mp3?dl=1", "Pink Panther Theme"),
+        array("https://dl.dropbox.com/s/x59i95o522n57k9/HalogenUGotThat.mp3?dl=1", "U Got That - Halogen"),
+        array("https://dl.dropbox.com/s/b843r3mq3mmlhgr/Faint-LinkinPark.mp3?dl=1", "Faint - Linkin Park"),
+        array("https://dl.dropbox.com/s/3vcayw07ambz4n5/ShenheOpera.mp3?dl=1", "Devastation and Redemption"),
+        array("https://dl.dropbox.com/s/4xqttbga1l0opd3/waiting_for_love.mp3?dl=1", "Waiting For Love - Avicii"),
+        array("https://dl.dropbox.com/s/ioc9ybz85cibutc/iridescentlinkinpark.mp3?dl=1", "Iridescent - Linkin Park"),
+        array("https://dl.dropbox.com/s/edn1a0i7b32gkio/AmongUsTrapBassBoosted.mp3?dl=1", "Amongus - Bass Boosted"),
+        array("https://dl.dropbox.com/s/zow4pcstrujnrts/JPNG.mp3?dl=1", "We Are Japanese Goblin x Write That Down"),
+        array("https://dl.dropbox.com/s/2i0ofxa9eah5ba2/MissionImpossibleTheme.mp3?dl=1", "Mission Impossible Theme"),
+        array("https://dl.dropbox.com/s/d169so6iw2k4ao1/QilinsPrance.mp3?dl=1", "Qilin's Prance - Genshin Impact OST"),
+        array("https://dl.dropbox.com/s/x6zzjjd9tqhik3c/bluedabadeefemale.mp3?dl=1", "Blue - Eiffel 65(Female Voice)"),
+        array("https://dl.dropbox.com/s/eyiwch1s81os9gl/onemorelightlinkinpark.mp3?dl=1", "One More Light - Linkin Park"),
+        array("https://dl.dropbox.com/s/1wegtazu4mi3lwa/unnamedtrack006ori.mp3?dl=1", "Ori & The Blind Forest - Unknown Track"),
+        array("https://dl.dropbox.com/s/t03pr4ffk4nh2v7/CastleofGlassLinkinpark.mp3?dl=1", "Castle Of Glass - Linkin Park"),
+        array("https://dl.dropbox.com/s/x77u69m11ejrp3i/kdapop_stars_seraphine.mp3?dl=1", "POP/STARS - KDA(Seraphine Cover)"),
+        array("https://dl.dropbox.com/s/9hcmbtyr0n3duz2/JojoPart6OP.mp3?dl=1", "Jojo's Adventure Part 6 Stone Ocean Opening"),
+        array("https://dl.dropbox.com/s/n1oz8dxni5h0feh/InTheEndMellenGi.mp3?dl=1", "In The End - Linkin Park(Mellen Gi Mix)"),
+        array("https://dl.dropbox.com/s/4kpxbg5m59yzptt/UnravelTokyoGhoulOP.mp3?dl=1", "Unravel - Tokyo Ghoul OP(Piano Cover)"),
+        array("https://dl.dropbox.com/s/ez6mex2tbg12rl9/giornos_theme.mp3?dl=1", "Giorno's Theme - Jojo's Bizzarre Adventure"),
+        array("https://dl.dropbox.com/s/0s4turp8xlw6rwu/ThisGameNoGameNoLifeOPPiano.mp3?dl=1", "This Game - No Game No Life OP"),
+        array("https://dl.dropbox.com/s/bx91sbj00b65xnf/senbonzakuraEng.mp3?dl=1", "Senbonsakura - Hatsune Miku(English Cover)"),
+        array("https://dl.dropbox.com/s/pru9wt2vyr2ojq5/Prezioso%26Marvin-The%20Riddle.mp3?dl=1", "The Riddle - Prezioso & Marvin"),
+        array("https://dl.dropbox.com/s/bb13l8kycgigb4e/AaronSmithDancin%28KRONORemix%29.mp3?dl=1", "Dancing - Aaron Smith(KRONO Remix)"),
+        array("https://dl.dropbox.com/s/9uygkorukmveie0/Careless%20Whisper%28Instrumental%29.mp3?dl=1", "Careless Whisper - Instrumental"),
+        array("https://dl.dropbox.com/s/rgduo6n52qvpujt/INDUSTRYBABYxWEAREJAPANESEGOBLIN.mp3?dl=1", "We Are Japanese Goblin x Industry Baby"),
+        array("https://dl.dropbox.com/s/mjlcixitfmarz91/HaiPhutHon_Marlene%28KAIZ%20Remix%29.mp3?dl=1", "Hai Phut Hon - Phao(KAIZ Remix)"),
+        array("https://dl.dropbox.com/s/0m0a2fjk8dkn291/fall_out_boy_centuries_trap_remix.mp3?dl=1", "Centuries - Fall Out Boy(Trap Remix)"),
+        array("https://dl.dropbox.com/s/dxui0snizy6jdmc/pumped_up_kicks_bridge_and_law_remix.mp3?dl=1", "Pumped Up Kicks - Bridge & Law Remix"),
+        array("https://dl.dropbox.com/s/0qfb96hhxpn06re/ZhonglixRaiden_Theme_EPIC_ORCHESTRAL.mp3?dl=1", "ZhonglixRaiden Theme EPIC ORCHESTRAL"),
+        array("https://dl.dropbox.com/s/c0g1xq964im1csb/TheVerkkarsFlashbangdanceftn0thing.mp3?dl=1", "Flashbang Dance - The Verkkars ft. n0thing"),
+        array("https://dl.dropbox.com/s/q1vw1ol7y1h1ygw/IchibannotakaramonoAngelBeatsOSTpiano.mp3?dl=1", "Ichiban no Takaramono - Angel Beats OST"),
+        array("https://dl.dropbox.com/s/ez1mwowvrs4snx7/ImagineDragons-Natural%28BassBoostedRemix%29.mp3?dl=1", "Natural - Imagine Dragons(Bass Boosted)"),
+        array("https://dl.dropbox.com/s/ft9jtnuqu9p427t/MySoulyourBeats%21AngelBeatsOPPiano.mp3?dl=1", "My Soul Your Beats - Angel Beats OP(Piano Cover)"),
+        array("https://dl.dropbox.com/s/2e2obimh32f1h7e/undertale_megalovania_oscar_santos_remix.mp3?dl=1", "Megalovania - Undertale(Oscar Santos Remix)"),
+        array("https://dl.dropbox.com/s/hgvolu6vxykh8mt/Unravel-TK_TheFirstTake%28Cut%29.mp3?dl=1", "Unravel - TK from Ling Tosite Sigure THE F1RST TAKE"),
+        array("https://dl.dropbox.com/s/6zp8pem86nl888n/Song%20for%20Denise%20%28Maxi%20Version%29%20bass%20boosted.mp3?dl=1", "Song for Denise (Maxi Ver. Bass Boosted)"),
+        array("https://dl.dropbox.com/s/cnw9b3gxguqcesw/%C4%90en%20-%20L%E1%BB%91i%20Nh%E1%BB%8F%20ft.%20Ph%C6%B0%C6%A1ng%20Anh%20%C4%90%C3%A0o.mp3?dl=1", "Loi Nho - Den ft. Phuong Anh Dao"),
+        array("https://dl.dropbox.com/s/pnyjzb470fb989x/Disc1GlazedMoonOvertheTidesGenshinImpact.mp3?dl=1", "Jade Moon Upon a Sea of Clouds - \nDisc1: Glazed Moon Over the Tides - Genshin Impact"),
+        array("https://dl.dropbox.com/s/gu2zq4n17taamy7/Ori%20and%20the%20Blind%20Forest%20%28Gareth%20Coker%29%20-%20Light%20of%20Nibel%20%28Definitive%20Edition%20Mix%29.mp3?dl=1", "Ori & The Blind Forest - Light of Nibel Definitive Edition"),
+        array("https://dl.dropbox.com/s/ld97fk3du6ce17d/Random%20Gods.mp3?dl=1", "Random Gods"),
+        array("https://dl.dropbox.com/s/s777avuphktdhon/Mellifluous.mp3?dl=1", "Mellifluous"),
+        array("https://dl.dropbox.com/s/razskdybfl1rb01/Idol%20x%20Industry%20Baby.mp3?dl=1", "Idol x Industry Baby"),
+        array("https://dl.dropbox.com/scl/fi/0uo9ayljprfxslv82v8sn/YoruniKakeru-YOASOBI.mp3?rlkey=fnopwe0jm8252uvuhct1ldj7b&dl=1", "Yoru ni Kakeru - Yoasobi"),
+        array("https://dl.dropbox.com/scl/fi/7ai0k69p7up131vjgr9wu/KingGnu-SPECIALZ.mp3?rlkey=d1zfafdo209mrnivxq8f3orlo&dl=1", "SPECIALZ - King Gnu"),
+        array("https://dl.dropbox.com/scl/fi/kqk9z3hp9vvphdgl7qf99/IdolxBlingBangBangBorn_Mashup.mp3?rlkey=iifia2ptzp3ybux5e0ry11yzj&dl=1", "Idol x BlingBangBangBorn Mashup"),
+        array("https://dl.dropbox.com/scl/fi/jy9rwv4efqqlm4rxnxu3x/BlingBangBangBorn-CreepyNuts.mp3?rlkey=lh9oomc5o9leulelxwlv76jcd&dl=1", "BlingBangBangBorn - Creepy Nuts"),
+        array("https://dl.dropbox.com/scl/fi/bhzfzirqw3mvi2ex0ptu1/Numb_LinkinPark.mp3?rlkey=e88kfiycr8uolfgmdslnlco2g&dl=1", "Numb - Linkin Park"),
+        array("https://dl.dropbox.com/scl/fi/cj9n567mnjoktxiur2idp/InTheEnd_LinkinPark.mp3?rlkey=mthypcw1bh7yw9tz3cii6oexh&dl=1", "In The End - Linkin Park"),
+        array("https://www.dropbox.com/scl/fi/spfxcd61voi5y667efggt/FREEBIRDSOLO.mp3?rlkey=j32w9i99r4b97j3grsa7wgeie&dl=0", "Free bird - Solo"),
+        array("https://www.dropbox.com/scl/fi/muurk7h9uld3hbhacsmfi/NessaBarrett_americanjesus.mp3?rlkey=kswiw6pzvgwde12b1mzyx36yh&dl=0", "American Jesus - Nessa Barrett")
     )
     
+    MusicData["MaxSong", number] = SongList:count()
+
     local MaxPage = ceil(MusicData["MaxSong", number]/MusicData["MaxListed", number])
     MusicData["MaxPage", number] = MaxPage
-    
+
     if (EGP) {
         holoCreate(1, EGP:entity():toWorld(vec(-50, 0, 0)), vec(1, 15, 1), EGP:entity():toWorld(ang(-90, 0, 0)), vec4(255, 255, 255, 0), "models/gman_high.mdl")
         
         EGP:egpClear()
         EGP:egpDrawTopLeft(1)
         
-        W = 512
+        #W = 512
         H = 512
-        
+
         # Title #
         local Title = format("%s's Musik Player", owner():name())
-        EGP:egpText(100, Title ,vec2(512*0.5 - (Title:length()*8)/2, 3))
-        
+        EGP:egpText(100, Title, vec2(512/2 - (Title:length()*8)/2, 3))
+
         # List Buttons #
         local MaxListed = MusicData["MaxListed", number]
-        local B_ListSize = vec2(512-64, 256/MaxListed - 0.6)
+        local B_ListSize = vec2(512 - 64, 256/MaxListed - 0.6)
         
         local Page = 1 # Debug
         for (I = 1, MaxListed)
         {
-            local Name = ""
+            local Name   = ""
             local String = ""
-            local ID = I + (Page - 1)*MaxListed
-            
-            if (MusicData[ID, array][2, string]) {
-                Name = MusicData[ID, array][2, string]
+            local ID = I + (Page - 1) * MaxListed
+
+            if (SongList[ID, array][2, string]) {
+                Name = SongList[ID, array][2, string]
                 String = format("%02d. %s", ID, Name)
+            } else {
+                String = ""
             }
-            
+
             local X_Align = 4
             local Y_Align = ((ceil(H/B_ListSize:y()) + 6)) * (I - 1) + 32
-            
+
             EGP:egpBoxOutline(I, vec2(X_Align, Y_Align), B_ListSize)
-            EGP:egpSize(I, 3)
-            EGP:egpText(I + MaxListed, String, EGP:egpPos(I) + vec2(6, 2))
-            
+            EGP:egpSize(I, 2)
+            EGP:egpTextLayout(I + MaxListed, String, EGP:egpPos(I) + vec2(6, 0), EGP:egpPos(I) + vec2(512-6, 2))
+            EGP:egpSize(I + MaxListed, 12)
+
             MusicData["bListID" + I, number] = I
         }
-        
+
         # Page Buttons #
-        EGP:egpBoxOutline(40, vec2(512-64 + 16, 64), vec2(32, 64))
+        EGP:egpRoundedBoxOutline(40, vec2(512-64 + 16, 64), vec2(32, 64))
         EGP:egpSize(40, 2)
-        EGP:egpBoxOutline(41, vec2(512-64 + 16, 128 + 72), vec2(32, 64))
+        EGP:egpRoundedBoxOutline(41, vec2(512-64 + 16, 128 + 72), vec2(32, 64))
         EGP:egpSize(41, 2)
-        
-        local MidPoint = (EGP:egpPos(40) + EGP:egpSize(40)*0.5 + EGP:egpPos(41) + EGP:egpSize(41)*0.5)*0.5
-        EGP:egpText(42, "<#>" ,vec2(512-64 + 32, MidPoint:y()))
+
+        local MidPoint = (EGP:egpPos(40) + EGP:egpSize(40)/2 + EGP:egpPos(41) + EGP:egpSize(41)/2)/2
+        EGP:egpText(42, "<#>" ,vec2(512 - 64 + 32, MidPoint:y()))
         EGP:egpAlign(42, 1, 1)
         EGP:egpSize(42, 25)
-        
-        MusicData["Page-", number] = 40
-        MusicData["Page+", number] = 41
-        MusicData["Page", number] = 42
-        
-        EGP:egpSetText(MusicData["Page", number], format("%02d", MusicData["CurPage", number]))
-        
+
         # Song Info #
-        EGP:egpText(45, "<Song Name>" ,vec2(3, 400 - 64))
+        EGP:egpText(45, "<Song Name>", vec2(3, 400 - 64))
         EGP:egpSize(45, 25)
-        
-        EGP:egpText(46, "00:00" ,vec2(3, 400 - 32))
+        EGP:egpText(46, "00:00", vec2(3, 400 - 32))
         EGP:egpSize(46, 20)
-        
-        EGP:egpText(47, "00:00" ,vec2(512 - 50, 400 - 32))
+        EGP:egpText(47, "00:00", vec2(512 - 50, 400 - 32))
         EGP:egpSize(47, 20)
-        
-        MusicData["NameID", number] = 45
-        MusicData["TimeID", number] = 46
-        MusicData["LengthID", number] = 47
-        
+
         # Progress Bar #
         EGP:egpBoxOutline(50, vec2(0, 400), vec2(512, 8))
         EGP:egpRoundedBox(51, vec2(0, 400), vec2(512, 8))
         
-        MusicData["RunBar", number] = 51
-        
         # Pointer #
         EGP:egpCircle(52, vec2(256, 400 + EGP:egpSize(51):y()/2), vec2(10))
-        
-        MusicData["PointerID", number] = 52
-        
+
         # Navigation Buttons #
         local NavButtonSize = vec2(64, 32)
-        
         EGP:egpBoxOutline(53, vec2(256 - 128, 400 + 36), NavButtonSize)
         EGP:egpSize(53, 2)
+
         local GetX = EGP:egpPos(53):x()
         EGP:egpBoxOutline(54, vec2(128 + NavButtonSize:x() + GetX, 400 + 36), NavButtonSize)
         EGP:egpSize(54, 2)
-        local MidPoint2 = (EGP:egpPos(53) + EGP:egpPos(54))*0.5
+
+        local MidPoint2 = (EGP:egpPos(53) + EGP:egpPos(54))/2
         EGP:egpBoxOutline(55, MidPoint2, NavButtonSize)
         EGP:egpSize(55, 2)
-        
+
         # Icon #
-        
-        EGP:egpTriangle(153, vec2(256 - 128 + 16, 436 + 16), vec2(256-128 + 48, 436 + 6), vec2(256-128 + 48, 436 + 26))
-        EGP:egpTriangle(154, vec2(256 + 128 - 16, 436 + 16), vec2(256+128 - 48, 436 + 6), vec2(256+128 - 48, 436 + 26))
-        
+        EGP:egpTriangle(153, vec2(256 - 128 + 16, 436 + 16), vec2(256 - 128 + 48, 436 + 6), vec2(256 - 128 + 48, 436 + 26))
+        EGP:egpTriangle(154, vec2(256 + 128 - 16, 436 + 16), vec2(256 + 128 - 48, 436 + 6), vec2(256 + 128 - 48, 436 + 26))
         EGP:egpBox(155, vec2(256 - 16, 436 + 6), vec2(8, 18))
-        EGP:egpBox(156, vec2(256 + 8, 436 + 6), vec2(8, 18))
-        
-        MusicData["Song-ID", number] = 53
-        MusicData["PlayPauseID", number] = 55
-        MusicData["Song+ID", number] = 54
-        
-        EGP:egpBoxOutline(56, vec2(3, 512 - 36), vec2(48, 24))
+        EGP:egpBox(156, vec2(256 + 08, 436 + 6), vec2(8, 18))
+
+        EGP:egpBoxOutline(56, vec2(003, 512 - 36), vec2(48, 24))
         EGP:egpSize(56, 2)
         EGP:egpBoxOutline(57, vec2(128, 512 - 36), vec2(48, 24))
         EGP:egpSize(57, 2)
-        
-        local MidPoint3 = (EGP:egpPos(56) + EGP:egpSize(56)*0.5 + EGP:egpPos(57) + EGP:egpSize(57)*0.5)*0.5
+
+        local MidPoint3 = (EGP:egpPos(56) + EGP:egpSize(56)/2 + EGP:egpPos(57) + EGP:egpSize(57)/2)/2
         EGP:egpText(58, "Vol", MidPoint3)
         EGP:egpAlign(58, 1, 1)
         EGP:egpSize(58, 20)
-        
-        MusicData["Vol-ID", number] = 56
-        MusicData["Vol+ID", number] = 57
-        MusicData["VolID", number] = 58
-        
+
+        MusicData["Page-", number]       = 40
+        MusicData["Page+", number]       = 41
+        MusicData["Page",  number]       = 42
+        MusicData["NameID", number]      = 45
+        MusicData["TimeID", number]      = 46
+        MusicData["LengthID", number]    = 47
+        MusicData["ProgBar", number]     = 50
+        MusicData["RunBar", number]      = 51
+        MusicData["PointerID", number]   = 52
+        MusicData["Song-", number]       = 53
+        MusicData["PlayPause", number]   = 55
+        MusicData["Song+", number]       = 54
+        MusicData["Vol-", number]        = 56
+        MusicData["Vol+", number]        = 57
+        MusicData["VolID", number]       = 58
+        EGP:egpSetText(MusicData["Page", number], format("%02d", MusicData["CurPage", number]))
+
         # Cursor #
         EGP:egpCircle(70, vec2(0, 0), vec2(4))
         EGP:egpColor(70, vec(255))
@@ -200,17 +205,24 @@ if (first() | duped() | ~EGP) {
     }
 }
 
+#[
 function number wirelink:isButton(Index:number) {
     local Cursor = This:egpCursor(User)
     local Yes = inrange(Cursor, EGP:egpPos(Index), EGP:egpPos(Index) + EGP:egpSize(Index))
     return Yes
 }
+]#
+
+function number wirelink:isButton(Index:number){
+    return This:egpObjectContainsPoint(Index, This:egpCursor(User)) ? 1 : 0
+}
 
 function playSong(Url:string, Volume:number, Radius:number) {
     if (Url != "") {
-        if (WebAudio:isValid()) {
-            WebAudio:destroy()
-        }
+        if (WebAudio:isValid()) { WebAudio:destroy() }
+        
+        Url = Url:replace("www.dropbox.com", "dl.dropbox.com")
+        Url = Url:replace("dl=0", "dl=1")
         
         if (webAudioCanCreate()) {
             WebAudio = webAudio(Url)
@@ -221,30 +233,34 @@ function playSong(Url:string, Volume:number, Radius:number) {
                 WebAudio:setPos(Emitter:pos())
                 WebAudio:setParent(Emitter)
             }
-            
+
+            FFT = array()
             WebAudio:setVolume(Volume)
             WebAudio:setRadius(Radius)
-            
             WebAudio:play()
-            
+
             local Wide = "https://dl.dropbox.com/s/6zp8pem86nl888n/Song%20for%20Denise%20%28Maxi%20Version%29%20bass%20boosted.mp3?dl=1"
             if (Url == Wide) {
+                if (Emitter) {
+                    holoPos(1, Emitter:pos() + vec(0, 0, 100))
+                }
                 holoAlpha(1, 255)
             }
-            
-            if (Url != Wide) {
-                holoAlpha(1, 0)
-            }
+            else { holoAlpha(1, 0) }
         }
     }
 }
 
+local ProgBar    = MusicData["ProgBar", number]
 local PrevPageID = MusicData["Page-", number]
 local NextPageID = MusicData["Page+", number]
 
-local PrevSong = MusicData["Song-ID", number]
-local NextSong = MusicData["Song+ID", number]
-local PlayPaus = MusicData["PlayPauseID", number]
+local VolumeUpID = MusicData["Vol+", number]
+local VolumeDwID = MusicData["Vol-", number]
+
+local PrevSong = MusicData["Song-", number]
+local NextSong = MusicData["Song+", number]
+local PlayPaus = MusicData["PlayPause", number]
 
 #[
 local VolUp = MusicData["Vol-ID", number]
@@ -252,47 +268,46 @@ local VolDown = MusicData["Vol+ID", number]
 local VolID = MusicData["VolID", number]
 ]#
 
-local MaxPage = MusicData["MaxPage", number]
-local Page = MusicData["CurPage", number]
+local VolumeID = MusicData["VolID", number]
+local MaxPage  = MusicData["MaxPage", number]
+local Page     = MusicData["CurPage", number]
 local Cooldown = MusicData["Cooldown", number] * 1000
 
 event tick() {
     local Curtick = curtime()
     local Tick = MusicData["tick", number]
-    
-    if (WebAudio:isValid()) {
-        FFT = WebAudio:getFFT()
-    }
-    
-    if (Curtick > Tick + 0.5) {
+
+    if (WebAudio:isValid()) { FFT = WebAudio:getFFT() }
+    else { FFT = array() }
+
+    if (Curtick > Tick + 0.3) {
         MusicData["tick", number] = Curtick
-        
+
         if (WebAudio:isValid()) {
             Time   = WebAudio:getTime()
             Length = WebAudio:getLength()
-            
-            if (Length > 0 & Time >= Length - 0.1) {
+
+            if (Length > 0 & Time >= Length - 0.3) {
                 MusicData["CurSong", number] = MusicData["CurSong", number] + 1
-                
-                if (MusicData["Loop", number]) {
+
+                if (MusicData["Loop", number] == 1) {
                     if (MusicData["CurSong", number] > MusicData["MaxSong", number]) {
                         MusicData["CurSong", number] = 1
                     }
                 } else {
                     MusicData["CurSong", number] = clamp(MusicData["CurSong", number], 1, MusicData["MaxSong", number])
                 }
-                
-                local Name = MusicData[MusicData["CurSong", number], array][2, string]
-                local Url  = MusicData[MusicData["CurSong", number], array][1, string]
+
+                local Name = SongList[MusicData["CurSong", number], array][2, string]
+                local Url  = SongList[MusicData["CurSong", number], array][1, string]
                 MusicData["CurURL", string] = Url
+
                 EGP:egpSetText(MusicData["NameID", number], Name)
-                
                 playSong(Url, MusicData["Volume", number], MusicData["Radius", number])
             }
-        
+
             EGP:egpPos(MusicData["PointerID", number], vec2(Time/Length * 512, 400 + EGP:egpSize(51):y()/2))
             EGP:egpSize(MusicData["RunBar", number], vec2(Time/Length * 512, 8))
-            
             EGP:egpSetText(MusicData["TimeID", number], format("%02d:%02d", Time/60, Time%60))
             EGP:egpSetText(MusicData["LengthID", number], format("%02d:%02d", Length/60, Length%60))
         }
@@ -302,131 +317,167 @@ event tick() {
 for (I = 1, MusicData["MaxListed", number]) {
     local Down = 0
     local ButtonID = MusicData["bListID" + I, number]
-    
+
     if (EGP:isButton(ButtonID) & !Down) {
-        
-        local Name = MusicData[I + (Page - 1) * 10, array][2, string]
-        local Url  = MusicData[I + (Page - 1) * 10, array][1, string]
-        
+        local Name = SongList[I + (Page - 1) * 10, array][2, string]
+        local Url  = SongList[I + (Page - 1) * 10, array][1, string]
+
         if (MusicData["CurURL", string] & MusicData["CurURL", string] == Url) {
             EGP:egpColor(ButtonID, vec(255, 0, 0))
         } else {
             EGP:egpColor(ButtonID, vec(0, 255, 255))
-            MusicData["CurURL", string] = Url
             EGP:egpSetText(MusicData["NameID", number], Name)
-            
+            EGP:egpSetText(VolumeID, MusicData["Volume", number]:toString())
+            EGP:egpColor(155, vec(255))
+            EGP:egpColor(156, vec(255))
+
+            MusicData["CurURL", string] = Url
             playSong(Url, MusicData["Volume", number], MusicData["Radius", number])
             MusicData["CurSong", number] = I + (Page - 1) * 10
             MusicData["Playing", number] = 1
         }
-        
+
         timer("down" + I, Cooldown)
         Down = 1
     }
-    
+
     if (clk("down" + I)) {
         EGP:egpColor(ButtonID, vec(255))
         Down = 0
     }
 }
 
+function pageChanged() {
+    local MaxListed = MusicData["MaxListed", number]
+    EGP:egpSetText(MusicData["Page", number], format("%02d", MusicData["CurPage", number]))
+
+    for (I = 1, MusicData["MaxListed", number]) {
+        local Name = format("%02d. %s", I + (MusicData["CurPage", number] - 1) * MaxListed, SongList[I + (MusicData["CurPage", number] - 1) * MaxListed, array][2, string])
+        EGP:egpSetText(MusicData["bListID" + I, number] + MusicData["MaxListed", number], Name)
+    }
+}
+
 local Down = 0
 
-if (EGP:isButton(PrevPageID) & !Down) {
+if (EGP:isButton(ProgBar) & !Down) {
+    timer("down" + PrevPageID, Cooldown)
+    Down = 1
+    
+    MusicData["tick", number] = MusicData["tick", number] - 0.3
+    if (WebAudio:isValid()) {   
+        local Time = EGP:egpPos(ProgBar):distance(EGP:egpCursor(User))/512 * Length
+        MusicData["GetTime", number] = Time
+        WebAudio:setTime(Time)
+        WebAudio:update()
+        if (MusicData["Playing", number]) {
+            WebAudio:play()
+        }
+    }
+}
+elseif (EGP:isButton(PrevPageID) & !Down) {
+    timer("down" + PrevPageID, Cooldown)
+    Down = 1
+
     Page = Page - 1
     #Page = clamp(Page, 1, MaxPage)
-    if (Page < 1) {
-        Page = MaxPage
-    }
+    if (Page < 1) { Page = MaxPage }
     MusicData["CurPage", number] = Page
-    
-    EGP:egpColor(PrevPageID, vec(50))
-    
-    Down = 1
-    timer("down" + PrevPageID, Cooldown)
+    EGP:egpColor(PrevPageID, vec(50))    
+    pageChanged()
 }
 elseif (EGP:isButton(NextPageID) & !Down) {
+    timer("down" + NextPageID, Cooldown)
+    Down = 1
+
     Page = Page + 1
     #Page = clamp(Page, 1, MaxPage)
-    if (Page > MaxPage) {
-        Page = 1
-    }
+    if (Page > MaxPage) { Page = 1 }
     MusicData["CurPage", number] = Page
-    
     EGP:egpColor(NextPageID, vec(50))
-        
-    Down = 1
-    timer("down" + NextPageID, Cooldown)
+    pageChanged()
 }
 elseif (EGP:isButton(PrevSong) & !Down) {
+    timer("down" + PrevSong, Cooldown)
+    Down = 1
+
     local CurSong = MusicData["CurSong", number]
-    
     CurSong = CurSong - 1
     MusicData["CurSong", number] = CurSong
     MusicData["CurSong", number] = clamp(MusicData["CurSong", number], 1, MusicData["MaxSong", number])
-    
-    EGP:egpColor(PrevSong, vec(50))
-    
-    local Name = MusicData[MusicData["CurSong", number], array][2, string]
-    local Url  = MusicData[MusicData["CurSong", number], array][1, string]
+
+    local Name = SongList[MusicData["CurSong", number], array][2, string]
+    local Url  = SongList[MusicData["CurSong", number], array][1, string]
     MusicData["CurURL", string] = Url
+
+    EGP:egpColor(PrevSong, vec(50))
     EGP:egpSetText(MusicData["NameID", number], Name)
-    
     playSong(Url, MusicData["Volume", number], MusicData["Radius", number])
-    
-    timer("down" + PrevSong, Cooldown)
-    Down = 1
 }
 elseif (EGP:isButton(NextSong) & !Down) {
+    timer("down" + NextSong, Cooldown)
+    Down = 1
+
     local CurSong = MusicData["CurSong", number]
-    
     CurSong = CurSong + 1
     MusicData["CurSong", number] = CurSong
     MusicData["CurSong", number] = clamp(MusicData["CurSong", number], 1, MusicData["MaxSong", number])
-    
-    EGP:egpColor(NextSong, vec(50))
-    
-    local Name = MusicData[MusicData["CurSong", number], array][2, string]
-    local Url  = MusicData[MusicData["CurSong", number], array][1, string]
+
+    local Name = SongList[MusicData["CurSong", number], array][2, string]
+    local Url  = SongList[MusicData["CurSong", number], array][1, string]
     MusicData["CurURL", string] = Url
+
+    EGP:egpColor(NextSong, vec(50))
     EGP:egpSetText(MusicData["NameID", number], Name)
-    
     playSong(Url, MusicData["Volume", number], MusicData["Radius", number])
-    
-    timer("down" + NextSong, Cooldown)
-    Down = 1
 }
 elseif (EGP:isButton(PlayPaus) & !Down) {
-    EGP:egpColor(PlayPaus, vec(50))
-    
+    Down = 1
+    timer("down" + PlayPaus, Cooldown)
+
     MusicData["Playing", number] = !MusicData["Playing", number]
-    
+    EGP:egpColor(PlayPaus, vec(50))
+
     if (WebAudio:isValid()) {
         if (MusicData["Playing", number]) {
-            WebAudio:play()
             WebAudio:setTime(MusicData["GetTime", number])
-            
+            WebAudio:play()
+
             EGP:egpColor(155, vec(255))
             EGP:egpColor(156, vec(255))
         } else {
             MusicData["GetTime", number] = WebAudio:getTime()
             WebAudio:pause()
-            
+
             EGP:egpColor(155, vec(255, 100, 0))
             EGP:egpColor(156, vec(255, 100, 0))
         }
+    } else {
+        EGP:egpColor(155, vec(255))
+        EGP:egpColor(156, vec(255))
     }
-    
-    Down = 1
-    timer("down" + PlayPaus, Cooldown)
 }
-
-if (changed(Page)) {
-    EGP:egpSetText(MusicData["Page", number], format("%02d", MusicData["CurPage", number]))
-     
-    for (I = 1, MusicData["MaxListed", number]) {
-        local Name = format("%02d. %s", I + (MusicData["CurPage", number] - 1) * 10, MusicData[I + (MusicData["CurPage", number] - 1) * 10, array][2, string])
-        EGP:egpSetText(MusicData["bListID" + I, number] + MusicData["MaxListed", number], Name)
+elseif (EGP:isButton(VolumeUpID) & !Down) {
+    if (WebAudio:isValid()) {
+        local Volume = MusicData["Volume", number]
+        Volume += 10
+        if (Volume > 200) { Volume = 200 }
+        WebAudio:setVolume(Volume)
+        WebAudio:update()
+        MusicData["Volume", number] = Volume
+        
+        EGP:egpSetText(VolumeID, Volume:toString())
+    }
+}
+elseif (EGP:isButton(VolumeDwID) & !Down) {
+    if (WebAudio:isValid()) {
+        local Volume = MusicData["Volume", number]
+        Volume -= 10
+        if (Volume < 0) { Volume = 0 }
+        WebAudio:setVolume(Volume)
+        WebAudio:update()
+        MusicData["Volume", number] = Volume
+        
+        EGP:egpSetText(VolumeID, Volume:toString())
     }
 }
 
@@ -440,39 +491,17 @@ elseif (clk("down" + NextPageID)) {
 }
 elseif (clk("down" + PrevSong)) {
     EGP:egpColor(PrevSong, vec(255))
+    EGP:egpColor(155, vec(255))
+    EGP:egpColor(156, vec(255))
     Down = 0
 }
 elseif (clk("down" + NextSong)) {
     EGP:egpColor(NextSong, vec(255))
+    EGP:egpColor(155, vec(255))
+    EGP:egpColor(156, vec(255))
     Down = 0
 }
 elseif (clk("down" + PlayPaus)) {
     EGP:egpColor(PlayPaus, vec(255))
     Down = 0
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
