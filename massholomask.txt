@@ -1,0 +1,54 @@
+@name MassHoloMask
+@inputs 
+@outputs PropCount
+@persist Array:array Num Tick PropMode
+@trigger 
+@strict
+
+propSpawnUndo(0)
+propSpawnEffect(0)
+
+findByClass("prop_*")
+findSortByDistance(entity():pos())
+Array = findToArray()
+
+Num       = 1
+Tick      = 0
+PropCount = 0
+PropMode  = 0
+
+event tick() {
+    Cur = curtime()
+    if (Cur > Tick + 0.05) {
+        Tick = Cur
+        
+        if (!PropMode) {
+            if (Num < Array:count() & holoCanCreate()) {
+                local Ent = Array[Num, entity]
+                if (Ent:isValid()) {
+                    holoCreate(Num, Ent:pos(), vec(1.02), Ent:angles(), Ent:getColor(), Ent:model())
+                    #holoMaterial(Num, Ent:getMaterial())
+                    #holoMaterial(Num, "debug/debugdrawflat")
+                    holoMaterial(Num, "debug/debugportals")
+                    #holoMaterial(Num, "debug/debugempty")
+                    Num++
+                }
+            }
+        } else {
+            if (Num < Array:count() & propCanCreate()) {
+                local Ent = Array[Num, entity]
+                
+                if (Ent:isValid()) {
+                    P = propSpawn(Ent:model(), Ent:pos(), Ent:angles(), 1)
+                    P:setMaterial(Ent:getMaterial())
+                    P:setMaterial("debug/debugempty")
+                    P:setColor(Ent:getColor())
+                    #P:propStatic(1)
+                    P:setMass(50000)
+                    PropCount++
+                    Num++
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,57 @@
+@name hologramRadar
+@inputs 
+@outputs 
+@persist Ply:array [IconScale RadarScale]:number
+@trigger 
+@strict
+
+IconScale  = 0.3
+RadarScale = 1
+Div = 30
+Ply = players()
+
+holoCreate(100, entity():toWorld(vec(0, 0, 3)), RadarScale * vec(30, 30, 0)/Div, entity():toWorld(ang()), vec(10), "models/hunter/plates/plate2x2.mdl")
+holoMaterial(100, "debug/debugdrawflat")
+holoParent(100, entity())
+
+foreach (K:number, V:entity = Ply) {
+    if (holoCanCreate()) {
+        holoCreate(K, V:pos(), IconScale * vec(1, 5, 1)/Div, ang(180, 0, 0), vec(0, 255, 0), "models/squad/sf_bars/sf_bar25x25x8.mdl")
+        holoCreate(K+20, V:pos(), IconScale * vec(2, 2, 0.0025)/Div, ang(0, 0, 0), vec(0, 255, 0), "models/hunter/tubes/tube2x2x025.mdl")
+        holoMaterial(K, "debug/debugdrawflat")
+        holoMaterial(K+20, "debug/debugdrawflat")
+        holoParent(K+20, K)
+    }
+}
+
+event tick() {
+    holoAng(100, ang())
+    foreach (K:number, V:entity = Ply) {
+        if (V:isValid()) {
+            holoPos(K, holoEntity(100):toWorld((V:pos():setZ(0)/(Div*10)) + vec(0, 0, 3)))
+            if (V:inVehicle()) {
+                holoAng(K, holoEntity(100):toWorld(V:vehicle():toLocal(V:eyeAngles() + ang(0, -90, 0))))
+                holoAng(K+20, ang(0, V:vehicle():angles():yaw(), 0))
+                holoModel(K+20, "models/hunter/misc/platehole1x1a.mdl")
+            } else {
+                holoAng(K, ang(0, V:eyeAngles():yaw(), 0))
+                holoAng(K+20, ang())
+                holoModel(K+20, "models/hunter/tubes/tube1x1x8.mdl")
+            }
+            holoAng(K+20, ang())
+            
+            if (V:aimEntity():isValid() & (V:aimEntity():isPlayer() | V:aimEntity():isNPC()) & !V:inVehicle()) {
+                holoColor(K, vec(255, 0, 0))
+            } else {
+                holoColor(K, vec(0, 255, 0))
+            }
+        } else {
+            reset()
+            #break
+        }
+    }
+}
+
+event playerConnected(_:entity) {
+    reset()
+}

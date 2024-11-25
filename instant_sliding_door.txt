@@ -1,0 +1,134 @@
+@name Instant_Sliding_Door
+@inputs 
+@outputs 
+@persist [Door_1 Door_2 Chip]:entity Door_Count:number Door_Model:string MaxMoveRange Length Move LockUse MoveVar MoveSpeed
+@persist Automate OffsetY
+@trigger 
+
+if (first() | duped()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    
+    Chip = entity()
+    Chip:propDraw(0)
+    
+    OffsetY = 90
+    Door_Count = 2
+    
+    Automate   = 1
+    
+    MoveSpeed  = 5
+    Door_Model = "models/props_building_details/Storefront_Template001a_Bars.mdl"
+    #Door_Model = "models/maxofs2d/logo_gmod_b.mdl"
+    
+    function entity entity:door_spawn(Model:string, Position:vector, Angle:angle, Freeze) {
+        local Pos = This:toWorld(Position)
+        local Ang = This:toWorld(Angle)
+        
+        local Prop = propSpawn(Model, Pos, Ang, Freeze)
+        Prop:propStatic(1)
+        return Prop
+    }
+    
+    if (Door_Count == 1) {
+        Door_1 = Chip:door_spawn(Door_Model, vec(0,0,0), ang(0,0,0),  1)
+    } elseif (Door_Count == 2) {
+        Door_1 = Chip:door_spawn(Door_Model, vec(0,0,0), ang(0,0,0),  1)
+        Door_2 = Chip:door_spawn(Door_Model, vec(0,0,0), ang(0,0,0),  1)
+    }
+    
+    #Chip:setAng(ang(0,owner():eyeAngles():yaw(),0))
+    
+    X = Door_1:boxSize():x()
+    Y = Door_1:boxSize():y()
+    Z = Door_1:boxSize():z()
+    
+    if (Y > X) {
+        Length = Y
+    } elseif (X > Y) {
+        Length = X
+    }
+    if (OffsetY > 0) {
+        Chip:setAng(ang(0,OffsetY,0))
+    }
+}
+interval(50)
+
+findInSphere(Chip:pos(), Length)
+findClipToClass("player")
+
+Find = findToArray()
+if (Find:count() <= 0) {
+    if (Door_Count == 1) {
+        Door_1:setColor(vec(255))
+    } elseif (Door_Count == 2) {
+        Door_1:setColor(vec(255))
+        Door_2:setColor(vec(255))
+    }
+}
+foreach (K, V:entity = Find) {
+    if (!Automate) {
+        AimEnt = V:aimEntity()
+        Use = V:keyUse()
+        if (Door_Count == 1) {
+            if (AimEnt == Door_1 & Use & !LockUse) {
+                LockUse = 1
+                Move = !Move
+                timer("Use", 1000)
+            }
+        } elseif (Door_Count == 2) {
+            if ((AimEnt == Door_1 | AimEnt == Door_2) & Use & !LockUse) {
+                LockUse = 1
+                Move = !Move
+                timer("Use", 1000)
+            }
+        }
+        if (Door_Count == 1) {
+            if (AimEnt == Door_1) {
+                Door_1:setColor(vec(0,255,0))
+            } else {
+                Door_1:setColor(vec(255))
+            }
+        } elseif (Door_Count == 2) {
+            if (AimEnt == Door_1 | AimEnt == Door_2) {
+                Door_1:setColor(vec(0,255,0))
+                Door_2:setColor(vec(0,255,0))
+            } else {
+                Door_1:setColor(vec(255))
+                Door_2:setColor(vec(255))
+            }
+        }
+    } else {
+        Dist = V:pos():distance(Chip:pos())
+        if (Dist < Length) {
+            Move = 1
+        } else {
+            Move = 0
+        }
+    }
+}
+
+if (changed(Chip:angles())) {
+    if (Door_Count == 1 ) {
+        Door_1:setAng(Chip:toWorld(ang()))
+    } elseif (Door_Count == 2) {
+        Door_1:setAng(Chip:toWorld(ang(0,0,0)))
+        Door_2:setAng(Chip:toWorld(ang(0,0,0)))
+    }
+}
+
+MoveVar += clamp(Move*Length - MoveVar, -MoveSpeed, MoveSpeed)
+
+if (Door_Count == 1) {
+    local Pos1 = Chip:toWorld(vec(0, MoveVar,Door_1:height()/2))
+    Door_1:setPos(Pos1)
+} elseif (Door_Count == 2) {
+    local Pos1 = Chip:toWorld(vec(0, MoveVar+Length/2,Door_1:height()/2))
+    local Pos2 = Chip:toWorld(vec(0,-MoveVar-Length/2,Door_1:height()/2))
+    Door_1:setPos(Pos1)
+    Door_2:setPos(Pos2)
+}
+
+if (clk("Use")) {
+    LockUse = 0
+}

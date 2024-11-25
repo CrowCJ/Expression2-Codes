@@ -1,0 +1,38 @@
+@name MingeSphere
+@inputs 
+@outputs 
+@persist 
+@trigger 
+if (first()) {
+    #E = findPlayerByName("Nervio")
+    E = entity()
+
+    Scl = 100
+    Color = vec(100)
+    holoCreate(1, E:pos()+vec(0,0,(372*3/4)*Scl*0), vec(-Scl), E:angles(), vec4(Color,225), "models/hunter/misc/sphere375x375.mdl")
+    holoMaterial(1, "debug/debugportals")
+    holoParent(1, E)
+    #holoCreate(2, E:pos()+vec(0,0,(372*3/4)*Scl*0), vec(-Scl), E:angles(), vec4(Color,250), "models/hunter/misc/sphere375x375.mdl")
+    holoMaterial(2, "debug/debugportals")
+    holoParent(2, E)
+#[    Scale = -50
+    foreach (K, V:entity = players()) {
+        holoCreate(K, V:pos(), vec(Scale), V:eyeAngles(), vec4(0,0,0,200), "models/hunter/misc/sphere375x375.mdl")
+        holoMaterial(K, "debug/debugportals")
+        #holoMaterial(K, "debug/debugdrawflat")
+        holoParentAttachment(K, V, "eyes")
+    }]#
+    runOnTick(1)
+    holoPos(1,owner():pos())
+    holoParent(1,owner())
+}
+
+#holoColor(1, hsv2rgb(180*curtime()%360,1,1))
+
+#holoAlpha(1, 254*sin(curtime()*5)+254)
+
+#[foreach (K, V:entity = players()) {
+    holoPos(K, V:shootPos())
+    holoAng(K, V:eyeAngles()+ang(90,0,0))
+}]#
+

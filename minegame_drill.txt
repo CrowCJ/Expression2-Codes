@@ -1,0 +1,64 @@
+@name Minegame_Drill
+@inputs 
+@outputs 
+@persist Ent:entity Colors:array OreModel:string OreList:array Timer EnergyLevel Rotate
+@trigger 
+@model models/hunter/blocks/cube05x05x05.mdl
+
+if (first() | duped()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    
+    Ent = entity()
+    Ent:setMaterial("phoenix_storms/stripes")
+    
+    OreModel = "models/hunter/plates/plate025.mdl"
+    
+    Colors = array(
+        vec4(255, 200, 0, 255), 
+        vec4(0, 255, 255, 150),
+        vec4(33, 255, 0, 150)
+    )
+    
+    holoCreate(1, Ent:toWorld(vec(0, 0, 24)), vec(1.9, 1.9, 2.2), Ent:toWorld(ang()), vec(255), "cone")
+    holoCreate(2, Ent:toWorld(vec(0, 0, -12)), vec(1.5, 1.5, 2), Ent:toWorld(ang()), vec(255), "hq_stube_thin")
+    holoParent(1, Ent)
+    holoParent(2, Ent)
+    
+    rangerFilter(Ent)
+    rangerHitWater(0)
+    rangerPersist(1)
+}
+
+interval(100)
+
+if (clk("interval")) {
+    local Ranger = rangerOffset(1000, Ent:pos(), Ent:up())
+    
+    if (Ranger:distance() > 12 & Ranger:distance() < 30) {
+        Rotate += 1
+        holoAng(1, Ent:toWorld(ang(0, curtime()*60, 0)))
+        
+        if (Rotate % 20 == 0) {
+            local Num = randint(1, 10)
+            
+            if (propCanCreate()) {
+                local Match = (Num == 2) + (Num == 4)*2 + (Num == 5)*3
+                if (Colors[Match, vector4] != vec4()) {
+                    local Prop = propSpawn(OreModel, Ent:toWorld(vec(0, 0, -30)), randvec():toAngle(), 0)
+                    Prop:setMass(25)
+                    Prop:setMaterial("models/shiny")
+                    Prop:setColor(Colors[Match, vector4])
+                    
+                    Prop:applyForce(Ent:up()*Prop:mass()*-50)
+                    
+                    OreList:pushEntity(Prop)
+                    
+                    if (OreList:count() > 10) {
+                        OreList:shiftEntity():propDelete()
+                    }
+                }
+            }
+        }
+    }
+}

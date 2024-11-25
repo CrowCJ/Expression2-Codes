@@ -1,0 +1,31 @@
+@name Linkin Park Logo
+@inputs  EGP:wirelink
+@persist N
+@strict
+
+if (first() | duped() | ~EGP) {
+    N = 0
+    EGP:egpClear()
+    
+    for (I = 1, 10) {
+        N++
+        EGP:egpCircleOutline(N, vec2(256, 256), vec2(200, 200) + vec2(I))
+    }
+    EGP:egpDrawTopLeft(1)
+    local LineThick = 12
+    N++, EGP:egpLine(N, vec2(256, 54), vec2(120, 350))
+    EGP:egpSize(N, LineThick)
+    N++, EGP:egpLine(N, vec2(120, 350), vec2(400, 350))
+    EGP:egpSize(N, LineThick)
+    N++, EGP:egpLine(N, vec2(400, 350), vec2(280, 120))
+    EGP:egpSize(N, LineThick)
+    N++, EGP:egpLine(N, vec2(280, 120), vec2(150, 428))
+    EGP:egpSize(N, LineThick)
+    
+    N++, EGP:egpBox(N, vec2(240, 0), vec2(30, 200))
+    EGP:egpAngle(N, -25)
+    EGP:egpColor(N, vec())
+    N++, EGP:egpBox(N, vec2(158, 426), vec2(30, 200))
+    EGP:egpAngle(N, -25)
+    EGP:egpColor(N, vec())
+}

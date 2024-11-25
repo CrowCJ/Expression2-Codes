@@ -1,0 +1,19 @@
+@name Light
+@inputs  Seat:entity
+@outputs On
+@persist 
+@strict
+@model models/sprops/rectangles/size_1/rect_3x3x3.mdl
+
+if (first() | dupefinished()) {
+    On = 0
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (!Seat) { exit() }
+    if (!Seat:driver()) { exit() }
+    
+    if (Seat:driver() & Player == Seat:driver() & Key == "f" & Down) {
+        On = !On
+    }
+}

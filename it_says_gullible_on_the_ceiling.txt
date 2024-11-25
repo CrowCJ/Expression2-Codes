@@ -1,0 +1,44 @@
+@name it says gullible on the ceiling
+@inputs 
+@outputs 
+@persist Target:entity
+@trigger 
+@strict
+if (first()) {
+    Target = noentity()
+    holoCreate(0)
+    holoAlpha(0, 0)
+    Text = "gullible"
+    Spac = array(Text:length()/2 * 6, 10, 8, 5, 5, 8, 6, 6)
+    for (I = 1, Text:length()) {
+        local Mdl = "models/sprops/misc/alphanum/alphanum_l_" + Text[I] + ".mdl"
+        local Pos = vec(-Spac[I, number], 0, 0)
+        holoCreate(I, holoEntity(I-1):toWorld(Pos), vec(1), holoEntity(0):toWorld(ang(0, 180, 0)), vec(255), Mdl)
+        holoMaterial(I, "debug/debugdrawflat")
+        holoParent(I, 0)
+    }
+}
+
+event chat(Player:entity, Message:string, _:number) {
+    if (Player == owner()) {
+        if (Message:lower() ==  "it says gullible on the ceiling." | Message:lower() == "it says gullible on the ceiling") {
+            findByClass("player")
+            findSortByDistance(owner():pos())
+            findExcludeEntity(owner())
+            
+            R = findToArray()
+            
+            if (R[2, entity]) {
+                Target = R[2, entity]
+            }
+        }
+    }
+}
+event tick() {
+    if (Target) {
+        holoPos(0, Target:pos() + vec(0, 0, 120))
+        holoAng(0, ang(0, curtime() * 45, 0))
+    } else {
+        holoPos(0, entity():pos())
+    }
+}

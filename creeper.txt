@@ -1,0 +1,21 @@
+@name Creeper
+@inputs 
+@outputs 
+@persist Timer Trigger Key:string
+@trigger 
+
+if (first()) {
+    runOnTick(1)
+    
+    function number entity:press(Key:string) {
+        return changed(This:keyPressed(Key)) & This:keyPressed(Key)
+    }
+    
+    entity():setMass(inf())
+    Key = "g"
+    Timer = 1 #in Seconds
+}
+
+if (owner():press(Key) & owner():isAlive()) {
+    boom(owner():boxCenterW(), 500, 2500)
+}

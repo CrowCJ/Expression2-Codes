@@ -1,0 +1,41 @@
+@name MoveInRange
+@inputs 
+@outputs 
+@persist Seat:entity Max X Y Mul
+@trigger 
+@strict
+
+propSpawnUndo(0)
+X = Y = 0
+Max = 200
+Mul = 2
+Seat = seatSpawn("models/nova/chair_wood01.mdl", entity():toWorld(vec(0, 0, 6)), entity():toWorld(ang(0, 90, 0)), 1)
+
+event tick() {
+    local Forward = 0
+    local Left = 0
+    local Right = 0
+    local Back = 0
+    
+    if (Seat:driver()) {
+        D = Seat:driver()
+        
+        Forward = D:keyForward()
+        Left    = D:keyLeft()
+        Right   = D:keyRight()
+        Back    = D:keyBack()
+    }
+    
+    X += (Back - Forward) * Mul
+    Y += (Right - Left) * Mul
+    
+    X = clamp(X, -Max, Max)
+    Y = clamp(Y, -Max, Max)
+    
+    Pos = vec(X, Y, 6)
+    
+    Pos = clamp(Pos, vec(-Max, -Max, 6), vec(Max, Max, 6))
+    
+    Seat:setPos(entity():toWorld(Pos))
+    Seat:setAng(entity():toWorld(ang(0, 90 + (Left - Right)*5, (Back - Forward))))
+}

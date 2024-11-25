@@ -1,0 +1,155 @@
+@name MineGame_2
+@inputs  EGP:wirelink
+@outputs Ops CpuUsage
+@persist GameTable:table
+@trigger 
+@strict
+
+if (first() | duped() | ->EGP) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    
+    GameTable = table()
+    
+    GameTable["Init", table] = table(
+        "MaxStone" = 10,
+        "MaxHit"   = 10,
+        "Tick"     = 0,
+        "HitTick"  = 0,
+        "ScreenTick" = 0
+    )
+    
+    GameTable["Models", table] = table(
+        "models/hunter/blocks/cube05x05x05.mdl",
+        "models/hunter/blocks/cube075x075x075.mdl"
+    )
+    
+    GameTable["Drops", table] = table(
+        "models/props_mining/rock_caves01.mdl",
+        "models/props_mining/rock_caves01a.mdl",
+        "models/props_mining/rock_caves01b.mdl",
+        "models/props_mining/rock_caves01c.mdl"
+    )
+    
+    GameTable["Stones", array] = array()
+    GameTable["HitOnStone", array] = array()
+    GameTable["PlayerData", table] = table()
+    GameTable["ScoreTable", table] = table()
+    
+    if (EGP) {
+        EGP:egpClear()
+        for (I = 1, 10) {
+            String = format("%02d. <Name> \t <Score>", I)
+            EGP:egpText(I, String, vec2(3, 512 / 10 * (I-1) + 3))
+            EGP:egpSize(I, 25)
+        }
+    }
+}
+
+event tick()
+{
+    local Curtick = curtime()
+    local ScreenTick = GameTable["Init", table]["ScreenTick", number]
+    local Tick    = GameTable["Init", table]["Tick", number]
+    local HitTick = GameTable["Init", table]["HitTick", number]
+    local Max    = GameTable["Init", table]["MaxStone", number]
+    local MaxHit = GameTable["Init", table]["MaxHit", number]
+    local Stones = GameTable["Stones", array]
+    local HitOns = GameTable["HitOnStone", array]
+    
+    if (Curtick > Tick + 1)
+    {
+        GameTable["Init", table]["Tick", number] = Curtick
+        
+        local Ranger = rangerOffset(1000, entity():pos() + vec(random(-100, 100), random(-100, 100), 100), vec(0, 0, -1))
+        
+        if (GameTable["Stones", array]:count() < Max)
+        {
+            if (propCanCreate() & Ranger:pos():isInWorld())
+            {
+                local Model = GameTable["Models", table][randint(1, 2), string]
+                local Stone = propSpawn(Model, Ranger:pos(), ang(random(-180, 180), random(-180, 180), random(-180, 180)), 1)
+                Stone:propStatic(1)
+                Stone:setMass(50000)
+                
+                local Hit = MaxHit
+                
+                Stones:pushEntity(Stone)
+                HitOns:pushNumber(Hit)
+                GameTable["Stones", array] = Stones
+                GameTable["HitOnStone", array] = HitOns
+                
+            }
+        }
+    }
+    
+    if (Curtick > HitTick + 0.1)
+    {
+        GameTable["Init", table]["HitTick", number] = Curtick
+        
+        foreach (NumPly, Ply:entity = players())
+        {
+            local Score = GameTable["PlayerData", table]["Score", number]
+            local Key = Ply:keyAttack1()
+            
+            if (Ply:isAlive() & Key)
+            {
+                local AimEnt = Ply:aimEntity()
+                
+                foreach (ID, Stone:entity = GameTable["Stones", array])
+                {
+                    local Distance = Ply:pos():distance(Stone:pos())
+                    if (AimEnt == Stone & Distance <= 100)
+                    {
+                        local Ent = Stone
+                        local Hits = GameTable["HitOnStone", array][ID, number]
+                        
+                        Hits = Hits - 1
+                        GameTable["HitOnStone", array][ID, number] = Hits
+                        
+                        Ent:setColor(vec(255 - 255 * (Hits/MaxHit), 255 * (Hits/MaxHit), 0))
+                        
+                        if (Hits <= 0)
+                        {
+                            Ent:propBreak()
+                            GameTable["Stones", array]:remove(ID)
+                            GameTable["HitOnStone", array]:remove(ID)
+                            
+                            Score += 1
+                            GameTable["PlayerData", table]["Name", array][ID, string] = Ply:name()
+                            GameTable["PlayerData", table]["Score", array][ID, number] = Score
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if (Curtick > ScreenTick + 1)
+    {
+        GameTable["Init", table]["ScreenTick", number] = Curtick
+        
+        local Score = 0
+        foreach (ID, Ply:entity = players())
+        {
+            if (GameTable["PlayerData", table]["Score", array][ID, number] > Score) {
+                Score = GameTable["PlayerData", table]["Score", array][ID, number]
+            }
+        }
+        
+        GameTable["ScoreTable", table] = table()
+        
+        for (I = 1, 10)
+        {
+            local Name = ""
+            local Score = 0
+            local String = format("%02d. %s: %d", I, Name, Score)
+            EGP:egpSetText(I, String)
+        }
+    }
+    
+    Ops = ops()
+    CpuUsage = cpuUsage() * 1000000
+    
+    
+}

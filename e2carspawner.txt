@@ -1,0 +1,339 @@
+@name E2CarSpawner
+@inputs 
+@outputs 
+@persist [DriverSeat Base Base2 Chip]:entity
+@persist [SeatModel BaseModel Base2Model FrontWheel_Model TurnWheel_Model BackWheel_Model BlockModel]:string
+@persist [L_FrontBlock R_FrontBlock L_BackBlock L_BackBlock2 R_BackBlock R_BackBlock2]:entity
+@persist [L_FrontWheel L_TurnWheel R_FrontWheel R_TurnWheel]:entity
+@persist [L_BackWheel R_BackWheel L_BackWheel2 R_BackWheel2]:entity
+@persist [SphericalSize_Front SphericalSize_Back WheelSizeF WheelSizeB BackWheel2]:number
+@persist [BaseSpawn_ZOffset YawOffset Base2_ZOffset]:number
+@persist [FrontWheel_Offset BackWheel_Offset BackWheel_Offset2 DriverSeat_Offset]:vector
+@persist [ConstraintMode ConstraintFin Mass Mass2 FinishUnfreeze InvisibleWheels FWD BWD]:number
+@persist [Turn TurnSpeed MaxTurn_Angle Speed Slow_TurnAng Fast_TurnAng MulVector MulAngVel BrakeStrength]:number
+@persist [W A S D Force StuckBoost StuckIndicator Interval]
+@trigger 
+
+if (first()) {
+    function entity:stablized(Angle:angle, MulVector, MulAngVel) {
+        TarQ = quat(Angle)
+        CurQ = quat(This)    
+        Q = TarQ/CurQ     
+        V = This:toLocal(rotationVector(Q)+This:pos())
+        #Factors 150 and 12 can be adjusted to achieve best effect.
+        This:applyTorque((MulVector*V - MulAngVel*This:angVelVector())*This:inertia())
+    }
+    function entity:torque(Vector:vector) {
+        This:applyTorque(This:mass()*Vector)
+    }
+    function entity:brake(Num, Angle:angle, Strength) {
+        if (Num) {
+            #This:applyAngForce(Angle*-This:angVel()*This:mass()*Strength)
+            This:applyForce(This:mass()*-This:vel()*Strength*0.5)
+        }
+    }
+    function number entity:hold(Key:string) {
+        return This:keyPressed(Key)
+    }
+    
+    #propSpawnASync(1)
+    
+    Interval = 500
+    
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    enableConstraintUndo(0)
+    #runOnTick(1)
+    Chip = entity()
+    
+    SeatModel = "models/nova/jeep_seat.mdl"
+    BaseModel  = "models/sprops/rectangles/size_5/rect_48x480x3.mdl"
+    Alt_BaseModel = ""
+    if (Alt_BaseModel != "") {
+        BaseModel = Alt_BaseModel
+    }
+    Base2Model = "models/sprops/rectangles/size_3/rect_24x336x3.mdl"
+    
+    WheelSizeF = 40
+    WheelSizeB = 40
+    
+    if (WheelSizeF == 15) {
+        TurnWheel_Model = "models/sprops/geometry/fhex_12.mdl"
+    } else {
+        TurnWheel_Model  = "models/sprops/trans/wheel_c/wheel" +(WheelSizeF-5)+ ".mdl"
+    }
+    
+    BlockModel       = "models/sprops/geometry/sphere_24.mdl"
+    FrontWheel_Model = "models/sprops/trans/wheel_c/wheel" + WheelSizeF + ".mdl"   
+    BackWheel_Model  = "models/sprops/trans/wheel_c/wheel" + WheelSizeB + ".mdl"
+    BackWheel_Model  = "models/sprops/trans/wheel_b/wheel" + WheelSizeB + ".mdl"
+    
+    SphericalSize_Front = WheelSizeF/2.1
+    SphericalSize_Back  = WheelSizeB/2.1
+    
+    BaseSpawn_ZOffset  = 96
+    Base2_ZOffset      = -6
+    YawOffset         = 90
+    DriverSeat_Offset = vec( 200, 0, 6)
+    
+    FrontWheel_Offset = vec( 120, 54, -12)
+    BackWheel_Offset  = vec(-120, 54, -12)
+    
+    BackWheel2 = 0
+    BackWheel_Offset2 = vec(-220, 54, -12)
+    
+    InvisibleWheels = 0
+    FinishUnfreeze = 1
+    
+    FWD = 0
+    BWD = 1
+    TurnSpeed = 4
+    Slow_TurnAng = 45
+    Fast_TurnAng = 30
+    
+    Mass  = 50000
+    Mass2 = 10000
+    Force = 300
+    Boost = 100
+    BrakeStrength = 1
+    
+    MulVector = 5000
+    MulAngVel = 25
+}
+
+if (propCanCreate() & !ConstraintFin) {
+    if (!Base) {
+        interval(Interval*2)
+        Base = propSpawn(BaseModel, Chip:toWorld(vec(0, 0, BaseSpawn_ZOffset)), Chip:toWorld(ang(0, YawOffset, 0)), 1)
+        Base2 = propSpawn(Base2Model, Chip:toWorld(vec(0, 0, BaseSpawn_ZOffset+Base2_ZOffset)), Chip:toWorld(ang(0, YawOffset, 0)), 1)
+        Base2:setMass(Mass2)
+        noCollideAll(Base2, 1)
+        Base2:propDraw(0)
+        weld(Base, Base2)
+#[
+        Base3 = propSpawn(Base2Model, Chip:toWorld(vec(0, 0, BaseSpawn_ZOffset+Base2_ZOffset/2)), Chip:toWorld(ang(0, YawOffset, 0)), 1)
+        Base3:setMass(Mass2)
+        weld(Base2, Base3)
+        weld(Base3, Base)
+        noCollideAll(Base3, 1)
+        Base3:propDraw(0)
+]#
+    } elseif (Base & !ConstraintMode) {
+        interval(Interval)
+        if (!L_FrontWheel & !R_FrontWheel) {
+            L_FrontWheel = propSpawn(FrontWheel_Model, Base2:toWorld(vec(FrontWheel_Offset:x(), FrontWheel_Offset:y(), FrontWheel_Offset:z())), Base:toWorld(ang(0, 0, 0)), 1)
+            R_FrontWheel = propSpawn(FrontWheel_Model, Base2:toWorld(vec(FrontWheel_Offset:x(),-FrontWheel_Offset:y(), FrontWheel_Offset:z())), Base:toWorld(ang(0, 180, 0)), 1)
+        } elseif (!L_FrontBlock & !R_FrontBlock) {
+            L_FrontBlock = propSpawn(BlockModel, Base2:toWorld(vec(FrontWheel_Offset:x(), FrontWheel_Offset:y(), FrontWheel_Offset:z())), Base:toWorld(ang(0, 0, 0)), 1)
+            R_FrontBlock = propSpawn(BlockModel, Base2:toWorld(vec(FrontWheel_Offset:x(),-FrontWheel_Offset:y(), FrontWheel_Offset:z())), Base:toWorld(ang(0, 0, 0)), 1)
+        } elseif (!L_TurnWheel & !R_TurnWheel) {
+            L_TurnWheel = propSpawn(TurnWheel_Model, Base2:toWorld(vec(FrontWheel_Offset:x(), FrontWheel_Offset:y(), FrontWheel_Offset:z())), Base:toWorld(ang(0, 0, 0)), 1)
+            R_TurnWheel = propSpawn(TurnWheel_Model, Base2:toWorld(vec(FrontWheel_Offset:x(),-FrontWheel_Offset:y(), FrontWheel_Offset:z())), Base:toWorld(ang(0, 0, 0)), 1)
+        } elseif (!L_BackWheel & !R_BackWheel) {
+            L_BackWheel = propSpawn(BackWheel_Model, Base2:toWorld(vec(BackWheel_Offset:x(), BackWheel_Offset:y(), BackWheel_Offset:z())), Base:toWorld(ang(0, 0, 0)), 1)
+            R_BackWheel = propSpawn(BackWheel_Model, Base2:toWorld(vec(BackWheel_Offset:x(),-BackWheel_Offset:y(), BackWheel_Offset:z())), Base:toWorld(ang(0, 180, 0)), 1)
+        } elseif (!L_BackBlock & !R_BackBlock) {
+            L_BackBlock = propSpawn(BlockModel, Base2:toWorld(vec(BackWheel_Offset:x(), BackWheel_Offset:y(), BackWheel_Offset:z())), Base:toWorld(ang(0, 0, 0)), 1)
+            R_BackBlock = propSpawn(BlockModel, Base2:toWorld(vec(BackWheel_Offset:x(),-BackWheel_Offset:y(), BackWheel_Offset:z())), Base:toWorld(ang(0, 0, 0)), 1)
+        } elseif (!L_BackWheel2 & !R_BackWheel2 & BackWheel2) {
+            L_BackWheel2 = propSpawn(BackWheel_Model, Base2:toWorld(vec(BackWheel_Offset2:x(), BackWheel_Offset2:y(), BackWheel_Offset2:z())), Base:toWorld(ang(0, 0, 0)), 1)
+            R_BackWheel2 = propSpawn(BackWheel_Model, Base2:toWorld(vec(BackWheel_Offset2:x(),-BackWheel_Offset2:y(), BackWheel_Offset2:z())), Base:toWorld(ang(0, 180, 0)), 1)
+        } elseif (!L_BackBlock2 & !R_BackBlock2 & BackWheel2) {
+            L_BackBlock2 = propSpawn(BlockModel, Base2:toWorld(vec(BackWheel_Offset2:x(), BackWheel_Offset2:y(), BackWheel_Offset2:z())), Base:toWorld(ang(0, 0, 0)), 1)
+            R_BackBlock2 = propSpawn(BlockModel, Base2:toWorld(vec(BackWheel_Offset2:x(),-BackWheel_Offset2:y(), BackWheel_Offset2:z())), Base:toWorld(ang(0, 0, 0)), 1)
+        } elseif (!DriverSeat) {
+            DriverSeat = seatSpawn(SeatModel, Base:toWorld(DriverSeat_Offset), Base:toWorld(ang(0, -YawOffset, 0)), 1)
+            ConstraintMode = 1
+        }
+    }
+    
+    if (ConstraintMode) {
+        if (BackWheel2 == 1) {
+            Array = array(
+                Base,
+                L_FrontWheel, R_FrontWheel,
+                L_TurnWheel,  R_TurnWheel,
+                L_BackWheel,  R_BackWheel,
+                L_BackWheel2, R_BackWheel2
+            )
+        } else {
+            Array = array(
+                Base,
+                L_FrontWheel, R_FrontWheel,
+                L_TurnWheel,  R_TurnWheel,
+                L_BackWheel,  R_BackWheel
+            )
+        }
+        
+        for (I = 1, Array:count()) {
+            local Ent = Array[I, entity]
+            Ent:setMass(Mass)
+            noCollide(Base, Ent)
+            if (InvisibleWheels) {
+                if (Ent != Base) {
+                    Ent:propDraw(0)
+                }
+            }
+            if (Ent != Base) {
+                Ent:propPhysicalMaterial("rubber")
+            }
+        }
+        local SphericalFront = array(L_FrontWheel, R_FrontWheel)
+        if (BackWheel2 == 1) {
+            SphericalBack  = array(L_BackWheel, R_BackWheel, L_BackWheel2, R_BackWheel2)
+        } else {
+            SphericalBack  = array(L_BackWheel, R_BackWheel)
+        }
+        for (I = 1, SphericalFront:count()) {
+            SphericalFront[I, entity]:makeSpherical(SphericalSize_Front)
+        }
+        for (I = 1, SphericalBack:count()) {
+            SphericalBack[I, entity]:makeSpherical(SphericalSize_Back)
+        }
+        if (BackWheel2 == 1) {
+            Blocks = array(
+                L_FrontBlock, R_FrontBlock,
+                L_BackBlock,  R_BackBlock,
+                L_BackBlock2, R_BackBlock2
+            )
+        } else {
+            Blocks = array(
+                L_FrontBlock, R_FrontBlock,
+                L_BackBlock,  R_BackBlock
+            )
+        }
+        for (I = 1, Blocks:count()) {
+            local Ent = Blocks[I, entity]
+            Ent:setMass(Mass)
+            Ent:propDraw(0)
+            weld(Base2, Ent)
+            noCollideAll(Ent, 1)
+            if (InvisibleWheels) {
+                Ent:propDraw(0)
+            }
+        }
+        weld(DriverSeat, Base)
+        noCollideAll(DriverSeat, 1)
+        noCollide(Base, DriverSeat)
+        noCollide(R_FrontWheel, L_FrontWheel)
+
+        noCollide(R_BackWheel, L_BackWheel)
+        if (BackWheel2) {
+            noCollide(R_BackWheel2, L_BackWheel2)
+            noCollide(L_BackWheel, L_BackWheel2)
+            noCollide(R_BackWheel, R_BackWheel2)
+        }
+        noCollideAll(L_TurnWheel, 1)
+        noCollideAll(R_TurnWheel, 1)
+        
+        ballsocket(L_TurnWheel, Base2:toLocal(L_TurnWheel:pos()), L_FrontBlock, vec(0, 0, -45), vec(0, 0, 135), vec(), 1)
+        ballsocket(R_TurnWheel, Base2:toLocal(R_TurnWheel:pos()), R_FrontBlock, vec(0, 0, -45), vec(0, 0, 135), vec(), 1)
+
+        local Rope  = 0
+        local RopeW = 1
+        Rope++, rope(Rope, Base2, vec(FrontWheel_Offset:x(), 0, 0), L_TurnWheel, vec(0, 0, 12), 0, RopeW, "", 1)
+        Rope++, rope(Rope, Base2, vec(FrontWheel_Offset:x(), 0, 0), L_TurnWheel, vec(0, 0, -12), 0, RopeW, "", 1)
+        Rope++, rope(Rope, Base2, vec(0, 0, 0), L_TurnWheel, vec(0, 0, 12), 0, RopeW, "", 1)
+        Rope++, rope(Rope, Base2, vec(0, 0, 0), L_TurnWheel, vec(0, 0, -12), 0, RopeW, "", 1)
+        Rope++, rope(Rope, Base2, vec(FrontWheel_Offset:x(), 0, 0), R_TurnWheel, vec(0, 0, 12), 0, RopeW, "", 1)
+        Rope++, rope(Rope, Base2, vec(FrontWheel_Offset:x(), 0, 0), R_TurnWheel, vec(0, 0, -12), 0, RopeW, "", 1)
+        Rope++, rope(Rope, Base2, vec(0, 0, 0), R_TurnWheel, vec(0, 0, 12), 0, RopeW, "", 1)
+        Rope++, rope(Rope, Base2, vec(0, 0, 0), R_TurnWheel, vec(0, 0, -12), 0, RopeW, "", 1)
+        
+
+        axis(L_FrontWheel, vec(0, 0, 0), L_TurnWheel, vec(0, 0, 0), 0, vec(0, 1, 0))
+        axis(R_FrontWheel, vec(0, 0, 0), R_TurnWheel, vec(0, 0, 0), 0, vec(0, 1, 0))
+   
+        axis(L_BackWheel, vec(0, 0, 0), L_BackBlock, vec(0, 0, 0), 0, vec(0, 1, 0))
+        axis(R_BackWheel, vec(0, 0, 0), R_BackBlock, vec(0, 0, 0), 0, vec(0, 1, 0))
+        if (BackWheel2) {
+            axis(L_BackWheel2, vec(0, 0, 0), L_BackBlock2, vec(0, 0, 0), 0, vec(0, 1, 0))
+            axis(R_BackWheel2, vec(0, 0, 0), R_BackBlock2, vec(0, 0, 0), 0, vec(0, 1, 0))
+        }
+        print(_HUD_PRINTCENTER, "Done")
+        Base:soundPlay(1, 0, "garrysmod/content_downloaded.wav")
+        ConstraintFin = 1
+        if (FinishUnfreeze) {
+            local UnFreeze = Base:getConnectedEntities()
+            for (I = 1, UnFreeze:count()) {
+                UnFreeze[I, entity]:propFreeze(0)
+            }
+            local Count = UnFreeze:count()-1
+            print("PropCount: " + Count)
+            print("Total Mass: " + Count*Mass)
+        }
+        runOnTick(1)
+    }
+} else {
+    #Control Input
+    local Driver = DriverSeat:driver()
+    W = Driver:hold("w")
+    S = Driver:hold("s")
+    A = Driver:hold("a")
+    D = Driver:hold("d")
+    Shift = Driver:hold("lshift")
+    Space = Driver:hold("space")
+    
+    Speed = toUnit("km/h", Base:vel():length())
+    if (Speed < 20) {
+        MaxTurn_Angle = Slow_TurnAng
+    } else {
+        MaxTurn_Angle = Fast_TurnAng
+    }
+    if (FrontWheel_Offset:x() < 0) {
+        Inverse = -1
+    } else {
+        Inverse = 1
+    }
+    Turn += clamp((A-D)*MaxTurn_Angle*Inverse - Turn, -TurnSpeed, TurnSpeed)
+
+    L_TurnWheel:stablized(Base:angles() + ang(0, Turn, 0), MulVector, MulAngVel)
+    R_TurnWheel:stablized(Base:angles() + ang(0, Turn, 0), MulVector, MulAngVel)
+    
+    if ((W | S) & Speed < 5) {
+        StuckIndicator++
+        if (StuckIndicator > 50) {
+            StuckBoost+=100
+        }
+    } else {
+        StuckBoost = 0
+        StuckIndicator = 0
+    }
+    
+    
+    if (FWD & !BWD) {
+        L_FrontWheel:torque(vec(0, 1, 0)*(W-S)*(Force + Boost*Shift + StuckBoost))
+        R_FrontWheel:torque(vec(0,-1, 0)*(W-S)*(Force + Boost*Shift + StuckBoost))
+    } elseif (BWD & !FWD) {
+        L_BackWheel:torque(vec(0, 1, 0)*(W-S)*(Force + Boost*Shift + StuckBoost))
+        R_BackWheel:torque(vec(0,-1, 0)*(W-S)*(Force + Boost*Shift + StuckBoost))
+    } else {
+        L_FrontWheel:torque(vec(0, 1, 0)*(W-S)*(Force + Boost*Shift + StuckBoost))
+        R_FrontWheel:torque(vec(0,-1, 0)*(W-S)*(Force + Boost*Shift + StuckBoost))
+        L_BackWheel:torque(vec(0, 1, 0)*(W-S)*(Force + Boost*Shift + StuckBoost))
+        R_BackWheel:torque(vec(0,-1, 0)*(W-S)*(Force + Boost*Shift + StuckBoost))
+    }
+    
+    if (BackWheel2 & (BWD | (BWD & FWD))) {
+        L_BackWheel2:torque(vec(0, 1, 0)*(W-S)*(Force + Boost*Shift))
+        R_BackWheel2:torque(vec(0,-1, 0)*(W-S)*(Force + Boost*Shift))
+    }
+    
+    if (Space) {
+        if (BackWheel2 == 0) {
+            Ent = array(
+                L_FrontWheel, R_FrontWheel,
+                L_BackWheel,  R_BackWheel
+            )
+        } else {
+            Ent = array(
+                L_FrontWheel, R_FrontWheel,
+                L_BackWheel,  R_BackWheel,
+                L_BackWheel2,  R_BackWheel2
+            )
+        }
+        for (I = 1, Ent:count()) {
+            Ent[I, entity]:brake(Space, ang(1, 0, 0), BrakeStrength)
+        }
+    }
+}

@@ -1,0 +1,74 @@
+@name GG
+@inputs 
+@outputs 
+@persist Array:array
+@strict
+
+if (first()) {
+    Array = array()
+    
+    timer("clear", 500)
+}
+
+event entityCreated(Entity:entity) {
+    try {
+        if (Entity:owner() != owner() | !Entity:isValidPhysics() | !Entity:isValid()) { exit() }
+        
+        #Entity:noCollideAll(1)
+        Entity:setMass(50000)
+        #Entity:propSetFriction(0)
+    #[
+        local X = cosr(random(-1, 1))
+        local Y = sinr(random(-1, 1))
+        local Z = random(0, 1)
+    ]#
+        #Entity:applyAngForce(randvec():toAngle() * Entity:mass() * 10)
+        #Entity:applyForce(vec(X, Y, Z) * Entity:mass() * 1000)
+        #Entity:setMaterial("debug/debugportals")
+        #Entity:setColor(hsv2rgb(Array:count() % 360, 1, 1))
+        Entity:applyForce(owner():eye() * Entity:mass() * 10000)
+        
+        Array:pushEntity(Entity)
+    } catch (_:string) {}
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner()) {
+        if (Key == "g" & Down & Array:count() > 0) {
+            try {
+                for (I = 1, 32) {
+                    local V = Array[I, entity]
+                    if (V:isValid()) {
+                        V:propDelete()
+                    }
+                    
+                    Array:remove(I)
+                }
+            } catch (_:string) {}
+                
+        }
+        
+        if (Key == "g" & Down & Array:count() == 0) {
+            hint("Nothing Left!", 1)
+        }
+    }
+}
+
+if (clk("clear")) {
+    timer("clear", 500)
+    if (Array == array()) { exit() }
+    
+    foreach (K:number, V:entity = Array) {
+        if (!V:isValid()) {
+            Array:remove(K)
+        }
+    }
+    
+    if (Array:count() >= 1) {
+        if (Array[1, entity]:isValid()) {
+            Array:shiftEntity():propDelete()
+        } else {
+            Array:shift()
+        }
+    }
+}

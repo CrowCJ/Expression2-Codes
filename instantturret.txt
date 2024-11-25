@@ -1,0 +1,25 @@
+@name InstantTurret
+@inputs  [Turret]:wirelink
+@outputs 
+@persist 
+@trigger 
+@strict
+
+event tick() {
+    if (!Turret) { exit() }
+    let Dir = owner():aimPos() - Turret:entity():pos()
+    let Ang = Dir:toAngle() + ang(90, 0, 0)
+    
+    Turret:entity():setPos(owner():pos() + vec(0, 0, 120))
+    Turret:entity():setAng(Ang)
+    
+    if (!Turret:entity():isPlayerHolding()) { Turret:entity():propFreeze(1) }
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner() & Key == "g") {
+        if (!Turret) { exit() }
+        
+        Turret["Fire", number] = Down
+    }
+}

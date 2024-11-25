@@ -1,0 +1,24 @@
+@name Array Reverse
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@strict
+
+Init = array(vec(-1273, -5947, -8284),vec(7463, -5989, -8284),vec(9327, -5989, -8284),vec(9681, -6189, -8284),vec(9868, -6518, -8284),vec(9880, -9806, -8284),vec(9712, -10184, -8284),vec(9390, -10377, -8284),vec(-6158, -10414, -8284),vec(-6648, -10218, -8284),vec(-6812, -9805, -8284),vec(-6807, -6513, -8284),vec(-6649, -6142, -8284),vec(-6065, -5981, -8284))
+
+function array reverseA(Arr:array) {
+    local Count = Arr:count()
+    local Temp  = vec()
+    for (I = 1, Count/2) {
+        Temp = Arr[Count - I + 1, vector]
+        Arr[Count - I + 1, vector] = Arr[I, vector]
+        Arr[I] = Temp
+    }
+    
+    return Arr
+}
+
+R = reverseA(Init)
+
+print(R)

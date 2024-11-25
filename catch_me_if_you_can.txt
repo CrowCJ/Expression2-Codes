@@ -1,0 +1,38 @@
+@name Catch Me If You Can
+@inputs  Prop:entity
+@outputs 
+@persist Delay Tick OriginZ GridSize
+@trigger 
+@strict
+
+
+if (first()) {
+    Tick  = 0
+    Delay = 0.05
+    GridSize = 24
+}
+
+if (->Prop & Prop) {
+    OriginZ = Prop:pos():z()
+}
+    
+event tick() {
+    local Cur = systime()
+    if (Cur > Tick + Delay) {
+        Tick = Cur
+        if (->Prop & Prop:isValid()) {
+            foreach (_:number, Ply:entity = players()) {
+                if (Ply:isAlive() & Ply:aimEntity() == Prop) {
+                    local Pos = Prop:pos() + vec(random(-25, 25), random(-25, 25), random(OriginZ - Prop:pos():z(), 25))
+                    local RPos = round(Pos/GridSize) * GridSize
+                    if (RPos:isInWorld()) {
+                        Prop:setPos(RPos)
+                    } else {
+                        continue
+                    }
+                    break
+                }
+            }
+        }
+    }
+}

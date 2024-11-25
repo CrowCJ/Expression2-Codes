@@ -1,0 +1,46 @@
+@name GetKeyPos
+@inputs 
+@outputs 
+@persist N Text:string
+@trigger 
+@strict
+
+if (first()) {
+    Text = ""
+    print("Path[\"" + map() + "\", table] = table(")
+    N = 0
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner()) {
+        if (Key == "g" & Down) {
+            Pos = round(owner():aimPos() + vec(0, 0, 36))
+            X = Pos:x()
+            Y = Pos:y()
+            Z = Pos:z()
+            N++
+            holoCreate(N)
+            holoScale(N, vec(1))
+            holoPos(N, Pos)
+            holoColor(N, vec(255))
+            holoMaterial(N, "debug/debugdrawflat")
+            
+            String = format("vec(%d,%d,%d),", X, Y, Z)
+            #print(String)
+            Text += String
+        }
+        
+        if (Key == "p" & Down) {
+            print(Text)
+            #print("Copied to Clipboard")
+            #setClipboardText(Text)
+        }
+        
+        if (Key == "r" & Down) {
+            holoDeleteAll(1)
+            Text = ""
+        }
+    }
+}
+
+

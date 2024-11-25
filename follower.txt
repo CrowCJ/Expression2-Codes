@@ -1,0 +1,36 @@
+@name Follower
+@inputs  Prop:entity
+@outputs 
+@persist [Owner]:entity
+@trigger 
+
+if (first() | duped()) {
+    function entity:stabilized(Angle:angle, MulVector:number, MulAngVel:number) {
+        TarQ = quat(Angle)
+        CurQ = quat(This)    
+        Q = TarQ/CurQ     
+        V = This:toLocal(rotationVector(Q)+This:pos())
+        #Factors 150 and 12 can be adjusted to achieve best effect.
+        This:applyTorque((MulVector*V - MulAngVel*This:angVelVector())*This:inertia())
+    }
+    Owner = owner()
+}
+event tick() {
+    if (!Prop:isValid()) { exit() }
+    Prop:propGravity(0)
+    Dir = (Owner:pos() + vec(0,0,Owner:height()/2) + Owner:right()*100 - Prop:pos() - Prop:vel()*0.75)*Prop:mass()
+    
+    foreach (_:number, V:entity = players()) {
+        Dist = Prop:pos():distance(V:pos())
+        if (Dist < 100) {
+            Ent = V
+        } else {
+        Ent = Owner
+        }
+        Ang = (Ent:pos() + vec(0,0,Ent:height()/2) - Prop:pos()):toAngle()
+    }
+    
+    Prop:applyForce(Dir)
+    
+    Prop:stabilized(Ang,250,12)
+}

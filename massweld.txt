@@ -1,0 +1,54 @@
+@name massweld
+@inputs 
+@outputs 
+@persist Find:array Num1 Num2
+@trigger 
+@strict
+
+if (first()) {
+    enableConstraintUndo(0)
+    
+    Num1 = 0
+    Num2 = 1
+    #findByModel("models/hunter/plates/plate8x32.mdl")
+    
+    findByClass("prop_*")
+    findClipToPlayerProps(owner())
+    #findByModel("models/hunter/blocks/cube8x8x8.mdl")
+    
+    #E = findPlayerByName("lazy")
+    E = owner()
+    
+    #findIncludePlayerProps(E)
+    Find = findToArray()
+        
+    #E = owner()
+#[
+    
+    foreach (K, V:entity = TempFind) {
+        if (V:owner() == E) {
+            Find:pushEntity(V)
+        }
+    }
+]#
+}
+
+event tick() {
+    if (Num2 <= Find:count()) {
+        if (Num1 <= Find:count()) {
+            Num1++
+            Ent  = Find[Num1, entity]
+            Ent2 = Find[Num2, entity]
+            if (Ent2:owner() == E & Ent:owner() == E) {
+                Ent2:weld(Ent)
+            }
+        } else {
+            Num1 = 0
+            Num2++
+        }
+    } else {
+        hint("DONE", 3)
+        selfDestruct()
+        #Num = 1
+    }
+}

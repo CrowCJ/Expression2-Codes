@@ -1,0 +1,43 @@
+@name EGP Button Example
+@inputs  EGP:wirelink User:entity
+@outputs 
+@persist N Max Down
+@trigger 
+@strict
+
+if (first() | ~EGP) {
+    Down = 0
+    N = 0
+    EGP:egpClear()
+    
+    EGP:egpDrawTopLeft(1)
+    Max = 12
+    for (I = 1, Max) {
+        for (J = 1, Max) {
+            N++, EGP:egpBox(N, vec2(4 + (512)/Max * (J-1), 4 + (512)/Max * (I-1)), vec2((512/Max) - 8, (512/Max) - 8))
+            EGP:egpSize(N, 4)
+            #N++, EGP:egpText(N, "A", vec2(8 + (512)/Max * (J-1), 8 + (512)/Max * (I-1)))
+        }
+    }
+}
+
+function number wirelink:isButton(Index:number){
+    return This:egpObjectContainsPoint(Index, This:egpCursor(User)) ? 1 : 0
+}
+
+for (I = 1, Max*Max) {    
+    if (EGP:isButton(I) & !Down) {
+        Down = 1
+        EGP:egpColor(I, vec(0, 255, 0))
+        EGP:entity():emitSound("buttons/blip1.wav", 100, clamp(I, 10, 255), 100)
+        
+        timer("D", 250)
+    }
+}
+
+if (clk("D")) {
+    for (I = 1, Max*Max) {
+        EGP:egpColor(I, vec(255))
+    }
+    Down = 0
+}

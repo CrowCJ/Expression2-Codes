@@ -1,0 +1,112 @@
+@name Magnetic[Original]
+@inputs 
+@outputs 
+@persist [E Seat Target]:entity Res MinZ MaxZ Tick Yaw Go Slice Mass
+@trigger 
+
+if (first()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    #enableConstraintUndo(0)
+    
+#[
+    Path = "models/hunter/blocks/cube05x05x025.mdl"
+    #Path = "models/sprops/geometry/sphere_144.mdl"
+    #Path = "models/props_interiors/BathTub01a.mdl"
+    E = propSpawn(Path, entity():toWorld(vec(0, 0, 50)), ang(), 0)
+]#
+    E = entity():isWeldedTo()
+    entity():parentTo(E)
+    E:propDrag(0)
+    E:propSetFriction(0)
+
+    #E:propPhysicalMaterial("ice")
+        
+    #noCollide(Seat, E)
+
+    #E = entity()
+    #E:setMaterial("models/shiny")
+    E:setMaterial("debug/debugdrawflat")
+    #E:setMaterial("models/debug/debugwhite")
+    E:setAlpha(255)
+    
+    E:propFreeze(0)
+    E:setMass(50)
+    
+    Res = -0.5z
+    
+    #noCollideAll(E, 0)
+    runOnTick(1)
+    
+    function entity:stablized(Angle:angle, MulVector, MulAngVel) {
+        TarQ = quat(Angle)
+        CurQ = quat(This)    
+        Q = TarQ/CurQ     
+        V = This:toLocal(rotationVector(Q)+This:pos())
+        #Factors 150 and 12 can be adjusted to achieve best effect.
+        This:applyTorque((MulVector*V - MulAngVel*This:angVelVector())*This:inertia())
+    }
+
+    Filter = E:getConnectedEntities()
+    rangerHitWater(1)
+    rangerFilter(Filter)
+    rangerPersist(1)
+    
+    Mass = 0
+    for (I = 1, Filter:count()) {
+        Mass += Filter[I, entity]:mass()
+    }
+
+    
+    #Target = owner()
+}
+
+Dist = E:pos():distance(entity():pos())
+Ranger = rangerOffset(1000000, E:pos() - vec(0, 0, 0), vec(0, 0, -1))
+
+Avg = (E:boxSize():x() + E:boxSize():y() + E:boxSize():z())/3
+
+MinZ = Avg/4+5
+MaxZ = Avg/4+50
+
+#E:applyForce((vec(0, 0, gravity()*0.0227) - vec(E:vel():x()*Res, E:vel():y()*Res, E:vel():z()*Res))*E:mass())
+
+#[
+if (Dist > 4000) {
+    E:setPos(entity():toWorld(vec(0, 0, 50)))
+    E:propSetVelocity(vec())
+    entity():soundPlay(1, 0, "buttons/button19.wav")
+}
+
+E:setColor(vec(255*(Dist/5000), 255-255*(Dist/4000), 0))
+]#
+
+
+if (serverUUID() == "d19075b6-ba2c-4b50-8b66-a9b3ef1fe2cf") { #!CFC Server
+    if (Ranger:distance() < MaxZ & Ranger:distance() >= MinZ) {
+        E:applyForce((vec(0, 0, gravity()*0.0211) - vec(E:vel():x()*Res, E:vel():y()*Res, E:vel():z()))*Mass)
+    }
+    if (Ranger:distance() < MinZ) {
+        E:applyForce((vec(0, 0, gravity()*0.1) - vec(E:vel():x()*Res, E:vel():y()*Res, E:vel():z()))*Mass)
+    }
+} else {
+    if (Ranger:distance() < MaxZ & Ranger:distance() >= MinZ) {
+        E:applyForce((vec(0, 0, gravity()*0.0227) - vec(E:vel():x()*Res, E:vel():y()*Res, E:vel():z()))*Mass)
+    }
+    if (Ranger:distance() < MinZ) {
+        E:applyForce((vec(0, 0, gravity()*0.1) - vec(E:vel():x()*Res, E:vel():y()*Res, E:vel():z()))*Mass)
+    }
+}
+
+if (E:isUnderWater()) {
+    E:applyForce(vec(0, 0, gravity()*100)*E:mass())
+}
+
+if (Target:isValid()) {
+    local Pos = ((vec(Target:pos():x(), Target:pos():y(), 0) - E:pos():setZ(0))*10 - E:vel())*Mass
+    E:applyForce(Pos)
+}
+
+E:stablized(ang(0, E:angles():yaw(), 0), 250, 20)
+#E:stablized(ang(0, owner():eyeAngles():yaw(), 0), 250, 50)
+

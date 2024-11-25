@@ -1,0 +1,47 @@
+@name Minegame_Collector
+@inputs 
+@outputs GoldCollected
+@persist Chip:entity [Colors Bonus]:array
+@trigger 
+@model models/hunter/blocks/cube1x1x025.mdl
+
+
+#HIGHEST: 13057
+
+if (first() | duped()) {
+    Chip = entity()
+    
+    Colors = array(
+        vec4(255, 200, 0, 255), 
+        vec4(0, 255, 255, 150),
+        vec4(33, 255, 0, 150)
+    )
+    
+    Bonus = array(
+        1,
+        5,
+        10
+    )
+}
+interval(250)
+
+findInBox(Chip:toWorld(Chip:boxMin()), Chip:toWorld(Chip:boxMax()))
+findExcludeEntity(Chip)
+findIncludeModel("models/hunter/plates/plate025.mdl")
+
+Find = findToArray()
+
+foreach (OreID, Ore:entity = Find)
+{
+    if (Ore:isValid() & Ore:isValidPhysics()) {  
+        foreach (ID, Color4:vector4 = Colors)
+        {          
+            local Match = (Ore:getColor4() == Color4) * Bonus[ID, number]
+            Ore:propDelete()
+            
+            GoldCollected += Match
+            Chip:setName("Collected: " + GoldCollected)
+        }
+    }
+}
+

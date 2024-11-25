@@ -1,0 +1,58 @@
+@name fftwave2
+@inputs FFT:array
+@outputs 
+@persist Tick Interval Amount ScaleFactor [Colors FFTn]:array Spacing
+@trigger 
+@strict
+
+if (first() | duped()) {
+    entity():setAlpha(100)
+    Tick = 0
+    Interval = 0.05
+    
+    Amount = 40
+    Spacing = 3
+    ScaleFactor = 0.39
+    
+    FFTn   = array()
+    Colors = array()
+    #Color = vec(255)
+    
+    holoCreate(0, entity():toWorld(vec(6.5, 0, 1)), vec(3.2, 10.1, 0.4) * ScaleFactor, entity():toWorld(ang()), vec(0), "cube")
+    holoParent(0, entity())
+    
+    for (I = 1, Amount) {
+        local Pos = vec(0, (-Amount/2 - 0.5 + I) * Spacing, 0) * ScaleFactor
+        local Ang = ang()
+        local Color = hsv2rgb(360/Amount * I % 360, 1, 1)
+        Colors:pushVector(Color)
+        holoCreate(I, entity():toWorld(Pos), vec(3, 0.25, 0.25) * ScaleFactor, entity():toWorld(Ang), Color, "cube")
+        holoMaterial(I, "debug/debugdrawflat")
+        holoParent(I, entity())
+    }
+}
+
+event tick() {
+    local CurTick = curtime()
+    if (CurTick > Tick + Interval) {
+        Tick = CurTick
+    }
+}
+
+if (ops() < 4000 & ~FFT) {
+    for (I = 1, Amount) {
+        FFTn[I, number] = FFTn[I, number] + (FFT[I, number] - FFTn[I, number]) * tickInterval() * 32
+        FFTn[I, number] = FFTn[I, number] * (1 + ln(FFTn[I, number])^2) / 30
+        if (FFT[I, number] == 0) { FFTn[I, number] = 0 }
+        FFTn[I, number] = clamp(FFTn[I, number], 0, 256)
+        local M   = -FFTn[I, number]/128 * 12
+        local X   = M + 15
+        local Y   = (-Amount/2 - 0.5 + I) * Spacing
+        local Z   = 3
+        local Pos = vec(X, Y, Z) * ScaleFactor
+        #local Ang = ang(0, 0, 0)
+        holoPos(I, entity():toWorld(Pos))
+        #holoAng(I, entity():toWorld(Ang))
+        #holoColor(I, Colors[I, vector] * clamp(FFTn[I, number]/64, 0, 1))
+    }
+}

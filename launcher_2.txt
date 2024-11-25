@@ -1,0 +1,53 @@
+@name Launcher_2
+@inputs 
+@outputs 
+@persist Table:table Delete:array Lock #Shoot
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    #propSpawnASync(1)
+    Lock   = 0
+    Delete = array()
+    Table  = table(
+        "potato" = "models/props_phx/misc/potato_launcher_explosive.mdl",
+        "mk82"   = "models/props_phx/mk-82.mdl",
+        "ball"   = "models/dav0r/hoverball.mdl",
+        "trap"   = "models/hunter/triangles/trapezium3x3x1.mdl",
+        "box"    = "models/hunter/blocks/cube025x025x025.mdl",
+        "bomb"   = "models/props_phx/ww2bomb.mdl",
+        "choice" = "bomb",
+    
+        "force"  = 5000,
+        "gravity"= 0
+    )
+}
+
+event tick() {
+    if (owner():keyPressed("mouse_left") & !owner():keyPressed("q") & propCanCreate() & !Lock) {
+        Lock = 1
+        timer("unlock", 50)
+        local Player = owner()        
+        local Mdl = Table[Table["choice", string], string]
+         
+        local Launch = propSpawn(Mdl, Player:shootPos() + Player:eye()*48 + Player:vel()*tickInterval()*1.5, Player:eyeAngles(), 0)
+        Launch:makeSpherical(12)
+        #Launch:propPhysicalMaterial("water")
+        Launch:setAlpha(0)
+        Launch:propGravity(Table["gravity", number])
+        Launch:setMass(100)
+        Launch:setTrails(9999, 0, 10, "trails/laser", vec(255, 127, 0), 255)
+        Launch:applyForce(Player:eye() * Launch:mass() * Table["force", number])
+           
+        Delete:pushEntity(Launch)
+        
+        if (Delete:count() > 10) {
+           if (Delete[1, entity]:isValid()) {
+               Delete:shiftEntity():propDelete()
+           }
+        }
+    }
+}
+
+if (clk("unlock")) { Lock = 0 }

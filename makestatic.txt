@@ -1,0 +1,14 @@
+@name MakeStatic
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@strict
+
+if (entity():isWeldedTo()) {
+    E = entity():isWeldedTo()
+    E:propStatic(1)
+}
+
+hint("Done", 1)
+selfDestruct()

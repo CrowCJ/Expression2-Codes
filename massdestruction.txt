@@ -1,0 +1,32 @@
+@name MassDestruction
+@inputs 
+@outputs 
+@persist Array:array Num Tick
+@trigger 
+@strict
+
+findByClass("prop_*")
+Array = findToArray()
+
+Num = 0
+Tick = 0
+
+event tick() {
+    Cur = curtime()
+    if (Cur > Tick + 0.2) {
+        Tick = Cur
+    }
+    
+    while (perf() & Num < Array:count() & propCanCreate()) {
+        Num++
+        if (Array[Num, entity]:isValid()) {
+            Bomb = propSpawn("models/props_phx/mk-82.mdl", Array[Num, entity]:pos(), ang(), 1)
+            Bomb:propBreak()
+        }
+    }
+    
+    if (Num >= Array:count()) {
+        print("done")
+        selfDestruct()
+    }
+}

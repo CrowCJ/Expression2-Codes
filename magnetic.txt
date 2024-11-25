@@ -1,0 +1,111 @@
+@name Magnetic
+@inputs 
+@outputs 
+@persist [E Seat]:entity Res MinZ MaxZ Tick Yaw Go Slice
+@trigger 
+
+if (first()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    #enableConstraintUndo(0)
+    
+    Path = "models/hunter/misc/shell2x2.mdl"
+    E = propSpawn(Path, entity():toWorld(vec(0, 0, 50)), ang(), 0)
+    E:propSetFriction(0)
+    E:propPhysicalMaterial("ice")
+    Seat = seatSpawn("models/nova/airboat_seat.mdl", E:massCenter()-vec(0, 0, 25), ang(), 0)
+        
+    #noCollide(Seat, E)
+
+    #E = entity()
+    #E:setMaterial("debug/debugdrawflat")
+    E:setMaterial("models/debug/debugwhite")
+    E:setAlpha(50)
+    #E:setMaterial("models/shiny")
+    E:propFreeze(0)
+    E:setMass(50000)
+    
+    Res = 0.05
+    Yaw = 0
+    
+    #noCollideAll(E, 0)
+    runOnTick(1)
+    
+    function entity:stablized(Angle:angle, MulVector, MulAngVel) {
+        TarQ = quat(Angle)
+        CurQ = quat(This)    
+        Q = TarQ/CurQ     
+        V = This:toLocal(rotationVector(Q)+This:pos())
+        #Factors 150 and 12 can be adjusted to achieve best effect.
+        This:applyTorque((MulVector*V - MulAngVel*This:angVelVector())*This:inertia())
+    }
+    
+    timer("blades", 1000)
+    
+    Filter = E:getConnectedEntities()
+    Filter:pushEntity(Seat)
+    rangerHitWater(1)
+    rangerFilter(Filter)
+    rangerPersist(1)
+}
+
+#[
+if (clk("blades")) {
+    for (I = 1, 4) {
+        if (propCanCreate()) {
+            Sin = sin(360/4*I) * 112
+            Cos = cos(360/4*I) * 112
+            Temp = propSpawn("models/hunter/misc/sphere2x2.mdl", E:toWorld(vec(Sin, Cos, 0)), E:toWorld(ang(0, 360/4*I, 0)), 0)
+            Temp:setColor(vec())
+            Temp:setMaterial(E:getMaterial())
+            Temp:setAlpha(E:getAlpha())
+            Temp:setMass(1000)
+            #weld(Temp, E)
+            #axis(E, vec(0, 0, 0), Temp, vec(0, 0, 0))
+            #ballsocket(E, vec(Sin/2, Cos/2, 0), Temp, vec(-180), vec(180), vec(0))
+            #noCollide(Temp, E)
+        }
+    }
+}
+]#
+
+Driver = Seat:driver()
+W = Driver:keyForward()
+S = Driver:keyBack()
+A = Driver:keyLeft()
+D = Driver:keyRight()
+
+if (!Driver) {
+    #noCollideAll(E, 1)
+    Seat:setPos(E:massCenter() + vec(0, 0, -25) + Seat:forward()*75 + E:vel()*tickInterval())
+} else {
+    Seat:setPos(E:massCenter() + vec(0, 0, -25) + E:vel()*tickInterval())
+    #noCollideAll(E, 0)
+}
+
+Yaw += clamp((A - D)*5 - Yaw, -1, 1)
+Go  += clamp((W-S)*5 - Go,  -1, 1)
+
+Avg = (E:boxSize():x() + E:boxSize():y() + E:boxSize():z())/3
+
+MinZ = Avg/2+10
+MaxZ = Avg/2+15
+
+Ranger = rangerOffset(10000, E:pos(), vec(0, 0, -1))
+if (Ranger:distance() < MaxZ & Ranger:distance() >= MinZ) {
+    E:applyForce((vec(0, 0, gravity()*0.0227) - vec(E:vel():x()*Res, E:vel():y()*Res, E:vel():z()))*E:mass())
+}
+if (Ranger:distance() < MinZ) {
+    E:applyForce((vec(0, 0, gravity()*0.1) - vec(E:vel():x()*Res, E:vel():y()*Res, E:vel():z()))*E:mass())
+}
+if (Ranger:distance() < MinZ-(MinZ*0.5)) {
+    E:applyForce((vec(0, 0, gravity()*0.3) - vec(E:vel():x()*Res, E:vel():y()*Res, E:vel():z()))*E:mass())
+}
+
+Slice = 500*(Driver:isValid())
+
+Seat:stablized(ang(0, Seat:angles():yaw() + Yaw, 0), 250, 10)
+
+E:stablized(ang(0, E:angles():yaw(), 0), 250, 20)
+E:applyAngForce(ang(0, Slice, 0)*E:mass())
+E:applyForce(Seat:forward()*Go*E:mass()*10)

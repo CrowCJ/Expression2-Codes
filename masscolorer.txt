@@ -1,0 +1,92 @@
+@name MassColorer
+@inputs 
+@outputs 
+@persist Find:array Num E:entity #Render
+@trigger 
+
+if (first()) {
+    #Render = 1
+    Num = 0
+    #findByModel("models/hunter/plates/plate8x32.mdl")
+    
+    findByClass("prop_*")
+    #findByClass("primitive_*")
+    
+    #findSortByDistance(entity():pos())
+    #findByModel("models/hunter/blocks/cube8x8x8.mdl")
+    #findByModel("models/props_phx/trains/double_wheels.mdl")
+    findClipToPlayerProps(owner())
+    #E = findPlayerByName("lazy")
+    E = owner()
+    
+    #findIncludePlayerProps(E)
+    Find = findToArray()
+        
+    #E = owner()
+#[
+    
+    foreach (K, V:entity = TempFind) {
+        if (V:owner() == E) {
+            Find:pushEntity(V)
+        }
+    }
+]#
+}
+
+event tick() {    
+    while (perf() & Num <= Find:count()) {
+        Num++
+        Ent = Find[Num, entity]
+        if (Ent:owner() == E) {
+            #Ent:constraintBreak()
+            Ent:setMass(50000)
+            #Ent:propFreeze(0)
+            #Ent:setMaterial(M[randint(M:count()), string])
+            #Ent:setMaterial("")
+            #Ent:setMaterial("phoenix_storms/Future_vents")
+            #Ent:setMaterial("phoenix_storms/bluemetal")
+            #Ent:setMaterial("debug/debugportals")
+            #Ent:setMaterial("debug/debugdrawflat")
+            #Ent:setMaterial("debug/debugempty")
+            #Ent:setMaterial("models/props_wasteland/dirtwall001a")
+            #Ent:setMaterial("models/debug/debugwhite")
+            #Ent:setMaterial("phoenix_storms/window")
+            #Ent:setMaterial("models/rendertarget")
+            #Ent:setMaterial("sprops/sprops_grid_orange_12x12")
+            #Ent:setMaterial("sprops/sprops_grid_12x12")
+            #Ent:setMaterial("models/wireframe")
+            #Ent:noCollideAll(1)
+            #Ent:propPhysicalMaterial("ice")
+            #Ent:setMaterial("phoenix_storms/stripes")
+            #Ent:setMaterial("phoenix_storms/wire/pcb_blue")
+            #Ent:setColor(vec(255))
+            #Ent:setColor(vec(127, 95, 0))
+            #Ent:setColor(vec(255) * random(0.5, 1))
+            #Ent:setColor(vec(50, 255, 255))
+            #Ent:propStatic(1)
+            #Ent:setMass(1000)
+            #Ent:propBreak()
+            #Ent:propMakePersistent(0)
+            #Ent:setColor(vec(255)*(Num%2==0))
+            #Ent:setColor(hsv2rgb((360/Find:count()*(Num))%360, 0.8, 1))
+            #Ent:setColor(hsv2rgb((360/Find:count()*(255 - Num))%360, 1, 1)*0.8)
+            #Ent:setColor((vec(255, 0, 0) + vec(0, 255/Find:count() * Num, 255/Find:count() * Num)) * 0.6)
+            #Ent:setColor(vec(255, 200, 100))
+            #Ent:setAlpha(512/Find:count() * Num)
+            #Ent:setSkin(4)
+            #Ent:propPhysicalMaterial("ice")
+            #Ent:setColor(vec())
+            #Ent:setAlpha(100)
+                  
+            #Ent:propFreeze(0)
+            #noCollideAll(Ent,1)
+            #Ent:applyForce(vec(0,0,1)*Ent:mass()*50000)
+            #Ent:applyForce((Ent:pos() - entity():pos()):normalized() * Ent:mass()*5000)
+        }
+    }
+    if (Num >= Find:count()) {
+        hint("DONE", 3)
+        selfDestruct()
+        #Num = 1
+    }
+}

@@ -1,0 +1,57 @@
+@name Chaotic_Grid
+@inputs 
+@outputs 
+@persist Models:array Max Counted R Grid X Y
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    Models = array(
+        "models/buildingspack2_nolot/housing/1-0_apartments.mdl",
+        "models/buildingspack2_nolot/housing/1-1_apartments.mdl",
+        "models/buildingspack2_nolot/housing/1-2_apartments.mdl",
+        "models/buildingspack2_nolot/housing/1-3_apartments.mdl",
+        "models/buildingspack2/housing/1-0_apartments.mdl",
+        "models/buildingspack2/housing/1-1_apartments.mdl",
+        "models/buildingspack2/housing/1-2_apartments.mdl",
+        "models/buildingspack2/housing/1-3_apartments.mdl",
+        "models/buildingspack2/skyscraper/3-0_skyscraper_a.mdl",
+        "models/buildingspack2/skyscraper/3-1_skyscraper_b.mdl",
+        "models/buildingspack2/skyscraper/3-2_skyscraper_c.mdl",
+        "models/buildingspack2/skyscraper/3-3_skyscraper_d.mdl",
+        "models/buildingspack2/skyscraper/3-4_skyscraper_e.mdl"
+    )
+    
+    Counted = 0
+    
+    R = 2576
+    Grid = 5
+    X = 0
+    Y = 0
+    
+    Max = Grid * Grid
+}
+
+event tick() {
+    if (Counted < Max) {
+        if (propCanCreate()) {
+            #local Pos = vec(sinr(random(0, 360)) * R, cosr(random(0, 360)) * R, random(0, R))
+            local Pos = vec(X, Y, 0) * R
+            local Ang = ang(0, 0, 0)
+            #local Ang = (entity():toWorld(Pos) - entity():toWorld(vec(0, 0, 0))):toAngle() + ang(0, 0, 0)
+            local Mdl = Models[randint(1, Models:count()), string]
+            
+            local Prop = propSpawn(Mdl, entity():toWorld(Pos), entity():toWorld(Ang), 1)
+            Prop:propStatic(1)            
+            
+            Counted++
+            
+            X++
+        }
+        if (X >= Grid) {
+            X = 0
+            Y++
+        }
+    }
+}

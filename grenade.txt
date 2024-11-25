@@ -1,0 +1,82 @@
+@name Grenade
+@inputs 
+@outputs 
+@persist [Mdl ExplosiveMdl]:string Nade:entity Delay Timer Trail CanThrow Drag
+@trigger 
+@strict
+
+if (first()) {
+    Mdl = "models/weapons/w_npcnade.mdl"
+    ExplosiveMdl = "models/props_phx/mk-82.mdl"
+    
+    Nade = noentity()
+    CanThrow = 1
+    Delay = 1
+    Timer = 2
+    Drag  = 0 
+    Trail = 1
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner() & Key == "g" & Down & CanThrow) {
+        if (!Nade & propCanCreate()) {
+            CanThrow = 0
+            
+            local Vel = owner():vel()
+            owner():emitSound("weapons/pinpull.wav")
+            
+            Nade = propSpawn(Mdl, owner():shootPos() + owner():eye() * 25, ang(), 0)
+            Nade:propDrag(Drag)
+            Nade:applyForce((owner():eye() * 600 + vec(Vel:x(), Vel:y(), Vel:z())*0.5*tickInterval())*Nade:mass()*2)
+            if (Trail) {
+                Nade:setTrails(128, 128, 1, "trails/laser", vec(255, 0, 0), 255)
+            }
+            timer("Dedonate", Timer*1000)
+        }
+    }
+}
+
+event chat(Player:entity, Msg:string, _:number) {
+    if (Player == owner() & Msg:sub(1, 7) == "grenade" & CanThrow) {
+        if (!Nade & propCanCreate()) {
+            CanThrow = 0
+            
+            local Vel = owner():vel()
+            owner():emitSound("weapons/pinpull.wav")
+            
+            Nade = propSpawn(Mdl, owner():shootPos() + owner():eye() * 25, ang(), 0)
+            Nade:propDrag(Drag)
+            Nade:applyForce(owner():eye() * Nade:mass() * 600 + (vec(Vel:x(), Vel:y(), Vel:z()*0.25))*tickInterval())
+            if (Trail) {
+                Nade:setTrails(128, 128, 1, "trails/laser", vec(255, 0, 0), 255)
+            }
+            timer("Dedonate", Timer*1000)
+        }
+    }
+}
+
+if (clk("Dedonate")) {
+    owner():emitSoundStop("weapons/pinpull.wav")
+    for (I = 1, 4) {
+        if (propCanCreate()) {
+            local Pos = Nade:pos() + vec(sin(360/4*I), cos(360/4*I), 0) * 64
+            local Exp = propSpawn(ExplosiveMdl, Pos, ang(0, 360/4*I, 0), 1)
+            Exp:propBreak()
+        }
+    }
+    
+    Nade:propDelete()
+    Nade = noentity()
+    timer("Ready", Delay*1000)
+}
+
+if (clk("Ready")) {
+    hint("READY", 1)
+    CanThrow = 1
+}
+
+
+
+
+
+

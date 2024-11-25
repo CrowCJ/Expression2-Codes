@@ -1,0 +1,43 @@
+@name holo_create
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@strict
+
+function number entity:holo_create(Position:vector, Angle:angle)
+{
+    Num++
+    holoCreate(Num, This:toWorld(Position))
+    holoAng(Num, This:toWorld(Angle))
+    holoParent(Num, This)
+
+    return Num
+}
+    
+function holo_model(...Args:array)
+{
+    local Model = Args[1, string]
+    local Mat   = Args[2, string]
+    local Color = Args[3, vector]
+    
+    if (Args[1, string]) {
+        holoModel(Num, Model)
+    }
+    if (Args[2, string]) {
+        holoMaterial(Num, Mat)
+    }
+    if (Args[3, vector]) {
+        holoColor(Num, Color)
+    }
+}
+    
+function holo_scale(X, Y, Z)
+{
+    local Vector = vec(X, Y, Z)
+    holoScaleUnits(Num, Vector)
+}
+    
+CPU:holo_create(vec(0, 0, 0), ang(0, 0, 0))
+    holo_model("cube")
+    holo_scale(6, 12, 3)

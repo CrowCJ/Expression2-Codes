@@ -1,0 +1,109 @@
+@name Minegame_Conveyor
+@inputs 
+@outputs 
+@persist Ent:entity Y [Colors Barriers]:array
+@trigger 
+@model models/hunter/plates/plate1x4.mdl
+
+
+if (first() | duped()) {
+    #Ent = entity():isWeldedTo()
+    enableConstraintUndo(0)
+    propSpawnUndo(0)
+    
+    Ent = entity()
+    
+    noCollideAll(Ent, 0)
+    Ent:propPhysicalMaterial("ice")
+    holoCreate(1, Ent:toWorld(vec(0, 0, 0)), vec(1, 0.5, 1))
+    holoModel(1, "prism")
+    holoAng(1, Ent:toWorld(ang(0, 0, -90)))
+    holoParent(1, Ent)
+    
+    Ent:setMaterial("phoenix_storms/OfficeWindow_1-1")
+    
+    Colors = array(
+        vec4(255, 200, 0, 255), 
+        vec4(0, 255, 255, 150),
+        vec4(33, 255, 0, 150)
+    )
+    
+    Y = -Ent:boxSize():y()/2.5
+    
+    local R = Ent:boxSize():x()/2 - 1.7
+    local Offset = 90
+    
+    for (I = 1, 2) {
+        local Sin = sin(360/2 * I + Offset) * R
+        local Cos = cos(360/2 * I + Offset) * R
+        
+        local Barrier = propSpawn("models/hunter/plates/plate4.mdl", Ent:toWorld(vec(Sin, Cos, Ent:boxSize():z()/2)), Ent:angles(), 1)
+        Barrier:setMaterial("models/debug/debugwhite")
+        weld(Barrier, Ent)
+        
+        Barriers:pushEntity(Barrier)
+    }
+}
+
+if (first()) {
+    Ang = owner():eyeAngles()
+    
+    local Yaw = Ang:yaw()
+    
+    if ((Yaw >= -180 & Yaw < -135) | (Yaw <= 180 & Yaw > 135)) {
+        Yaw = 180
+    }
+    if (Yaw >= 45 & Yaw < 135) {
+        Yaw = 90
+    }
+    if ((Yaw >= -45 & Yaw < 0) | (Yaw < 45 & Yaw >= 0)) {
+        Yaw = 0
+    }
+    if (Yaw >= -135 & Yaw < -45) {
+        Yaw = -90
+    }
+        
+    Ent:setAng(ang(Ent:angles():pitch(), Yaw - 90, Ent:angles():roll()))
+}
+
+interval(100)
+
+if (clk("interval")) {
+    findInBox(Ent:pos() + Ent:boxMin() + vec(0, 0, 0), Ent:pos() + Ent:boxMax() + vec(0, 0, 12))
+    findExcludeEntity(Ent)
+    findClipToClass("prop_*")
+    #findIncludeModel("models/hunter/plates/plate025.mdl")
+    
+    Find = findToArray()
+    
+    foreach (K, V:entity = Find)
+    {
+        if (V:owner() == owner() & V:isValid() & V:isValidPhysics()) {
+            foreach (ID, Color4:vector4 = Colors)
+            {
+                if (V:getColor4() == Color4) {
+                    local Dir = (-Ent:right())
+                    V:applyForce((Dir)*V:mass()*100)
+                    V:applyForce((-V:vel())*V:mass()*0.5)
+                }
+            }
+        }
+    }
+    
+    if (Ent:isPlayerHolding()) {
+        foreach (Index, Barrier:entity = Barriers) {
+            Barrier:propFreeze(0)
+        }
+    } else {
+        foreach (Index, Barrier:entity = Barriers) {
+            if (Barrier:angles():yaw() != Ent:angles():yaw()) {
+                Barrier:propFreeze(0)
+                Barrier:setAng(Ent:angles())
+            }
+            
+            if (!Barrier:isFrozen()) {
+                Barrier:propFreeze(1)
+            }
+        }
+    }
+}

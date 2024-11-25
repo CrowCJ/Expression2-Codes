@@ -1,0 +1,129 @@
+@name holoClock
+@inputs 
+@outputs [Hrs Min Sec]:string
+@persist Z TimeOffset N Ent:entity [Scale Color]:vector Factor Material:string Tick
+@trigger 
+@strict
+
+if (first()) {
+    Tick = 0
+    N = 0
+    Mdl = format("models/sprops/misc/alphanum/alphanum_%d.mdl", 0)
+    
+    Separator = "models/sprops/misc/alphanum/alphanum_colon.mdl"
+    
+    Ent = entity()
+    
+    TimeZone = "utc"
+    TimeOffset = -5
+    
+    Z = 12
+    
+    Color = vec(200, 200, 255)
+    
+    Factor = 5
+    Scale  = vec(1, 0.1, 1) * Factor
+    
+    Material = "debug/debugdrawflat"
+    
+    holoCreate(1, Ent:toWorld(vec(-25.5, 0, Z)*Factor), Scale, Ent:toWorld(ang(0, 180, 0)), Color, Mdl)
+    holoCreate(2, Ent:toWorld(vec(-16.5, 0, Z)*Factor), Scale, Ent:toWorld(ang(0, 180, 0)), Color, Mdl)
+    holoCreate(3, Ent:toWorld(vec(-10.5, 0, Z)*Factor), Scale, Ent:toWorld(ang(0, 180, 0)), Color, Separator)
+    holoCreate(4, Ent:toWorld(vec(-4.5, 0, Z)*Factor), Scale, Ent:toWorld(ang(0, 180, 0)), Color, Mdl)
+    holoCreate(5, Ent:toWorld(vec( 4.5, 0, Z)*Factor), Scale, Ent:toWorld(ang(0, 180, 0)), Color, Mdl)
+    holoCreate(6, Ent:toWorld(vec(10.5, 0, Z)*Factor), Scale, Ent:toWorld(ang(0, 180, 0)), Color, Separator)
+    holoCreate(7, Ent:toWorld(vec(16.5, 0, Z)*Factor), Scale, Ent:toWorld(ang(0, 180, 0)), Color, Mdl)
+    holoCreate(8, Ent:toWorld(vec(25.5, 0, Z)*Factor), Scale, Ent:toWorld(ang(0, 180, 0)), Color, Mdl)
+    holoCreate(9, Ent:toWorld(vec(10.5, 0, Z*2)*Factor), Scale/vec(3, 1, 3), Ent:toWorld(ang(0, 180, 0)), Color, format("models/sprops/misc/alphanum/alphanum_%s.mdl", TimeZone[1]))
+    holoCreate(10, Ent:toWorld(vec(13.5, 0, Z*2)*Factor), Scale/vec(3, 1, 3), Ent:toWorld(ang(0, 180, 0)), Color, format("models/sprops/misc/alphanum/alphanum_%s.mdl", TimeZone[2]))
+    holoCreate(11, Ent:toWorld(vec(16.5, 0, Z*2)*Factor), Scale/vec(3, 1, 3), Ent:toWorld(ang(0, 180, 0)), Color, format("models/sprops/misc/alphanum/alphanum_%s.mdl", TimeZone[3]))
+    
+    if (TimeOffset >= 0) {
+        holoCreate(12, Ent:toWorld(vec(19.5, 0, Z*2)*Factor), Scale/vec(3, 1, 3), Ent:toWorld(ang(0, 180, 0)), Color, "models/sprops/misc/alphanum/alphanum_plu.mdl")
+    } else {
+        holoCreate(12, Ent:toWorld(vec(19.5, 0, Z*2)*Factor), Scale/vec(3, 1, 3), Ent:toWorld(ang(0, 180, 0)), Color, "models/sprops/misc/alphanum/alphanum_min.mdl")
+    }
+    
+    Off = format("%02d", abs(TimeOffset))
+    
+    holoCreate(13, Ent:toWorld(vec(22.5, 0, Z*2)*Factor), Scale/vec(3, 1, 3), Ent:toWorld(ang(0, 180, 0)), Color, format("models/sprops/misc/alphanum/alphanum_%s.mdl", Off[1]))
+    holoCreate(14, Ent:toWorld(vec(25.5, 0, Z*2)*Factor), Scale/vec(3, 1, 3), Ent:toWorld(ang(0, 180, 0)), Color, format("models/sprops/misc/alphanum/alphanum_%s.mdl", Off[2]))
+    
+    if (Off[1] == "0") {
+        holoScale(13, vec())
+        holoPos(14, Ent:toWorld(vec(22.5, 0, Z*2)*Factor))
+    }
+    
+    holoCreate(15, Ent:toWorld(vec(0, 0, Z*1.25)*Factor), vec(-1)*Factor, Ent:toWorld(ang(0, 0, 90)), vec4(0, 0, 0, 150), "models/sprops/rectangles/size_3_5/rect_30x66x3.mdl")
+    
+    for (I = 1, 15) {
+        holoBodygroup(I, 0, 3)
+        holoMaterial(I, Material)
+        holoParent(I, Ent)
+        
+        if (I < 15) {
+            holoClipEnabled(I, 1)
+            holoClip(I, vec(0, 0, 0), vec(0, 1, 0), 0)
+        }
+    }
+}
+
+event chat(E:entity, S:string, N:number) {
+    if (S:sub(1, 9) == "!timezone") {
+        TimeOffset = S:sub(11, 13):toNumber()
+        
+        if (TimeOffset >= 0) {
+            holoModel(12, "models/sprops/misc/alphanum/alphanum_plu.mdl")
+        } else {
+            holoModel(12, "models/sprops/misc/alphanum/alphanum_min.mdl")
+        }
+        
+        Off = format("%02d", abs(TimeOffset))
+    
+        holoModel(13, format("models/sprops/misc/alphanum/alphanum_%s.mdl", Off[Off:length()-1]))
+        holoPos(13, Ent:toWorld(vec(22.5, 0, Z*2)*Factor))
+        holoModel(14, format("models/sprops/misc/alphanum/alphanum_%s.mdl", Off[Off:length()]))
+        holoPos(14, Ent:toWorld(vec(25.5, 0, Z*2)*Factor))
+        
+        if (Off[1] == "0") {
+            holoAlpha(13, 0)
+            holoPos(14, Ent:toWorld(vec(22.5, 0, Z*2)*Factor))
+        } else {
+            holoAlpha(13, 255)
+            holoPos(14, Ent:toWorld(vec(25.5, 0, Z*2)*Factor))
+        }
+    }
+}
+
+event tick() {
+    local CurTick = curtime()
+    if (CurTick > Tick + 1) {
+        Tick = CurTick
+        Hrs = format("%02d", (time("hour") + TimeOffset)%24)
+        Min = format("%02d", time("min"))
+        Sec = format("%02d", time("sec"))
+        
+        local H1  = format("models/sprops/misc/alphanum/alphanum_%s.mdl", Hrs[1])
+        local H2  = format("models/sprops/misc/alphanum/alphanum_%s.mdl", Hrs[2])
+        
+        local M1  = format("models/sprops/misc/alphanum/alphanum_%s.mdl", Min[1])
+        local M2  = format("models/sprops/misc/alphanum/alphanum_%s.mdl", Min[2])
+        
+        local S1  = format("models/sprops/misc/alphanum/alphanum_%s.mdl", Sec[1])
+        local S2  = format("models/sprops/misc/alphanum/alphanum_%s.mdl", Sec[2])
+        
+        holoModel(1, H1)
+        holoModel(2, H2)
+        
+        holoModel(4, M1)
+        holoModel(5, M2)
+        
+        holoModel(7, S1)
+        holoModel(8, S2)
+        
+        N++
+        entity():emitSound("buttons/lightswitch2.wav")
+        
+        if (N > 10) { N = 1 }
+    }
+}

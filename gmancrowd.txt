@@ -1,0 +1,55 @@
+@name gmancrowd
+@inputs 
+@outputs 
+@persist Count Print Max Sounds:array
+@trigger 
+@strict
+
+if (first()) { 
+    Sounds = array()
+    Print = 0
+    Count = 0
+    Max = 80
+}
+
+event tick() {    
+    while (perf() & Count < Max & holoCanCreate()) {
+        local Pos = vec(random(-1, 1), random(-1, 1), 0) * 1000
+        Pos = Pos:setZ(entity():pos():z())
+        
+        if (Pos:isInWorld()) {
+            Count++
+        
+            holoCreate(Count, Pos, vec(1), ang(0, random(0, 1) * 360, 0), vec(255), "models/gman_high.mdl")
+            Sounds:pushNumber(0)
+        }
+    }
+    
+    if (Count >= Max & !Print) {
+        Print = 1
+        print("Done")
+    }
+    
+    if (Count >= Max) {
+        foreach (_:number, V:entity = players()) {
+            for (I = 1, Max) {
+                local E = holoEntity(I)
+                if (V:pos():distance(E:pos()) < 100) {
+                    holoAng(I, ang(0, (V:pos() - holoPos(I)):toAngle():yaw(), 0))
+                    if (!Sounds[I, number]) {
+                        Sounds[I, number] = 1
+                        timer("Refresh" + I, 1000)
+                        holoEntity(I):soundPlay(I, 0, "Trainride.gman_riseshine")
+                        break
+                    }
+                }
+            }
+        }
+    }
+}
+
+for (I = 1, Max) {
+    if (clk("Refresh" + I)) {
+        Sounds[I, number] = 0
+    }
+}

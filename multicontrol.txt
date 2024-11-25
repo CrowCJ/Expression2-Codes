@@ -1,0 +1,77 @@
+@name MultiControl
+@inputs  [Base Vehicle]:entity [CabGimbal HGimbal RGimbal]:wirelink
+@outputs Length
+@persist P Rr Y [CG HG RG]:entity
+@trigger 
+@strict
+
+if (first() | duped()) {
+    P = 0
+    Rr = 0
+    Y = 0
+    
+    if (->Base) {
+        if (->CabGimbal) {
+            CabGimbal["On", number] = 1
+            CabGimbal["Angle", angle] = Base:toWorld(ang(0, 0, 0))
+            CG = CabGimbal:entity()
+        }
+        
+        if (->HGimbal) {
+            HGimbal["On", number] = 1
+            HGimbal["Angle", angle] = Base:toWorld(ang(0, 0, 0))
+            HG = HGimbal:entity()
+        }
+        
+        if (->RGimbal) {
+            RGimbal["On", number] = 1
+            RGimbal["Angle", angle] = Base:toWorld(ang(0, 0, 0))
+            RG = RGimbal:entity()
+        }
+    }
+}
+
+if (dupefinished()) {reset()}
+
+event tick() {
+    local L = 0
+    local R = 0
+    local U = 0
+    local D = 0
+    local TR = 0
+    local TL = 0
+    local LU = 0
+    local LD = 0
+    
+    if (->Vehicle & Vehicle:isValid()) {
+        if (Vehicle:driver()) {
+            local Driver = Vehicle:driver()
+            
+            L = Driver:keyPressed("left")
+            R = Driver:keyPressed("right")
+            U = Driver:keyPressed("up")
+            D = Driver:keyPressed("down")
+            TR = Driver:keyPressed("pad_4")
+            TL = Driver:keyPressed("pad_6")
+            LU = Driver:keyPressed("pad_8")
+            LD = Driver:keyPressed("pad_2")
+        }
+    }
+    
+    if (->Base & CG & HG & RG) {
+        Y  += (L - R)
+        P  += -(U - D)
+        Rr += -(TR - TL)
+        Length += (LU - LD)
+        
+        CabGimbal["Angle", angle] = Base:toWorld(ang(0, Y, 0))
+        HGimbal["Angle", angle]   = CG:toWorld(ang(-90 + P, 0, 0))
+        RGimbal["Angle", angle]   = HG:toWorld(ang(-90, 0, Rr))
+        
+        foreach (_, Gimbal:entity = array(CG, HG, RG)) {
+            if (!Gimbal:isPlayerHolding()) {
+                Gimbal:propFreeze(1)
+            }
+        }
+    }
+}

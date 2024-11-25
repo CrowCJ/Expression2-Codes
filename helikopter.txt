@@ -1,0 +1,101 @@
+@name Helikopter
+@inputs 
+@outputs 
+@persist Seat:entity Var Strength Force Roll W S A D Shift Space Alt Pitc RollMax MaxPitch
+@trigger 
+
+if (first()|duped()) {
+    function entity:stabilized(Angle:angle) {
+        TarQ = quat(Angle) #Calculate quaternion for target orientation
+        CurQ = quat(This) #Calculate current orientation quaternion         
+        #TarQ/CurQ is a quaternion representing the rotation that will rotate the object from current orientation to the target one.
+        Q = TarQ/CurQ     
+        #applyTorque() works on intrinsic vectors! Get the rotation vector and transform it.
+        V = This:toLocal(rotationVector(Q)+This:pos())
+        #Alternatively, can use "V = transpose(matrix(E))*rotationVector(Q)"     
+        #Apply torque. angVelVector() works like a delta term.
+        #Factors 150 and 12 can be adjusted to achieve best effect.
+        This:applyTorque((150*V - 12*This:angVelVector())*This:inertia())
+    }
+    Seat = entity():isWeldedTo()
+    entity():parentTo(Seat)
+    #Seat:setMass(50000)
+    Var = Seat:angles():yaw()
+    runOnTick(1)
+    
+    Strength = 45
+    MaxPitch = 45
+    RollMax  = 45
+    Force = 500
+    
+    holoCreate(1, Seat:pos() + vec(0, 0, -Seat:boxSize():z()/2), vec())
+    holoParent(1, Seat)
+    #[    
+    holoCreate(3, Seat:toWorld(vec(0, -24, 52)), vec(1), Seat:toWorld(ang(90,0,90)), vec(255), "models/sprops/geometry/hring_108.mdl")
+    holoParent(3, Seat)
+    
+    holoCreate(2, Seat:toWorld(vec(0, 0, 114)), vec(5), Seat:toWorld(ang(-90,0,0)), vec(255), "models/xqm/helicopterrotormedium.mdl")
+    holoParent(2, Seat)
+    
+    holoCreate(4, holoEntity(2):toWorld(vec(-8, 0, 0)), vec(1), Seat:toWorld(ang(180,0,0)), vec(255), "models/sprops/misc/domes/size_2/dome_24x18.mdl")
+    holoParent(4, Seat)]#
+}
+if (dupefinished()) {reset()}
+
+Speed = toUnit("km/h", Seat:vel():length())
+
+if (Seat:isVehicle()) {
+    Dr = Seat:driver()
+    W = Dr:keyForward()
+    S = Dr:keyBack()
+    A = Dr:keyLeft()
+    D = Dr:keyRight()
+    Space = Dr:keyJump()
+    Shift = Dr:keySprint()
+    Alt   = Dr:keyWalk()
+    Var += (A - D)*2
+    Roll  += clamp((A-D)*RollMax - Roll, -0.5-D - (!A + !D), 0.5+A + (!A + !D))
+    Pitc += clamp((W-S)*MaxPitch - Pitc, -0.5-S - (!W + !S), 0.5+W + (!W + !S))
+    
+    holoAng(1, ang(0, Seat:angles():yaw()+90, 0))
+    #Seat:stabilized(ang(-Roll, Var, -Pitc))
+    Seat:stabilized(ang(-Roll/Speed, Var, -Pitc/Speed))
+    Pitch = Seat:angles():pitch()
+} else {
+    Dr = owner():vehicle():driver()
+    W = Dr:keyForward()
+    S = Dr:keyBack()
+    A = Dr:keyLeft()
+    D = Dr:keyRight()
+    Space = Dr:keyJump()
+    Shift = Dr:keySprint()
+    Alt   = Dr:keyWalk()
+    
+    Var += (A - D)*2
+    Roll  += clamp((A-D)*RollMax - Roll, -0.5-D - (!A + !D), 0.5+A + (!A + !D))
+    Pitc += clamp((W-S)*MaxPitch - Pitc, -0.5-S - (!W + !S), 0.5+W + (!W + !S))
+    
+    holoAng(1, ang(0, Seat:angles():yaw(), 0))
+    Seat:stabilized(ang(Pitc, Var, -Roll))
+    Pitch = Seat:angles():pitch()
+}
+
+if (Seat:driver():isAlive()) {
+    Rot = curtime() * 2500
+    holoAng(2, Seat:toWorld(ang(-90,0,Rot)))
+}
+
+Ranger = rangerOffset(100, holoEntity(1):toWorld(vec(25, 0, 0)), vec(0, 0, -1))
+rangerFilter(Seat)
+
+if (Ranger:distance() < 25 & Seat:driver():isAlive()) {
+    Up = 200
+}
+
+if (Ranger:distance() < 5 + Seat:driver():isAlive()*25) {
+    Up = 25
+} else {
+    Up = 0
+}
+Seat:applyForce((vec(0, 0, 3 + Up +(Space - Alt)*100)-Seat:vel()*0.5)*Seat:mass())
+Seat:applyForce(holoEntity(1):forward()*(W-S)*(1+Shift)*Force*Seat:mass())

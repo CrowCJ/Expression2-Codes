@@ -1,0 +1,95 @@
+@name MultiPropColor
+@inputs 
+@outputs 
+@persist [Array Sounds]:array Speed N
+@trigger 
+
+if (first()) {
+    #findByClass("prop_*")
+    N = 0
+    Array = array()
+    findByModel("models/hunter/plates/plate8x32.mdl")
+    #findByClass("props_*")
+    findIncludePlayerProps(owner())
+    Temp = findToArray()
+    
+    foreach (_:number, V:entity = Temp) {
+        if (V:owner()==owner()) {
+            Array:pushEntity(V)
+        }
+    }
+    
+    foreach (_:number, V:entity = Array) {
+        V:setMaterial("debug/debugdrawflat")
+        #V:setColor(vec(100))
+        #V:setMaterial("models/debug/debugwhite")
+    }
+
+    Sounds = array(
+        "tri",
+        "tri_1760",
+        "tri_440",
+        "tri_880",
+        "square",
+        "square_1760",
+        "square_440",
+        "square_880",
+        "sine",
+        "sine_1760",
+        "sine_440",
+        "sine_880",
+        "saw",
+        "saw_1760",
+        "saw_440",
+        "saw_880",
+        "saw_inverted_1760",
+        "saw_inverted_440",
+        "saw_inverted_880",
+        "12_5_pwm_1760",
+        "12_5_pwm_440",
+        "12_5_pwm_880",
+        "25_pwm_1760",
+        "25_pwm_440",
+        "25_pwm_880",
+        "75_pwm_1760",
+        "75_pwm_880",
+        "75_pwm_440",
+        "brown_noise",
+        "pink_noise",
+        "white_noise"
+    )
+    
+    Speed = 45
+    
+    holoCreate(1)
+    holoScale(1, vec())
+    holoEntity(1):soundPlay(1, 0, "synth/" +Sounds[randint(1,Sounds:count()),string]+ ".wav")
+    soundVolume(1, 0.25)
+    timer("change",randint(500,2500))
+}
+event tick() {
+    #[
+    foreach (K, V:entity = Array) {
+        V:setColor(hsv2rgb(Speed*curtime()%360,1,1))
+    }
+    ]#
+    
+    #interval(250)
+    
+    if (N < Array:count()) {
+        N++
+    } else {
+        N = 1
+    }
+    
+    #N = randint(1, 255)
+    
+    Array[N,entity]:setColor(hsv2rgb(Speed*curtime()%360,1,1))
+    holoPos(1, Array[N,entity]:pos())
+    soundPitch(1, N)
+}
+if (clk("change")) {
+    holoEntity(1):soundPlay(N, 0, "synth/" +Sounds[randint(1,Sounds:count()),string]+ ".wav")
+    soundVolume(1, 0.25)
+    timer("change",randint(500,2500))
+}

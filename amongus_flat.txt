@@ -1,0 +1,159 @@
+@name AmongUs_Flat
+@inputs  [RTCam RTScr]:wirelink
+@outputs 
+@persist Count C:entity [Target Last]:entity Boom #A:array #R:webaudio
+@trigger 
+
+if (first()) {
+    entity():propDraw(0)
+    Count = 0
+    Boom = 0
+    C = entity()
+    C:setMass(50000)
+    
+    #A = array("https://dl.dropbox.com/s/edn1a0i7b32gkio/AmongUsTrapBassBoosted.mp3?dl=1", "Amongus - Bass Boosted", 60 + 15)
+
+    Scale = 2
+    holoCreate(1000, C:toWorld(vec(-20,0,0)*Scale), vec(), ang(-90,180,0), vec(255), "cube")
+    
+#[
+    #ifdef streamStart()
+        holoEntity(1000):streamStart(1, A[1, string], 100)
+        timer("loop", A[3, number]*1000)
+    #endif
+    
+    #ifdef webAudioCanCreate()
+        R = webAudio(A[1, string])
+        R:play()
+        R:setLooping(1)
+        R:parentTo(holoEntity(1000))
+        #timer("loop", A[3, number]*1000)
+    #endif
+]#
+    
+    #holoParent(1000, C)
+    
+    Colors = array(
+        vec(0,0,0),
+        vec(255,0,0),
+        vec(0,255,0),
+        vec(0,0,255),
+        vec(255,255,0),
+        vec(0,255,255),
+        vec(255,0,255),
+        vec(255,255,255)
+    )
+    Color = Colors[randint(1, Colors:count()), vector]
+    Count++, holoCreate(Count, C:toWorld(vec(0,0,0)*Scale), vec(1,1.5,0.15)*Scale, C:toWorld(ang(0,0,0)), Color, "cube")
+    Count++, holoCreate(Count, C:toWorld(vec(-1.5,0,-1.5)*Scale), vec(1.2,1,0.3)*Scale, C:toWorld(ang(0,0,0)), Color, "hq_rcube")
+    
+    Count++, holoCreate(Count, C:toWorld(vec(-12,4,0)*Scale), vec(1.5,0.35,0.1)*Scale, C:toWorld(ang(0,0,0)), Color, "cube")
+    Count++, holoCreate(Count, C:toWorld(vec(-12,-4,0)*Scale), vec(1.5,0.35,0.1)*Scale, C:toWorld(ang(0,0,0)), Color, "cube")
+    
+    #Glasse#
+    Count++, holoCreate(Count, C:toWorld(vec(6,0,1.5)*Scale), vec(0.5,1,0.15)*Scale, C:toWorld(ang(0,0,0)), vec(50,200,255), "hq_rcube")
+    
+    Count++, holoCreate(Count, C:toWorld(vec(6,0,0)*Scale), vec(1.5,1.5,0.15)*Scale, C:toWorld(ang(0,0,0)), Color, "hq_cylinder")
+    Count++, holoCreate(Count, C:toWorld(vec(-6,0,0)*Scale), vec(1.5,1.5,0.15)*Scale, C:toWorld(ang(0,0,0)), Color, "hq_cylinder")
+    
+    for (I = 1, Count) {
+        holoMaterial(I, "debug/debugdrawflat")
+        #holoMaterial(I, "models/debugwhite")
+        holoParent(I, 1000)
+    }
+    #entity():propNotSolid(1)
+    #entity():propDraw(0)
+    #entity():setPos(world():pos())
+    #runOnTick(1)
+    
+    Target = players()[randint(1, numPlayers()), entity]
+    #Target = owner()
+    Last = Target
+}
+
+interval(25)
+
+if (Target:isAlive() & !Boom) {
+    Dist = Target:pos():distance(holoEntity(1000):pos())
+    Z = Target:pos():z() - holoEntity(1000):pos():z()
+    holoPos(1000, holoEntity(1000):toWorld(vec(((Dist)/25 - 1), 0, Z)))
+    holoPos(1000, holoEntity(1000):toWorld(vec(0, randint(-5, 5), 0)))
+    
+    if (Dist < 50) {
+        Boom = 1
+        #boomCustom("glassimpact", Target:boxCenterW(), 1000, 1)
+        #B = propSpawn("models/props_phx/torpedo.mdl", Target:boxCenterW(), ang(), 1)
+        #B = propSpawn("models/props_c17/FurnitureDresser001a.mdl", Target:boxCenterW(), ang(), 1)
+        
+#[
+        B = propSpawn("models/props_junk/watermelon01.mdl", Target:boxCenterW(), ang(), 1)
+        
+        B:propNotSolid(1)
+        B:propDraw(0)
+        B:propBreak()
+]#
+    }
+
+    holoAng(1000, ang(0, (Target:shootPos() - (holoEntity(1000):pos() + vec(0, 0, -12))):toAngle():yaw(), 0)+ang(0,0,0))
+} else {
+    Target = players()[randint(1, numPlayers()), entity]
+    while (perf() & Target == Last) {
+        Target = players()[randint(1, numPlayers()), entity]
+        if (Target != Last) {
+            break
+        }
+    }
+    Last = Target
+    Boom = 0
+}
+if (~RTCam & RTCam) {
+    RTCam["Active", number] = 1
+    RTCam["FOV", number] = 100
+    RTCam:entity():setAlpha(0)
+}
+if (~RTScr & RTScr) {
+    RTScr["Active", number] = 1
+    RTScr["Camera", entity] = RTCam:entity()
+}
+
+RTCam:entity():setPos(holoEntity(1000):toWorld(vec(-50, 50, 100)))
+RTCam:entity():setAng((Target:shootPos() - RTCam:entity():pos()):toAngle())
+
+#[
+if (clk("loop")) {
+    #ifdef streamStart()
+        holoEntity(1000):streamStart(1, A[1, string])
+        timer("loop", A[3, number]*1000)
+    #endif
+    
+    #ifdef webAudioCanCreate()
+        R = webAudio(A[1, string])
+        R:play()
+        timer("loop", A[3, number]*1000)
+    #endif
+}
+]#
+
+#[
+findInSphere(holoEntity(1000):pos(), 50)
+findExcludeClass("hologram")
+findExcludeEntity(C)
+R = findClosest(holoEntity(1000):pos())
+boomCustom("glassimpact", R:boxCenterW(), 1000, 10)
+]#
+
+
+#[
+foreach (K, V:entity = players()) {
+
+    if (holoEntity(1000):pos():distance2(V:pos()) < 500*500) {
+        holoAng(1000, ang(0, (V:shootPos() - (holoEntity(1000):pos() + vec(0, 0, -12))):toAngle():yaw(), 0)+ang(90,0,0))
+    }
+
+    if (V:aimEntity() == C) {
+        C:setPos(randvec()*random(1000, 2000))
+    }
+}
+]#
+
+#C:setPos(randvec()*random(1000, 2000))

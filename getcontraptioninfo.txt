@@ -1,0 +1,23 @@
+@name GetContraptionInfo
+@inputs 
+@outputs 
+@persist Ent:entity Ents:array
+@trigger 
+
+if (first()) {
+    Ent = entity():isWeldedTo()
+    
+    Ents = Ent:getConnectedEntities()    
+    
+    local Mass = 0
+    foreach (ID, E:entity = Ents) {
+        if (E:owner() == owner() & E:isValidPhysics()) {
+            Mass += E:mass()
+        }
+    }
+    
+    local String_Out = format("Entities Count: %02d, Total Mass: %.02f", Ents:count(), Mass)
+    print(String_Out)
+    
+    selfDestruct()
+}

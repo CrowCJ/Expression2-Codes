@@ -1,0 +1,70 @@
+@name Chaotic_Prop
+@inputs 
+@outputs 
+@persist [Models Cached]:array Max Counted R
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    Cached = array()
+    Models = array(
+        "models/buildingspack2_nolot/housing/1-0_apartments.mdl",
+        "models/buildingspack2_nolot/housing/1-1_apartments.mdl",
+        "models/buildingspack2_nolot/housing/1-2_apartments.mdl",
+        "models/buildingspack2_nolot/housing/1-3_apartments.mdl",
+        "models/buildingspack2/housing/1-0_apartments.mdl",
+        "models/buildingspack2/housing/1-1_apartments.mdl",
+        "models/buildingspack2/housing/1-2_apartments.mdl",
+        "models/buildingspack2/housing/1-3_apartments.mdl",
+        "models/buildingspack2/skyscraper/3-0_skyscraper_a.mdl",
+        "models/buildingspack2/skyscraper/3-1_skyscraper_b.mdl",
+        "models/buildingspack2/skyscraper/3-2_skyscraper_c.mdl",
+        "models/buildingspack2/skyscraper/3-3_skyscraper_d.mdl",
+        "models/buildingspack2/skyscraper/3-4_skyscraper_e.mdl",
+        "models/buildingspack2_nolot/public/2-0_car_garage.mdl",
+        "models/buildingspack2_nolot/public/2-1_office_building.mdl",
+        "models/buildingspack2_nolot/public/2-3_strip_club_a.mdl",
+        "models/buildingspack2_nolot/public/2-4-2_gas_stop_awning.mdl",
+        "models/buildingspack2_nolot/public/2-2_lgbt_club_a.mdl",
+        "models/buildingspack2_nolot/public/2-4_gas_stop.mdl",
+        "models/buildingspack2_nolot/public/2-6_gun_shop.mdl",
+        "models/buildingspack2_nolot/public/2-8_parking_garage.mdl",
+        "models/buildingspack2_nolot/public/2-9_school_house.mdl"
+    )
+    
+    Max = 24
+    Counted = 0
+    
+    R = 5000
+}
+
+event tick() {
+    if (Counted < Max) {
+        if (propCanCreate()) {
+            #local Pos = vec(sinr(random(0, 360)) * R, cosr(random(0, 360)) * R, random(0, R))
+            local Pos = vec(random(-1, 1), random(-1, 1), random(0, 1)) * R
+            local Ang = ang(randint(1, 4), randint(1, 4), randint(1, 4)) * 90
+            #local Ang = (entity():toWorld(Pos) - entity():toWorld(vec(0, 0, 0))):toAngle() + ang(-90, 0, 0)
+            local Mdl = Models[randint(1, Models:count()), string]
+            
+            #local Prop = propSpawn(Mdl, entity():toWorld(Pos), entity():toWorld(Ang), 1)
+            if (Cached:count() == 0) {
+                Prop = propSpawn(Mdl, entity():pos() + (Pos), Ang, 1)
+            } else {
+                local Last = Cached[Counted, entity]
+                local LBox = Last:boxSize()
+                local Op   = randint(-1, 1)
+                local Opp  = 0
+                if (Op == -1 | Op == 1) {
+                    Opp = Op
+                }
+                #Prop = propSpawn(Mdl, Last:pos() + LBox:setZ(0)* (Opp), entity():toWorld(Ang), 1)
+                Prop = propSpawn(Mdl, entity():pos() + Pos, entity():toWorld(Ang), 1)
+            }
+            Prop:propStatic(1)            
+            Cached:pushEntity(Prop)
+            Counted++
+        }
+    }
+}

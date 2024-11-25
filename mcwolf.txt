@@ -1,0 +1,184 @@
+@name MCWolf
+@inputs 
+@outputs 
+@persist E:entity L_FLeg R_FLeg L_BLeg R_BLeg Neck Tail Body
+@persist Move Rot Rand MoveMode H
+@model models/hunter/blocks/cube05x1x05.mdl 
+
+if (first()|duped()) {
+    E=entity()
+    E:setAlpha(0)    
+    E:propFreeze(0)
+    E:noCollideAll(1)
+    H=12
+    CollarCol=vec(125,65,155)
+    #Body
+    Body=1
+    holoCreate(2,E:toWorld(vec(0,12,-2+H)),vec(1.3,1.3,1.3),E:toWorld(ang(0,0,0)),vec(200),"cube")
+    #holoCreate(2,E:toWorld(vec(0,12,-2+H)),vec(1.3,1.3,1.3),E:toWorld(ang(0,0,0)),vec(200),"cube")
+    holoParent(2,E)
+    holoCreate(1,holoEntity(2):toWorld(vec(0,-12,0)),vec(1,3,1),holoEntity(2):toWorld(ang(0,0,0)),vec(200),"cube")
+    holoParent(1,2)
+    #Collar
+    holoCreate(150,holoEntity(2):toWorld(vec(0,8,0)),vec(1.3,0.01,1.3),holoEntity(2):toWorld(ang(0,0,0)),CollarCol,"cube")
+    holoParent(150,holoEntity(2))
+    
+    
+    #Neck
+    Neck=3
+    holoCreate(3,holoEntity(2):toWorld(vec(0,8,0)),vec(0.1),E:toWorld(ang()),vec(200),"cube")
+    holoParent(3,holoEntity(2))
+    #Head
+    holoCreate(4,holoEntity(3):toWorld(vec(0,6,0)),vec(1,1.1,1),E:toWorld(ang()),vec(200),"cube")
+    holoParent(4,3)
+    holoCreate(5,holoEntity(3):toWorld(vec(0,12,-2)),vec(0.6,1.5,0.5),E:toWorld(ang()),vec(200),"cube")
+    holoParent(5,3)
+    holoCreate(6,holoEntity(3):toWorld(vec(0,20,0)),vec(0.25,0.2,0.2),E:toWorld(ang()),vec(0),"cube")
+    holoParent(6,3)
+    #Eyes
+    holoCreate(7,holoEntity(4):toWorld(vec(-4.8,6,3)),vec(0.15),holoEntity(4):toWorld(ang()),vec(255),"cube")
+    holoParent(7,3)
+    holoCreate(8,holoEntity(4):toWorld(vec(4.8,6,3)),vec(0.15),holoEntity(4):toWorld(ang()),vec(255),"cube")
+    holoParent(8,3)
+    holoCreate(9,holoEntity(4):toWorld(vec(-3,6,3)),vec(0.15),holoEntity(4):toWorld(ang()),vec(0),"cube")
+    holoParent(9,3)
+    holoCreate(10,holoEntity(4):toWorld(vec(3,6,3)),vec(0.15),holoEntity(4):toWorld(ang()),vec(0),"cube")
+    holoParent(10,3)
+    
+    #Ears
+    holoCreate(100,holoEntity(4):toWorld(vec(-3,-4,6)),vec(0.1,0.3,1),E:toWorld(ang(0,90,-0)),vec(200),"cube")
+    holoParent(100,3)
+    
+    holoCreate(102,holoEntity(4):toWorld(vec(3,-4,6)),vec(0.1,0.3,1),E:toWorld(ang(0,90,0)),vec(200),"cube")
+    holoParent(102,3)
+    #TailBone
+    Tail=103
+    holoCreate(103,holoEntity(Body):toWorld(vec(0,-20,3)),vec(0),holoEntity(Body):toWorld(ang(0,0,0)),vec(200),"cube")
+    holoParent(103,Body)
+    #Tail
+    holoCreate(104,holoEntity(103):toWorld(vec(0,0,-7)),vec(0.3,0.3,1.5),holoEntity(103):toWorld(ang(0,0,0)),vec(200),"cube")
+    holoParent(104,103)
+    
+    #Legs
+    
+    L_FLeg=50
+    R_FLeg=51
+    L_BLeg=52
+    R_BLeg=53
+
+    
+    #Legs Bone
+    holoCreate(L_FLeg,holoEntity(Body):toWorld(vec(-4.5,14,-8)),vec(),holoEntity(Body):toWorld(ang(0,0,0)),vec(200),"cube")
+    
+    holoCreate(R_FLeg,holoEntity(Body):toWorld(vec(4.5,14,-8)),vec(),holoEntity(Body):toWorld(ang(0,0,0)),vec(200),"cube")
+    
+    holoCreate(L_BLeg,holoEntity(Body):toWorld(vec(-4.5,-14,-8)),vec(),holoEntity(Body):toWorld(ang(0,0,0)),vec(200),"cube")
+    
+    holoCreate(R_BLeg,holoEntity(Body):toWorld(vec(4.5,-14,-8)),vec(),holoEntity(Body):toWorld(ang(0,0,0)),vec(200),"cube")
+    
+    holoParent(L_FLeg,Body)
+    holoParent(R_FLeg,Body)
+    holoParent(L_BLeg,Body)
+    holoParent(R_BLeg,Body)
+    
+    holoCreate(L_FLeg+200,holoEntity(L_FLeg):toWorld(vec(0,0,-4.5)),vec(0.25,0.25,1.5),holoEntity(L_FLeg):toWorld(ang()),vec(200),"cube")
+    holoParent(L_FLeg+200,L_FLeg)
+    
+    holoCreate(R_FLeg+200,holoEntity(R_FLeg):toWorld(vec(0,0,-4.5)),vec(0.25,0.25,1.5),holoEntity(R_FLeg):toWorld(ang()),vec(200),"cube")
+    holoParent(R_FLeg+200,R_FLeg)
+    
+    holoCreate(L_BLeg+200,holoEntity(L_BLeg):toWorld(vec(0,0,-4.5)),vec(0.25,0.25,1.5),holoEntity(L_BLeg):toWorld(ang()),vec(200),"cube")
+    holoParent(L_BLeg+200,L_BLeg)
+    
+    holoCreate(R_BLeg+200,holoEntity(R_BLeg):toWorld(vec(0,0,-4.5)),vec(0.25,0.25,1.5),holoEntity(R_BLeg):toWorld(ang()),vec(200),"cube")
+    holoParent(R_BLeg+200,R_BLeg)
+    
+    MoveMode=1
+    Move = 0
+    Rot = 0
+    Rand = 0
+    
+    if (MoveMode) {
+        timer("Move", randint(1000, 2500))
+    }
+    
+    rangerFilter(E)
+    rangerFilter(players())
+    rangerPersist(1)
+}
+event chipUsed(Player:entity) {
+    if (Player) {
+        MoveMode=!MoveMode
+    }
+    
+    if (MoveMode) {
+        H=6
+        holoPos(L_FLeg,holoEntity(Body):toWorld(vec(-4.5,14,-8)))
+        holoPos(R_FLeg,holoEntity(Body):toWorld(vec(4.5,14,-8)))
+        holoPos(2,E:toWorld(vec(0,12,-2+H)))
+        holoAng(2,E:toWorld(ang(0,0,0)))
+        timer("Move", randint(1000, 2500))
+    } else {
+        holoPos(L_FLeg,holoEntity(Body):toWorld(vec(-4.5,14,-12)))
+        holoPos(R_FLeg,holoEntity(Body):toWorld(vec(4.5,14,-12)))
+        H=10
+        holoPos(2,E:toWorld(vec(0,12,-2+H)))
+        holoAng(2,E:toWorld(ang(0,0,35)))
+        holoAng(3,E:toWorld(ang()))
+        holoAng(L_FLeg,holoEntity(Body):toWorld(ang(0,0,-30)))
+        holoAng(R_FLeg,holoEntity(Body):toWorld(ang(0,0,-30)))
+        holoAng(L_BLeg,holoEntity(Body):toWorld(ang(0,0,55)))
+        holoAng(R_BLeg,holoEntity(Body):toWorld(ang(0,0,55)))
+        
+        holoAng(Tail,holoEntity(Body):toWorld(ang(0,0,-125)))
+    }
+}
+event tick() {    
+    if (MoveMode) {
+        if (Move) {
+            E:applyForce(E:right()*-500)
+            CurM=curtime()*360
+        }
+        
+        CurH=curtime()*35
+    
+        holoAng(Neck,E:toWorld(ang(0,0,sin(CurH)*5)))
+    
+        Cur=curtime()*90
+    
+        holoAng(Tail,E:toWorld(ang(0,cos(Cur*3)*5,-90-15)))
+        
+        if (Rot) {
+            E:applyAngForce(ang(0,Rand - E:angles():yaw(),0) * E:mass())
+        }
+        
+        holoAng(L_FLeg,E:toWorld(ang(0,0,Move*cos(CurM)*15)))
+        holoAng(R_FLeg,E:toWorld(ang(0,0,Move*cos(CurM)*-15)))
+        holoAng(L_BLeg,E:toWorld(ang(0,0,Move*cos(CurM)*-15)))
+        holoAng(R_BLeg,E:toWorld(ang(0,0,Move*cos(CurM)*15)))
+        
+        R=rangerOffset(100,E:pos(),vec(0,0,-1))
+        
+        E:applyForce(((R:pos()+vec(0,0,25)-E:pos())-E:vel()*0.25)*E:mass())
+        E:applyForce((vec(0,0,9.015)-E:vel()*0.25)*E:mass())
+        Ang=(-E:angles()*15-E:angVel()*2)*E:inertia():length()
+        E:applyAngForce(ang(Ang:pitch(),-E:angVel():yaw()*E:mass(),Ang:roll()))
+    }
+}
+
+if (clk("Move")) {
+    Rot=0
+    Move=1
+    timer("Stop",5000)
+}
+
+if (clk("Stop")) {
+    Move=0
+    timer("Rot", randint(1000, 2500))
+}
+
+if (clk("Rot")) {
+    Rand=random(-180,180)
+    Rot=1
+    timer("Move", randint(1000, 2500))
+}

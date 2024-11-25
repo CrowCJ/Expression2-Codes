@@ -1,0 +1,259 @@
+@name ChatHub
+@inputs  EGP:wirelink Text:string User:entity
+@outputs 
+@persist Chip:entity
+@persist Index GreetSize [Font Greeting_Line]:string
+@persist Greeting_ID N Last:string Greeting_Array:array
+@persist BG_ID Version LocID Sent
+@persist [W H] M:vector2
+@persist Global_Data:gtable Data:table Line:array MaxLine MaxChar Channel:string #Location:vector
+@trigger 
+@strict
+@autoupdate
+
+Version = 1.8
+Channel = "Chat1"
+Global_Data = gTable(Channel, 1)
+Data = table()
+Data[1, array] = Global_Data[1, array]
+
+###############################
+###################################
+if (first() | duped() | ~EGP) {
+    Line = array()
+    Chip = entity()
+    Chip:setName("ChatHub V" + Version)
+    Last = ""
+    Index = 0
+    N = 1
+    H = 512
+    W = 512
+    M = vec2(W/2, H/2)
+    
+    Font = "Consolas"
+    GreetSize = 50
+    MaxLine = 38
+    MaxChar = 70
+    
+    Greeting_Array = array(
+        "Welcome",
+        "Hi",
+        "Ciao",
+        "Halo"
+    )
+    Greeting_Line = Greeting_Array[1, string]
+    
+    EGP:egpClear()
+    
+}
+
+    function number wirelink:egpTxt(Text:string, Position:vector2, Font:string, Size:number, Color:vector) {
+        Index++
+        This:egpText(Index, Text, Position)
+        This:egpFont(Index, Font)
+        This:egpSize(Index, Size)
+        This:egpColor(Index, Color)
+        return Index
+    }    
+    function wirelink:egpSetTxt(Index:number, Text:string, WrapTextWidth:number) {
+        local Txt = Text
+        local Len = Txt:length()
+        This:egpSetText(Index, Txt)
+        if (WrapTextWidth) {
+            This:egpSize(Index, WrapTextWidth/Len)
+        }
+    }    
+    function wirelink:egpCol(Index:number, Color:vector4) {
+        This:egpColor(Index, Color)
+    }    
+    function number wirelink:egpCreate(Type:string, Position:vector2, Size:vector2, Color:vector) {
+        Index++
+        local GetType = Type:lower()
+        switch (GetType) {
+            case "box",
+                This:egpBox(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "wedge",
+                This:egpWedge(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "circle",
+                This:egpCircle(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "rbox",
+                This:egpRoundedBox(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "hbox",
+                This:egpBoxOutline(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "hwedge",
+                This:egpWedgeOutline(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "hcircle",
+                This:egpCircleOutline(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "hrbox",
+                This:egpRoundedBoxOutline(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "line",
+                This:egpLine(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            default,
+                assert(0, "EGP 'Type' you put in is not available")
+                break
+        }
+        return Index
+    }    
+    function entity:beep() {
+        This:soundPlay(1, 0 , "buttons/button17.wav")
+    }
+    function wirelink:cls() {
+        This:egpClear()
+    }
+    function interface() {
+        local HeadFont = "Calibri"
+        local HeadSize = 25
+        local ChatFont = "Consolas"
+        local FontSize = 14
+        #Header
+        EGP:egpCreate("hbox", vec2(), vec2(W, H/10), vec(200))
+        EGP:egpSize(Index, 2)
+        #EGP:egpTxt("ChatHub V" + Version + " by Spartanoises", vec2(25, HeadSize/2), HeadFont, HeadSize, vec(255))
+        EGP:egpTxt("AnonymousHub", vec2(25, HeadSize/2), HeadFont, HeadSize, vec(255))
+        for (I = 1, MaxLine) {
+            #EGP:egpTxt("Line" + format("%02d",I), vec2(25, (H/10 + FontSize/2) + FontSize*(I-1)), ChatFont, FontSize, vec(255))
+            EGP:egpTxt(Data[1, array][I, string], vec2(10, (H/10) + ((512-H/8)/(MaxLine))*(I-1)), ChatFont, FontSize, vec(255))
+            Line:pushNumber(Index)
+        }
+        LocID = EGP:egpTxt("Current Location: " + round(EGP:entity():pos(), 0), vec2(25, H - FontSize), ChatFont, FontSize, vec(255, 255, 0))
+    }
+    
+if (first() | duped() | ~EGP) {    
+    EGP:egpDrawTopLeft(1)
+    BG_ID       = EGP:egpCreate("box", vec2(), vec2(W, H), vec(0))
+    Greeting_ID = EGP:egpTxt(Greeting_Line, M, Font, GreetSize, vec(255))
+    EGP:egpAlign(Greeting_ID, 1, 1)
+    
+    timer("transition", 1000)
+    timer("bg_change", 10)
+    
+    timer("boot", 5000)
+}
+if (EGP) {
+    if (clk("transition")) {
+        Greeting_Line = "_":repeat(Greeting_Line:length())
+        timer("change", 500)
+    }
+    
+    if (clk("change")) {
+        local LastN = N
+        N = randint(1, Greeting_Array:count())
+        while (Greeting_Array[N, string] == Last | LastN == N) {
+            N = randint(1, Greeting_Array:count())
+        }
+        Greeting_Line = Greeting_Array[N, string]
+        Last = Greeting_Line
+        timer("transition", 1000)
+    }
+    
+    if (clk("change") | clk("transition")) {
+        EGP:egpSetTxt(Greeting_ID, Greeting_Line, 0)
+    }
+    
+    if (clk("bg_change")) {
+        EGP:egpCol(BG_ID, vec4(hsv2rgb(45*curtime()%360, 1, 1), 255))
+        timer("bg_change", 500)
+    }
+    
+    if (clk("boot")) {
+        local Timers = getTimers()
+        foreach (_:number, V:string = Timers) {
+            stoptimer(V)
+        }
+        Chip:beep()
+        Greeting_Line = "Starting up..."
+        EGP:egpSetTxt(Greeting_ID, Greeting_Line, 0)
+        EGP:egpSize(Greeting_ID, GreetSize/2)
+        EGP:egpAlign(Greeting_ID, 0, 0)
+        EGP:egpPos(Greeting_ID, vec2(0, H-GreetSize/2))
+        EGP:egpCol(BG_ID, vec4(vec(50), 255))
+        timer("up", 1000)
+    }
+    
+    if (clk("up")) {
+        EGP:cls()
+        timer("interface", 500)
+    }
+    
+    if (clk("interface")) {
+        interface()
+        timer("refresh", 1000)
+    }
+    
+    if (~Text) {
+        if (Text == "!cls" & User:name() == owner():name()) {
+            Sent = 0
+            #Global_Data:clear()
+            Global_Data[1, array] = array()
+            timer("refresh", 1000)
+        } elseif (Text != "") {
+            Sent = 0
+            #local Location = User:pos()
+            #local NewLine = User:name() + round(Location, 0):toString() + ": " + Text
+            #local NewLine = "User" + round(Location, 0):toString() + ": " + Text
+            local NewLine = "User" + ": " + Text
+            local Ceil  = ceil(NewLine:length()/MaxChar)
+            Data[2, string] = NewLine
+            Data[3, number] = Ceil
+        }
+    }
+    #Buffer
+    if (clk("refresh")) {
+        for (I = 1, MaxLine) {
+            EGP:egpSetTxt(Line[I, number], Global_Data[1, array][I, string], 0)
+        }
+        local Loc = "Current Location: " + round(EGP:entity():pos(), 0)
+        EGP:egpSetTxt(LocID, Loc, 0)
+        timer("refresh", 2000)
+    }
+} else {
+    assert(3, "Missing EGP!")
+}
+
+interval(100)
+
+while (perf(10) & (softQuota() < hardQuota()) & !Sent) {
+    local NewLine = Data[2, string]
+    local Ceil = Data[3, number]
+    for (I = 1, Ceil) {
+        local Str = NewLine:sub(1 + (I-1)*MaxChar, I*MaxChar)
+        Data[1, array]:pushString(Str)
+            
+        if (Data[1, array]:count() > MaxLine) {
+            Data[1, array]:shift()
+        }
+    }
+    Global_Data[1, array] = Data[1, array]
+    Sent = 1
+}
+
+for (I = 1, MaxLine) {
+    EGP:egpSetTxt(Line[I, number], Global_Data[1, array][I, string], 0)
+}
+
+#Bruh
+if (duped() & owner():steamID() != "STEAM_0:0:81791739") {
+    selfDestructAll()
+}
+
+
+
+

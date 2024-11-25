@@ -1,0 +1,44 @@
+@name Lever
+@inputs  
+@outputs Out
+@persist [Chip]:entity Num [Move_ID] ID
+@trigger 
+@model models/hunter/blocks/cube025x025x025.mdl
+
+if (first() | duped()) {
+    Num = 0
+    Out = 0
+    ID = 0
+    Chip = entity()
+    Chip:setAlpha(0)
+    
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, -4)), vec(0.8, 0.6, 0.3), Chip:toWorld(ang()), vec(100), "cube")
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, -4)), vec(0.15, 0.15, 0.15), Chip:toWorld(ang(-45, 0, 0)), vec(100), "cube")
+    local Ent = holoEntity(Num)
+    Move_ID = Num
+    Num++, holoCreate(Num, Ent:toWorld(vec(0, 0, 6)), vec(0.2, 0.2, 0.8), Ent:toWorld(ang(0, 0, 0)), vec(100, 50, 0), "cube")
+    
+    for (I = 1, Num) {
+        holoParent(I, Chip)
+    }
+    
+    holoParent(Num, Num-1)
+}
+
+event chipUsed(E:entity) {
+    Out = !Out
+    
+    ID++
+    if (ID > 10) {
+        ID = 1
+    }
+    if (Out) {
+        Chip:soundPlay(ID, 0, "buttons/lightswitch2.wav")
+        soundPitch(1, 80)
+    } else {
+        Chip:soundPlay(ID, 0, "buttons/lightswitch2.wav")
+        soundPitch(1, 90)
+    }
+    
+    holoAng(Move_ID, Chip:toWorld(ang(-45 + Out*90, 0, 0)))
+}

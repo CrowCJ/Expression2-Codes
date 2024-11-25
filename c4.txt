@@ -1,0 +1,298 @@
+@name C4
+@inputs 
+@outputs 
+@persist Settings:table Increment
+@trigger 
+@strict
+
+if (first() | duped()) {
+    #entity():propNotSolid(1)
+    #entity():setAlpha(0)
+    propSpawnUndo(0)
+    Increment = 0
+    Settings = table(
+        "mdl"   = "models/weapons/w_c4_planted.mdl",
+        "explosion_mdl" = "models/props_phx/ww2bomb.mdl",
+        "timer" = 40,
+        "countdown" = 0,
+        "delay" = 1,
+        "clk"   = 0,
+        "tick"  = 0,
+        "ltick" = 0,
+        "ldelay"= 0.25,
+        "flip"  = 0,
+        "btick" = 0,
+        "defuse"= 0,
+        "defusing" = 0,
+        "dtimer"= 5,
+        "dhold" = 0,
+        "alpha" = -3.5,
+        "defuser" = noentity(),
+        "explosions" = array(),
+        "plant_key" = "g"
+    )
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner() & Player:isOnGround() & !Settings["bomb", entity] & Key == Settings["plant_key", string] & Down & propCanCreate()) {
+        Increment = 0
+        Settings["explosions", array] = array()
+        local Mdl  = Settings["mdl", string]
+        local Pos  = owner():pos()
+        local Ang  = ang(0, owner():eyeAngles():yaw(), 0)
+        local Bomb = propSpawn(Mdl, Pos, Ang, 1)
+        Bomb:propStatic(1)
+        
+        local String = "12:34"
+        
+        for (I = 1, String:length()) {
+            local Alt = ""
+            if (String[I] == ":") {
+                Alt = "colon"
+            } else {
+                Alt = String[I]
+            }
+            local Mdl = "models/sprops/misc/alphanum/alphanum_"+Alt+".mdl"
+            holoCreate(I, Bomb:toWorld(vec(3, -2.3 - (I-1) * 1.2, 8.9)), vec(0.1, 0, 0.1), Bomb:toWorld(ang(0, 90, 90)), vec(255, 0, 0), Mdl)
+            holoBodygroup(I, 0, 3)
+            holoMaterial(I, "debug/debugdrawflat")
+            holoParent(I, Bomb)
+        }
+        
+        holoCreate(10, Bomb:toWorld(vec(-1.5, 2.5, 7)), vec(0.1, 0.5, 0), Bomb:toWorld(ang(0, 0, 0)), vec4(0, 000, 0, 255), "plane")
+        holoCreate(11, Bomb:toWorld(vec(-1.5, -3.5, 7.1)), vec(0.075, 0.5, 0), Bomb:toWorld(ang(0, 0, 0)), vec4(0, 255, 0, 255), "plane")
+        holoMaterial(10, "debug/debugdrawflat")
+        holoMaterial(11, "debug/debugdrawflat")
+        holoParent(10, Bomb)
+        holoParent(11, Bomb)
+        holoCreate(20, Bomb:toWorld(vec(3.2, 0.9, 8.9)), vec(1), Bomb:toWorld(ang(0, 90, 0)), vec(255, 0, 0), "models/fasteroid/led_mini.mdl")
+        holoCreate(21, Bomb:toWorld(vec(3.2, 0.9, 10)), vec(1), Bomb:toWorld(ang(0, 0, 0)), vec4(255, 0, 0, 200), "hq_icosphere")
+        holoMaterial(20, "debug/debugdrawflat")
+        holoMaterial(21, "debug/debugdrawflat")
+        holoParent(20, Bomb)
+        holoParent(21, Bomb)
+        
+        holoCreate(100, Bomb:toWorld(vec(0, 0, 3)), vec())
+        
+        Bomb:noCollideAll(1)
+        #noCollideAll(Bomb, 1)
+        Bomb:soundPlay(1, 1000, "weapons/c4/c4_plant.wav")
+        Bomb:soundPlay(2, 1000, "radio/bombpl.wav")
+                
+        Settings["bomb", entity] = Bomb
+        Settings["clk", number] = 1
+        Settings["countdown", number] = Settings["timer", number]
+        timer("explode", Settings["timer", number] * 1000)
+    }
+    
+    if (Key == "e" & Settings["bomb", entity]:isValid() & !Settings["defusing", number]) {
+        if (Player:aimPos():distance(Settings["bomb", entity]:pos()) < 16 & Player:pos():distance(Settings["bomb", entity]:pos()) < 64) {
+            if (Down) {
+                Settings["defuser", entity] = Player
+                Settings["defusing", number] = 1
+                Settings["dhold", number] = 1
+            } else {
+                Settings["defuser", entity] = noentity()
+                Settings["dhold", number] = 0
+            }
+        } else {
+            
+        }
+    }
+}
+
+event tick() {    
+    if (Settings["bomb", entity]:isValid()) {
+        local Bomb = Settings["bomb", entity]
+            
+        if (changed(Settings["dhold", number]) & Settings["dhold", number]) {
+            Bomb:soundPlay(3, 1000, "weapons/c4/c4_disarm.wav")
+            timer("defuse", Settings["dtimer", number] * 1000)
+        }
+        
+        if (changed(Settings["dhold", number]) & !Settings["dhold", number]) {
+            Bomb:soundPlay(4, 1000, "c4.disarmfinish")
+            stoptimer("defuse")
+        }
+    }
+
+    if (Settings["defuser", entity]:isValid() & Settings["defuser", entity]:isAlive()) {
+        local Player = Settings["defuser", entity]
+        
+        if (Settings["bomb", entity]:isValid()) {
+            if (!Player:keyUse() | Player:aimPos():distance(Settings["bomb", entity]:pos()) > 16 | Player:pos():distance(Settings["bomb", entity]:pos()) > 64) {
+                Settings["dhold", number] = 0
+                Settings["defusing", number] = 0
+            }
+        }
+    }
+    
+    local CountDown = Settings["countdown", number]
+    local CurT  = curtime()
+    
+    local Tick  = Settings["tick", number]
+    local Delay = 1
+    
+    local LTick = Settings["ltick", number]
+    #local LDelay= Settings["ldelay", number]
+    
+    local BTick = Settings["btick", number]
+    local BDelay = (CountDown > Settings["timer", number]*0.5) ? 1 :
+                   (CountDown > 10) ? 0.6 : 
+                   (CountDown > 5) ? 0.3 : 0.1
+    
+    local Clk   = Settings["clk", number]
+
+    local Hold  = Settings["dhold", number]
+    local Alpha = Settings["alpha", number]
+    
+    if (Clk & CurT > Tick + Delay) {
+        Settings["tick", number] = CurT
+        
+        if (Settings["bomb", entity]:isValid()) {
+            Increment += 1
+            
+            if (propCanCreate()) {
+                local Bomb= Settings["bomb", entity]
+                local Mdl = Settings["explosion_mdl", string]
+                local X   = sin(Increment * 12) * (32)
+                local Y   = cos(Increment * 12) * (32)
+                local Pos = Bomb:pos() + vec(X, Y, 36)
+                local Ang = ang(90, 0, 0)
+                local Explosion = propSpawn(Mdl, Pos, Ang, 1)
+                Explosion:propStatic(1)
+                #Explosion:noCollideAll(1)
+                Explosion:propNotSolid(1)
+                Explosion:setAlpha(0)
+                
+                Settings["explosions", array]:pushEntity(Explosion)
+            }
+            CountDown -= 1
+            Settings["countdown", number] = CountDown
+            local Min = floor(CountDown/60)
+            local Sec = floor(CountDown%60)
+            
+            local String = format("%02d:%02d", Min, Sec)
+            
+            for (I = 1, 5) {
+                if (I != 3) {
+                    local Alt = String[I]
+                    local Mdl = "models/sprops/misc/alphanum/alphanum_"+Alt+".mdl"
+                    holoModel(I, Mdl)
+                }
+            }
+        }
+    }
+    
+    if (Clk & CurT > BTick + BDelay) {
+        Settings["btick", number] = CurT
+        
+        if (Settings["bomb", entity]:isValid()) {
+            local Bomb = Settings["bomb", entity]
+            
+            Bomb:emitSound("weapons/c4/c4_click.wav")
+        }
+    }
+    
+    if (Clk & CurT > LTick + (BDelay*0.5)) {
+        Settings["ltick", number] = CurT
+        local Flip = Settings["flip", number]
+        Flip = !Flip
+        Settings["flip", number] = Flip
+        holoColor(20, vec(255, 0, 0) * Flip)
+        holoAlpha(21, Flip * 100)
+    }
+    
+    if (Clk & !Settings["bomb", entity]:isValid()) {
+        Settings["bomb", entity] = noentity()
+        Settings["clk", number]  = 0
+    }
+    
+    if (Settings["bomb", entity]:isValid()) {
+        local Bomb = Settings["bomb", entity]
+        if (Hold) {
+            local Compensate = 0
+            if (serverUUID() == "d82dda16-fd38-43e8-83a2-0d40c37d9617") {
+                Compensate = 0.006
+            }
+            Alpha += clamp(2.5 - Alpha, (-0.0125 - Compensate)*(10/Settings["dtimer", number]), (0.0125 + Compensate)*(10/Settings["dtimer", number]))
+            Settings["alpha", number] = Alpha
+            holoPos(11, Bomb:toWorld(vec(-1.5, Alpha, 7.1)))
+        } else {
+            Settings["alpha", number] = -3.5
+            holoPos(11, Bomb:toWorld(vec(-1.5, Alpha, 7.1)))
+        }
+    }
+}
+
+if (clk("defuse")) {
+    if (Settings["bomb", entity]:isValid()) {
+        local Bomb = Settings["bomb", entity]
+        holoEntity(100):soundPlay(3, 1000, "c4.disarmfinish")
+        holoEntity(100):soundPlay(4, 1000, "radio/bombdef.wav")
+        
+        Bomb:propDelete()
+        
+        foreach (_:number, Ent:entity = Settings["explosions", array]) {
+            if (Ent:isValid()) {
+                Ent:propDelete()
+            }
+        }
+        
+        
+        Settings["bomb", entity]  = noentity()
+        Settings["clk", number]   = 0
+        Settings["alpha", number] = -3.5
+        Settings["dhold", number] = 0
+        stopAllTimers()
+    }
+}
+
+if (clk("explode")) {
+    if (Settings["bomb", entity]:isValid()) {
+        local Bomb = Settings["bomb", entity]
+        
+        holoEntity(100):soundPlay(5, 0, ")weapons/c4/c4_explode1.wav")
+        
+        foreach (_:number, Ent:entity = Settings["explosions", array]) {
+            if (Ent:isValid()) {
+                Ent:propBreak()
+            }
+        }
+        
+        for (I = 1, 4) {
+            #[
+            if (propCanCreate()) {
+                local Mdl = Settings["explosion_mdl", string]
+                local X   = sin(90 * I) * Radius
+                local Y   = cos(90 * I) * Radius
+                local Pos = Bomb:pos() + vec(X, Y, 12)
+                local Ang = ang()
+                local Explosion = propSpawn(Mdl, Pos, Ang, 1)
+                Explosion:setAlpha(0)
+                Explosion:propBreak()
+            }
+            ]#
+
+            if (holoCanCreate()) {
+                holoCreate(I + 50, Bomb:pos(), vec(2), ang(0, 90 * I, 0), vec(255), "models/effects/splode.mdl")
+            }
+        }
+        
+        Settings["clk", number] = 0
+        Bomb:propDelete()
+        stopAllTimers()
+        timer("clean", 2000)
+    }
+}
+
+if (clk("clean")) {
+    for (I = 1, 4) {
+        holoDelete(I + 50)
+    }
+    
+    Settings["bomb", entity] = noentity()
+    Settings["clk", number]  = 0
+    Settings["alpha", number] = -3.5
+    Settings["dhold", number] = 0
+}

@@ -1,0 +1,29 @@
+@name GetBounding[Mouse3]
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@strict
+
+function getBound() {
+    local Ent = owner():aimEntity()
+    
+    try {
+        local Mdl = Ent:model()
+        local Box = Ent:boxSize()
+        
+        local X = Box:x()
+        local Y = Box:y()
+        local Z = Box:z()
+        
+        print(format("Model: %s\nBounding Box: X: %f, Y: %f, Z: %f\nClass: %s\nOwned by: %s", Mdl, X, Y, Z, Ent:type(), Ent:owner():name()))
+    } catch (Error:string) {
+        print(Error)
+    }
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner() & Key == "mouse_middle" & Down) {
+        getBound()
+    }
+}

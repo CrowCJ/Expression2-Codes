@@ -1,0 +1,24 @@
+@name Celcius to Farenheit conversion
+@inputs  Cin Fin
+@outputs [Fout Cout]:string
+@persist 
+@trigger 
+@strict
+
+#(50F - 32) x .5556 = 10C F TO C
+#(30C x 1.8) + 32 = 86F C TO F
+
+function number ctof(Celcius:number) {
+    local Math = (Celcius * 1.8) + 32
+    return round(Math, 2)
+}
+
+function number ftoc(Farenheit:number) {
+    local Math = (Farenheit - 32) * (5/9)
+    return round(Math, 2)
+}
+
+event tick() {
+    Fout = format("%.02f C -> %.02f F", Cin, ctof(Cin))
+    Cout = format("%.02f F -> %.02f C", Fin, ftoc(Fin))
+}

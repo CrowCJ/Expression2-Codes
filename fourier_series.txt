@@ -1,0 +1,53 @@
+@name Fourier Series?
+@persist Count Flip [RadiusArray VarArray]:array Speed Radius
+@trigger  
+
+if (first()) {
+    Count  = 60
+    Speed  = 25
+    Model = "hq_tube_thin"
+    VarArray    = array()
+    RadiusArray = array()
+    for (I = 1, Count) {
+        R = randint(1, 2)
+        Num = randint(-10, 10)
+        if (I == 1) {
+            holoCreate(I, entity():toWorld(vec(0, 0, 3)), vec(R, R, 0), entity():toWorld(ang(0,0,0)), vec(255), Model)
+        } else {
+            holoCreate(I, holoEntity(I-1):toWorld(vec(holoScale(I-1):x()*6, 0, 0)), vec(R, R, 0), entity():toWorld(ang(0,0,0)), vec(255), Model)
+        }
+        
+        #holoColor(I, vec(255)*((-1)^I))
+        #holoMaterial(I, "debug/debugdrawflat")
+        holoMaterial(I, "models/wireframe")
+        
+        VarArray:pushNumber(Num)
+        RadiusArray:pushNumber(holoScale(I):x()*6)
+    }
+    
+    holoEntity(Count):setTrails(10, 10, 999999, "trails/laser", vec(0, 255, 0), 255)
+    #[  
+    holoCreate(1000, entity():toWorld(vec()), vec(Count,Count,0)/(Radius-1), entity():toWorld(ang(0,0,0)), vec4(255,255,255,100), "hq_tube_thin")
+    holoMaterial(1000, "debug/debugdrawflat")
+    holoParent(1000, entity())
+    ]#
+    
+    #runOnTick(1)
+}
+
+interval(100)
+for (I = 1, Count) {
+    
+    local Var = curtime()*Speed*VarArray[I,number]
+    local Sin = sin(Var)*RadiusArray[I-1,number]
+    local Cos = cos(Var)*RadiusArray[I-1,number]
+    
+    if (I == 1) {
+        holoPos(I, entity():toWorld(vec(0,0,3)))
+    } else {
+        holoPos(I, holoEntity(I-1):toWorld(vec(Sin,Cos,0)))
+    }
+    
+    holoAng(I, entity():toWorld(ang()))
+}
+

@@ -1,0 +1,130 @@
+@name BezierThrow
+@inputs 
+@outputs 
+@persist [Owner]:entity T:table
+@trigger 
+@strict
+
+if (first()) {
+    Owner = owner()
+    
+    propSpawnUndo(0)
+    T = table()
+    T = table(
+        "tick"  = 0,
+        "throw" = 0,
+        "addZ" = 10000,
+        "projectdot" = 20,
+        "mass" = 500,
+        #"model" = "models/props_junk/watermelon01.mdl",
+        #"model" = "models/props_phx/ball.mdl"
+        "model" = "models/props_phx/mk-82.mdl"
+        #"model" = "models/props_junk/wood_crate001a.mdl"
+        #"model" = "models/props_junk/propane_tank001a.mdl"
+    )
+    
+    for (I = 1, T["projectdot", number]) {
+        holoCreate(I, entity():pos(), vec(0.25))
+    }
+}
+
+function entity:stablized(Angle:angle, MulVector:number, MulAngVel:number) {
+    TarQ = quat(Angle)
+    CurQ = quat(This)    
+    Q = TarQ/CurQ     
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    #Factors 150 and 12 can be adjusted to achieve best effect.
+    This:applyTorque((MulVector*V - MulAngVel*This:angVelVector())*This:inertia())
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == Owner) {
+        if (propCanCreate() & Key == "g" & Down == 1 & !T["throw", number]) {
+            T["start", vector] = owner():pos() + vec(0, 0, owner():height() + 75)
+            
+            R = rangerOffset(1000000, T["start", vector], vec(0, 0, 1))
+            
+            #T["addZ", number] = R:distance()/2
+            
+            if (owner():aimEntity():isValid()) {
+                T["des", vector] = owner():aimEntity():pos() + vec(0, 0, 25)
+            } else {
+                T["des", vector] = owner():aimPos() + owner():aimNormal()*0 + vec(0, 0, 25)
+            }
+            
+            T["mid", vector] = (T["start", vector] + T["des", vector]) * 0.5
+            T["mid", vector] = (T["mid", vector] + T["des", vector]) * 0.5
+            T["mid", vector] = vec(T["mid", vector]:x(), T["mid", vector]:y(), T["mid", vector]:z() + T["addZ", number])
+            T["frame", number] = 0.1
+            local Ent = propSpawn(T["model", string], T["start", vector], randvec():toAngle(), 0)
+            #Ent:setTrails(64, 0, 10, "trails/laser", vec(255, 50, 50), 255)
+            Ent:setTrails(64, 0, 10, "trails/smoke", vec(255), 255)
+            Ent:setMass(T["mass", number])
+            T["ent", entity] = Ent
+            T["throw", number] = 1
+            
+            local Start = T["start", vector]
+            local End   = T["des", vector]
+            local Mid   = T["mid", vector]
+                
+            for (I = 1, T["projectdot", number]) {                
+                local Bezier = bezier(Start, Mid, End, I/10)
+                holoPos(I, Bezier)
+            }
+        }
+    }
+}
+
+event tick() {
+    if (T["throw", number] == 1) {
+        local Dist = 0
+        local Tick  = T["tick", number]
+        local Frame = T["frame", number]
+        Frame = clamp(Frame, 0, 1)
+        
+        if (curtime() > Tick + 0.1) {
+            T["tick", number] = Tick
+
+            if (Frame >= 0 & Frame < 0.3) {
+                Frame += 0.01
+            } elseif (Frame >= 0.25 & Frame < 0.35) {
+                Frame += 0.005
+            } elseif (Frame >= 0.35 & Frame < 0.45) {
+                Frame += 0.025
+            } elseif (Frame >= 0.45 & Frame < 0.65) {
+                Frame += 0.5
+            } else {
+                Frame += 1
+            }
+            T["frame", number] = Frame
+        }
+            
+        if (T["ent", entity]:isValid()) {
+            local Start = T["start", vector]
+            local End   = T["des", vector]
+            
+            local Mid   = T["mid", vector]
+            
+            local Bezier = bezier(Start, Mid, End, Frame)
+            
+            #Ent:setPos(Bezier)
+            if (Frame < 0.8) {
+                T["ent", entity]:applyForce((Bezier - T["ent", entity]:pos()) * T["ent", entity]:mass())
+                T["ent", entity]:applyForce(-T["ent", entity]:vel() * T["ent", entity]:mass() * (0.1 * (Frame < 1)))
+                T["ent", entity]:stablized((Bezier - Start):toAngle(), 250, 25)
+            } else{ 
+                T["ent", entity]:propDrag(0)
+                #T["ent", entity]:setMass(1000)
+                #T["ent", entity]:applyAngForce(ang(0, 50000, 0) * T["mass", number])
+                T["ent", entity]:stablized((End - T["ent", entity]:pos()):toAngle() + ang(90, 0, 0), 250, 25)
+                T["ent", entity]:applyForce((T["des", vector] - T["ent", entity]:pos()) * T["ent", entity]:mass() * 10)
+            }
+            
+            Dist = T["ent", entity]:pos():distance(T["end", vector])
+        }
+        
+        if (Dist < 60) {
+            T["throw", number] = 0
+        } 
+    }
+}

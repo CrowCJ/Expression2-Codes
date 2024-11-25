@@ -1,0 +1,35 @@
+@name Follower[SetPos]
+@inputs  Prop:entity
+@outputs 
+@persist [Owner]:entity
+@trigger 
+
+if (first() | duped()) {
+    Owner = owner()
+    if (Prop) { Prop:makeSpherical(1) }
+}
+event tick() {
+    if (!Prop:isValid()) { exit() }
+    
+    if (owner():isAlive()) {
+        let EyeAng = Owner:eyeAngles()
+        let Yaw = EyeAng:yaw() + 90
+        let Pos = Owner:pos() + Owner:vel() * tickInterval() * 1.5 + vec(0, 0, Owner:height() * 1.5) + vec(cos(Yaw), sin(Yaw), 0) * 0
+        let Ang = ang(90, Owner:eyeAngles():yaw(), 0)
+#[
+        foreach (_:number, V:entity = Prop:getConnectedEntities()) {
+            if (V == Prop) { continue }
+            V:setPos(Pos)
+        }
+]#
+        Prop:setPos(Pos)
+        Prop:setAng(Ang)
+    }
+    
+    if (owner():isAlive() & !Prop:isFrozen()) {
+        Prop:propFreeze(1)
+    }
+    if (!owner():health() <= 0 & Prop:isFrozen()) {
+        Prop:propFreeze(0)
+    }
+}

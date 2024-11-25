@@ -1,0 +1,145 @@
+@name CPUCooler
+@inputs 
+@outputs 
+@persist [CPU]:entity Num ScaleFactor FanMotor DBWhite:string
+@persist Ar:array E:entity N F FireDelay SmokeDelay FireDuration SmokeDuration Rot
+@model models/cheeze/wires/cpu.mdl
+
+if (first()) {
+    Ar=array(   
+        "sprites/flamelet1",
+        "sprites/flamelet2",
+        "sprites/flamelet3",
+        "sprites/flamelet4",
+        "sprites/flamelet5"
+    )
+#[
+    function void flame(){
+        F++
+        FlameSclXStart = randint(10, 25)*0.5
+        FlameSclYStart = FlameSclXStart
+        FlameSclXEnd = randint(1, 5)
+        FlameSclYEnd = FlameSclXEnd + 25
+        particleCreate(
+            F,
+            Ar[randint(1,Ar:count()),string],vec(255),N,
+            50,0,
+            FlameSclXStart,FlameSclXEnd,
+            FlameSclYStart,FlameSclYEnd,
+            FireDuration,
+            N,
+            entity():up()*5,
+            N
+        )
+        if(particleCanCreate()){
+            particleStart(F,entity():toWorld(vec(0,0,0)))
+        }
+    }
+    function void smoke(){
+        X = randint(5,10)*0.5
+        Y = randint(50,150)*0.5
+        particleCreate(
+            F*2,
+            "particles/smokey",vec(255),255,
+            100,0,
+            X,Y,
+            X,Y,
+            SmokeDuration,
+            N,
+            entity():up()*(75/SmokeDuration) + randvec(-0.1,0.1),
+            N
+        )
+        
+        if(particleCanCreate()){
+            particleBounce(F*2, 0)
+            particleCollision(F*2, 1)
+            particleStart(F*2,entity():toWorld(vec(randint(-1,1),randint(-1,1),0)))
+        }
+
+    }
+]#
+    function number entity:create(Position:vector, Angle:angle) {
+        Num++
+        holoCreate(Num, This:toWorld(Position*ScaleFactor))
+        holoAng(Num, This:toWorld(Angle))
+        holoParent(Num, This)
+        return Num
+    }
+    function scale(X,Y,Z) {
+        local Scale = vec(X,Y,Z)
+        holoScale(Num, Scale*ScaleFactor)
+    }
+    function mdl(Model:string, Material:string) {
+        holoModel(Num, Model)
+        holoMaterial(Num, Material)
+    }
+    function color(RGB:vector,A) {
+        holoColor(Num, vec4(RGB,A))
+    }
+    runOnTick(1)
+    ScaleFactor = 1
+    
+    FireDuration  = 1.5
+    SmokeDuration = 50
+    
+    FireDelay  = 100
+    SmokeDelay = 0
+    
+    propSpawnUndo(0)
+    
+    CPU = entity()
+    #CPU = propSpawn("models/hunter/blocks/cube025x025x025.mdl",entity():toWorld(vec()),entity():toWorld(ang()),1)
+    CPU:setAlpha(0)
+    
+    weld(entity(),CPU)
+    
+    DBWhite = "models/debug/debugwhite"
+    #Heat Spreader#
+    CPU:create(vec(0,0,1.3),ang(0,0,0))
+        scale(0.5,0.5,0.1)
+        mdl("cube",DBWhite)
+        color(vec(100),255)
+    #Cooler Fins#
+    H_Fins = 20
+    for (I = 1, H_Fins) {
+        CPU:create(vec((I-H_Fins/2-0.5)*0.31,0,3),ang(0,0,0))
+            scale(0.01,0.5,0.3)
+            mdl("cube",DBWhite)
+            color(vec(100),255)
+    }
+    #Fan Shroud#
+    CPU:create(vec(0,0,6),ang(0,0,0))
+        scale(0.5,0.5,0.2)
+        mdl("hq_stube_thin",DBWhite)
+        color(vec(25),255)
+    CPU:create(vec(0,0,6),ang(0,0,90))
+        scale(0.45,0.8,0.45)
+        mdl("models/sprops/misc/sq_holes/sqhole_d0_12.mdl",DBWhite)
+        color(vec(25),255)    
+    #Fan Motor#
+    FanMotor = CPU:create(vec(0,0,6),ang(0,0,0))
+        scale(0.2,0.2,0.1)
+        mdl("hq_cylinder",DBWhite)
+        color(vec(25),255)
+    #Fan Fins#
+    F_Ent = holoEntity(FanMotor)
+    F_Fins = 7
+    for (I = 1, F_Fins) {
+        Rad = 1.2
+        Sin = sin(360/F_Fins*I)*Rad
+        Cos = cos(360/F_Fins*I)*Rad
+        F_Ent:create(vec(Sin,Cos,0),ang(25,-360/F_Fins*I,90))
+            scale(0.2,0.01,0.25)
+            mdl("prism",DBWhite)
+            color(vec(25),255)
+    } 
+    
+    CPU:soundPlay(1,0,"vehicles/airboat/fan_motor_fullthrottle_loop1.wav")
+    soundPitch(1,180)
+    soundVolume(1, 0.5)
+}
+
+Rot += 30
+holoAng(FanMotor, CPU:toWorld(ang(0,Rot,0)))
+#flame()
+#smoke()

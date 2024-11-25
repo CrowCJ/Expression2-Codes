@@ -1,0 +1,179 @@
+@name Minegame
+@inputs 
+@outputs 
+@persist [RockList RockModel Materials JunkList]:array CountList:array MaxRock [JunkModel]:string JunkMass
+@persist Tick JunkColor:vector Bonus
+@trigger 
+@strict
+
+if (first() | duped()) {
+    
+    function number entity:press(Key:string) {
+        return changed(This:keyPressed(Key)) & This:keyPressed(Key)
+    }
+    
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    enableConstraintUndo(0)
+    
+    RockList  = array()
+    JunkList  = array()
+    CountList = array()
+    
+    #RockModel = array("025", "05", "075", "1")
+    
+    RockModel = array(
+        "models/props_wasteland/rockgranite03a.mdl",
+        "models/props_wasteland/rockgranite03b.mdl",
+        "models/props_wasteland/rockgranite03c.mdl",
+        "models/props/cs_militia/militiarock05.mdl"
+    )
+    
+    
+    Materials = array(
+        "models/props_wasteland/rockcliff02b",
+        "models/props_wasteland/rockcliff02c",
+        "models/props_wasteland/rockcliff04a",
+        "models/props_wasteland/rockgranite02a"
+        
+        #"models/debug/debugwhite"
+    )
+    
+    RockMass  = 50000
+    
+    JunkMass  = 10
+    #JunkModel = "debug/debugdrawflat"
+    JunkModel = "models/shiny"
+    
+    JunkColor = vec(255,200,0)
+    
+    MaxRock = 25
+    Tick = 0
+    
+    Bonus = 0.1
+}
+
+event tick() {    
+    if (propCanCreate() & RockList:count() < MaxRock) {
+        local Rand = random(-180, 180)
+        local Radius = random(50, 100) * 2
+        local Sinr = sinr(Rand) * Radius
+        local Cosr = cosr(Rand) * Radius
+        
+        local String = RockModel[randint(1, RockModel:count()), string]
+        
+        #local Model = format("models/hunter/blocks/cube%sx%sx%s.mdl", String, String, String)
+        local Model = String
+        local Mat   = Materials[randint(1, Materials:count()), string]
+        
+        local Rock = propSpawn(Model, entity():toWorld( vec(Sinr, Cosr, 0) ), randvec():toAngle(), 1)
+        Rock:setMaterial(Mat)
+        Rock:setMass(RockMass)
+        Rock:setColor(JunkColor)
+        Rock:propStatic(1)
+        Rock:propPhysicalMaterial("concrete")
+        
+        RockList:pushEntity(Rock)
+        CountList:pushNumber(randint(5, 10))
+    }
+    
+    Curtick = curtime()
+    
+    if (Curtick > Tick + 0.25 - Bonus) {
+        Tick = Curtick
+               
+        local Hit = 0
+        
+        foreach (_:number, Ply:entity = players())
+        {
+            local AimEnt = Ply:aimEntity()
+            local Weapon = Ply:weapon():isValid() & ( Ply:weapon():type() == "weapon_physcannon" | 
+                                                      Ply:weapon():type() == "weapon_crowbar" | 
+                                                      Ply:weapon():type() == "pac_crowbar"
+                                                    )
+            
+            if (AimEnt:isValid() & Weapon & Ply:keyAttack1()) {
+                foreach (ID:number, Rock:entity = RockList)
+                {
+                    local Distance = Ply:pos():distance(Rock:pos())
+                    if (AimEnt == Rock & Rock:isValid() & Distance < 100 & !Hit) {
+                        Hit = 1
+                        
+                        local Num = CountList[ID, number]
+                        Num = Num - 1
+                        CountList[ID, number] = Num
+                        
+                        Rock:soundPlay(ID + Num, 0, "Rock.ImpactHard")
+                        
+                        if (Num > 0) {
+                            local Melon = randint(1, 3)
+                            
+                            if (Melon == 2 & propCanCreate()) {
+                                local Mel = propSpawn("models/hunter/plates/plate025.mdl", Rock:pos(), randvec():toAngle(), 0)
+                                Mel:setMaterial(JunkModel)
+                                Mel:setColor(JunkColor)
+                                Mel:applyForce(vec(0, 0, 100))
+                                Mel:setMass(JunkMass)
+                                Rock:noCollide(Mel) #noCollide(Mel, Rock)
+                                JunkList:pushEntity(Mel)
+                            }
+                            break
+                        }
+                                            
+                        if (CountList[ID, number] == 0) {
+    
+                            local Melon = randint(1, 3)
+                            
+                            if (Melon == 2 & propCanCreate()) {
+                                local Mel = propSpawn("models/hunter/plates/plate025.mdl", Rock:pos(), randvec():toAngle(), 0)
+                                Mel:setMaterial(JunkModel)
+                                Mel:setColor(JunkColor)
+                                Mel:applyForce(vec(0, 0, 100))
+                                Mel:setMass(JunkMass)
+                                
+                                JunkList:pushEntity(Mel)
+                            }
+                            
+                            local Melon2 = randint(1, 10)
+                            
+                            if (propCanCreate()) {
+                                if (Melon2 == 10) {
+                                    local Mel = propSpawn("models/hunter/plates/plate025.mdl", Rock:pos(), randvec():toAngle(), 0)
+                                    Mel:setMaterial("debug/debugdrawflat")
+                                    Mel:setColor(vec4(0, 255, 255, 150))
+                                    Mel:applyForce(vec(0, 0, 100))
+                                    Mel:setMass(JunkMass)
+                                    #noCollide(Mel, Rock)
+                                    Rock:noCollide(Mel)
+                                    JunkList:pushEntity(Mel)
+                                } elseif (Melon2 == 5) {
+                                    local Mel = propSpawn("models/hunter/plates/plate025.mdl", Rock:pos(), randvec():toAngle(), 0)
+                                    Mel:setMaterial("debug/debugdrawflat")
+                                    Mel:setColor(vec4(33, 255, 0, 150))
+                                    Mel:applyForce(vec(0, 0, 100))
+                                    Mel:setMass(JunkMass)
+                                    Rock:noCollide(Mel)
+                                    JunkList:pushEntity(Mel)                          
+                                }
+                            }
+                            
+                            Rock:propDelete()
+                            
+                            RockList:remove(ID)
+                            CountList:remove(ID)
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (JunkList:count() > 20) {
+            local Ent = JunkList:shiftEntity()
+            if (Ent:isValid()) {
+                Ent:propDelete()
+            }
+        }
+        
+    }
+}
+

@@ -1,0 +1,105 @@
+@name FFTWave
+@inputs  FFT:array
+@outputs 
+@persist R Max Style Scale MaxDeg Offset N
+@persist Mat:string Colors:array HoloScale:vector E:entity FFTN:array Interval Tick
+@trigger 
+@model models/hunter/tubes/circle2x2.mdl
+
+if (first() | duped()) {
+    #Weld = entity():isWeldedTo()
+    #E = Weld ? Weld : entity()
+    E = entity()
+    
+    entity():setAlpha(0)
+    
+    Tick = 0
+    Interval = 0.06
+    FFTN   = array()
+    Colors = array()
+    N = 0
+    Mat = "debug/debugdrawflat"
+
+    Max = 36
+    Scale = 0.8
+    MaxDeg = 360
+    Offset = 180
+    
+    R = Scale * 70
+
+    Style = 1
+
+    holoCreate(100, E:toWorld(vec(0, 0, 0)), vec(-12 * Scale, -12 * Scale, 1), E:toWorld(ang()), vec(0), "cplane")
+    holoMaterial(100, Mat)
+    holoParent(100, E)
+    
+    local O = 2*_PI*R/(Max * Scale * 11.5)
+    
+    if (Style == 2) {
+        HoloScale = vec(O)
+    } else {
+        HoloScale = vec(O, 15, O)
+    }
+    local Mdl = ""
+    if (Style == 1) {
+        Mdl = "plane"
+    }
+    elseif (Style == 2) {
+        Mdl = "cube"
+    }
+        
+    for (I = 1, Max) {
+        Color = hsv2rgb(MaxDeg/Max*I%360, 1, 1)
+        Sin = sin(MaxDeg/Max*I + Offset) * R
+        Cos = cos(MaxDeg/Max*I + Offset) * R
+    
+        holoCreate(I, E:toWorld(vec(Sin, Cos, 0)), HoloScale*Scale, E:toWorld(ang(0, -MaxDeg/Max*I - Offset, 0)), vec(255), Mdl)
+        holoColor(I, vec())
+        holoMaterial(I, Mat)
+        holoParent(I, 100)
+        
+        holoClipEnabled(I, 1)
+        holoClip(I, entity():pos(), entity():up(), 1)
+        
+        Colors:pushVector(Color)
+    }
+}
+
+event tick() {
+    local CurTick = curtime()
+    if (CurTick > Tick + Interval) {
+        Tick = CurTick
+        local Tab = FFT
+        N += 0.5
+        holoAng(100, entity():toWorld(ang(0, N, 0)))
+        #local I = 0
+        for (I = 1, Tab:count()) {
+            FFTN[I, number] = FFTN[I, number] + (Tab[I, number] - FFTN[I, number]) * tickInterval() * 32
+            FPoint = FFTN[I, number] * (1 + ln(I))/5
+                                                
+            #holoPos(I, E:toWorld(vec(Sin, Cos, 0)))
+            
+            #Sin = sin(MaxDeg/Max*I + Offset) * R * (1 + FPoint/255*0.5)
+            #Cos = cos(MaxDeg/Max*I + Offset) * R * (1 + FPoint/255*0.5)            
+            #Pos = vec(Sin, Cos, 0)
+            
+            if (Style == 1) {
+                Sin = sin(MaxDeg/Max*I + Offset) * R
+                Cos = cos(MaxDeg/Max*I + Offset) * R
+                Pos = vec(Sin, Cos, -6*HoloScale:y()*Scale + 0.5 + FPoint/3)
+            }
+            elseif (Style == 2) {
+                Sin = sin(MaxDeg/Max*I + Offset) * (R + FPoint/10)
+                Cos = cos(MaxDeg/Max*I + Offset) * (R + FPoint/10)
+                Pos = vec(Sin, Cos, 0)
+            }
+            
+            #Col = Colors[I, vector]*(FPoint/12)
+            Col = hsv2rgb((360 / Max * I - N) % 360, 1, 1)
+            Ang = -MaxDeg/Max*I - Offset
+            holoPos(I, holoEntity(100):toWorld(Pos))
+            holoAng(I, holoEntity(100):toWorld(ang(0, Ang, 90)))
+            holoColor(I, Col)    
+        }
+    }
+}

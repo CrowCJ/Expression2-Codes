@@ -1,0 +1,25 @@
+@name [RGB]MousePad
+@inputs  Power
+@outputs 
+@persist 
+@model models/sprops/rectangles_superthin/size_2_5/rect_18x18.mdl
+@strict
+
+if (first() | duped()) {
+    entity():setAlpha(0)
+    noCollideAll(entity(), 0)
+    holoCreate(1, entity():pos(), vec(4, 7, 1), entity():angles(), vec(255), "models/skpmousepad/skpmousepad.mdl")
+    holoCreate(2, entity():pos() - vec(0, 0, 0.1), vec(4.1, 7.1, 1), entity():toWorld(ang()), vec(255), "models/skpmousepad/skpmousepad.mdl")
+    holoMaterial(2, "debug/debugdrawflat")
+    
+    holoParent(1, entity())
+    holoParent(2, entity())
+}
+
+event tick() {
+    if (Power) {
+        holoColor(2, hsv2rgb((curtime() * 35) % 360, 1, 1))
+    } else {
+        holoColor(2, vec())
+    }
+}

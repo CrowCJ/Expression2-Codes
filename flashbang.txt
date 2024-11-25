@@ -1,0 +1,113 @@
+@name FlashBang
+@inputs  Light:wirelink
+@outputs 
+@persist [TouchPath ExplodePath FlashMat FlashModel]:string Flash O:entity Prop:entity Var
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    Flash = 0
+    TouchPath = "weapons/flashbang/grenade_hit1.wav"
+    ExplodePath = "^weapons/flashbang/flashbang_explode2.wav"
+    
+    #FlashMat = "debug/debugportals"
+    FlashMat = "debug/debugdrawflat"
+    FlashModel = "models/hunter/misc/sphere375x375.mdl"
+    #FlashModel = "models/props_combine/portalskydome.mdl"
+    
+    O = owner()
+    runOnKeys(O, 1)
+    
+    if (->Light) {
+        Light["RGB", vector] = vec()
+        Light["GlowBrightness", number] = 10
+        Light["GlowSize", number] = 1024
+        Light["SpriteSize", number] = 256
+        
+        Light:entity():setAlpha(10)
+        noCollideAll(Light:entity(), 1)
+    }
+    Var = 1
+}
+
+if (~Light & Light) {
+    Light["RGB", vector] = vec()
+    Light["GlowBrightness", number] = 10
+    Light["GlowSize", number] = 1024
+    Light["SpriteSize", number] = 256
+    
+    Light:entity():setAlpha(10)
+    noCollideAll(Light:entity(), 1)
+}
+
+if (owner():keyPressed("g") & !Flash & ->Light) {
+    Prop = propSpawn(
+        "models/items/grenadeammo.mdl",
+        owner():shootPos() + owner():eye()*25 + owner():vel()*tickInterval(),
+        owner():eyeAngles(),
+        0
+    )
+    
+    holoCreate(1, Prop:toWorld(vec()), vec(1), Prop:toWorld(ang()), vec(255), "models/weapons/w_eq_flashbang_thrown.mdl")
+    holoParent(1, Prop)
+    #Prop:makeSpherical(3)
+    Prop:setMass(1)
+    Prop:propDraw(0)
+    Prop:propPhysicalMaterial("grenade")
+    Prop:applyForce(owner():eye()*(clamp(owner():aimPos():distance(owner():shootPos()), 1000, 2500) + owner():vel():length()*20)*Prop:mass())
+    Prop:setTrails(64, 32, 5, "trails/laser", vec(255), 255)
+    
+    O:soundPlay(1, 0, "weapons/pinpull.wav")
+    O:soundPlay(2, 0, ")weapons/grenade/tick1.wav")
+    Flash = 1
+    
+    timer("explode", 3000)
+}
+
+if (clk("touch")) {
+    if (Prop:isValid()) {
+        Prop:soundPlay(3, 0, TouchPath)
+    }
+}
+
+if (clk("explode")) {
+    if (Prop:isValid()) {
+        Prop:soundPlay(4, 0, ExplodePath)
+        Pos = Prop:pos()
+        Light:entity():setPos(Pos)
+        holoDelete(1)
+        
+        foreach (K, V:entity = players()) {
+            if (Prop:isValid()) {
+                local Dist = V:shootPos():distance(Prop:pos())
+                if (Dist < 500) {
+                    holoCreate(K, V:shootPos(), vec(-(V:height()/100)), ang(), vec(255), FlashModel)
+                    holoParentAttachment(K, V, "eyes")
+                    holoMaterial(K, FlashMat)
+                }
+            }
+        }
+    }
+    Prop:propFreeze(1)
+    
+    timer("decay", 1500)
+    timer("flash", 10)
+}
+
+if (clk("flash")) {
+    Var -= 0.05
+    Light["RGB", vector] = vec(255)*Var
+    timer("flash", 10)
+}
+
+if (clk("decay")) {
+    stoptimer("flash")
+    Flash = 0
+    holoDeleteAll()
+    Prop:propDelete()
+    Var = 1
+    Light["RGB", vector] = vec()
+    
+    print(_HUD_PRINTCENTER, "FlashBang Ready")
+}

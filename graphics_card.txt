@@ -1,0 +1,177 @@
+@name Graphics Card
+@inputs  Active
+@outputs 
+@persist [CPU]:entity Num [HoloInfo GlobalVar]:table Acc Spin #Fin
+@model models/hunter/plates/plate025.mdl
+#@model models/hunter/plates/plate1x1.mdl
+@strict
+
+if (first() | duped()) {
+    CPU = entity()
+    CPU:setName("NVidia GeForce RTX 4090")
+    CPU:setAlpha(0)
+    HoloInfo  = table()
+    GlobalVar = table()
+    Num = 0
+    Acc = 0
+    #Fin = 0
+    Spin = 0
+    
+    propSpawnUndo(0)
+#[
+    
+    if (propCanCreate()) {
+        Prop = propSpawn("models/hunter/plates/plate025x05.mdl", CPU:pos(), CPU:angles(), 0)
+        CPU:setPos(Prop:pos() + vec(0, 0, 1))
+        Prop:setAlpha(0)
+        CPU:parentTo(Prop)
+        #CPU:propNotSolid(1)
+    }
+]#    
+    GlobalVar = table(
+        "tick"    = 0,
+        "created" = 0,
+        "factor"  = 7,
+        "rpm"     = 2500,
+        
+        "mat" = array(
+            "debug/debugdrawflat",
+            "models/debug/debugwhite",
+            "models/shiny"
+        ),
+        "choosen_mat" = 3
+    )
+    
+    FanMdl = "models/props/de_inferno/ceiling_fan_blade.mdl"
+    FanMdl = "models/props_phx/wheels/metal_wheel2.mdl"
+    FanMdl = "models/props_phx/misc/propeller3x_small.mdl"
+    
+    FanScl = vec(6.5, 6.5, 0.3)
+    #FanScl = vec(12, 12, 0.5)
+    
+    local Mat = GlobalVar["mat", array][GlobalVar["choosen_mat", number], string]
+    HoloInfo = table(
+        array(vec(0, 6.5, 1.25+0.4), FanScl, ang(0, 0, 0), vec(50), Mat, FanMdl),
+        array(vec(0,-6.5,-1.25-0.4), FanScl, ang(0, 0, 0), vec(50), Mat, FanMdl),
+        array(vec(0, 6.5, 1.25+0.4), FanScl, ang(0, 0, 0), vec(50), Mat, FanMdl),
+        array(vec(0,-6.5,-1.25-0.4), FanScl, ang(0, 0, 0), vec(50), Mat, FanMdl),
+    
+        array(vec(0, 6.5, 1.2), vec(3, 3, 1), ang(180, 0, 0), vec(50), Mat, "hq_cylinder"),
+        array(vec(0,-6.5,-1.2), vec(3, 3, 1), ang(0, 0, 0), vec(50), Mat, "hq_cylinder"),
+        
+        array(vec(0, 6.5, 1.25), vec(8.5, 8.5, 0.5), ang(0, 00, 0), vec(50), Mat, "models/props_phx/construct/metal_plate_curve360.mdl"),
+        array(vec(0,-6.5,-1.25), vec(8.5, 8.5, 0.5), ang(180, 00, 0), vec(50), Mat, "models/props_phx/construct/metal_plate_curve360.mdl"),
+        
+        array(vec(0, 0, 0), vec(12, 12, 3.1), ang(0, 45, 0), vec(200, 150, 50), Mat, "models/mechanics/solid_steel/sheetmetal_plusb_4.mdl"),
+        
+        array(vec( 3.73, 10.25, 0), vec(1.2, 3.2, 1.2), ang(0, 180, 90), vec(200, 150, 50), Mat, "models/sprops/geometry/fdisc_24.mdl"),
+        array(vec( 3.73,-10.25, 0), vec(1.2, 3.2, 1.2), ang(0, 90, 90), vec(200, 150, 50), Mat, "models/sprops/geometry/fdisc_24.mdl"),
+        array(vec(-3.73, 10.25, 0), vec(1.2, 3.2, 1.2), ang(0, 270, 90), vec(200, 150, 50), Mat, "models/sprops/geometry/fdisc_24.mdl"),
+        array(vec(-3.73,-10.25, 0), vec(1.2, 3.2, 1.2), ang(0, 0, 90), vec(200, 150, 50), Mat, "models/sprops/geometry/fdisc_24.mdl"),
+        
+        array(vec( 4.2, 7.2, 0), vec(0.25, 6, 3), ang(0, 0, 0), vec(200, 150, 50), Mat, "cube"),
+        array(vec( 4.2,-7.2, 0), vec(0.25, 6, 3), ang(0, 0, 0), vec(200, 150, 50), Mat, "cube"),
+        array(vec(-4.2, 7.2, 0), vec(0.25, 6, 3), ang(0, 0, 0), vec(200, 150, 50), Mat, "cube"),
+        array(vec(-4.2,-7.2, 0), vec(0.25, 6, 3), ang(0, 0, 0), vec(200, 150, 50), Mat, "cube"),
+        
+        array(vec(0, 10.75, 0), vec(7.5, 0.25, 3), ang(0, 0, 0), vec(200, 150, 50), Mat, "cube"),
+        array(vec(0,-10.75, 0), vec(7.5, 0.25, 3), ang(0, 0, 0), vec(200, 150, 50), Mat, "cube"),
+        
+        array(vec(0, 7.35, 0), vec(8.2, 6.6, 2.9), ang(0, 0, 0), vec(0), Mat, "cube"),
+        array(vec(0,-7.35, 0), vec(8.2, 6.6, 2.9), ang(0, 0, 0), vec(0), Mat, "cube"),
+        
+        array(vec(0, 4, 0), vec(6, 6, 2.9), ang(0, 45, 0), vec(0), Mat, "cube"),
+        array(vec(0,-4, 0), vec(6, 6, 2.9), ang(0, 45, 0), vec(0), Mat, "cube"),
+        
+        array(vec( 7.5, 0, 1.4), vec(5.5, 5.5, 0.2), ang(0, -135, 0), vec(0), Mat, "models/hunter/triangles/025x025.mdl"),
+        array(vec(-7.5, 0, 1.4), vec(5.5, 5.5, 0.2), ang(0, 45, 0), vec(0), Mat, "models/hunter/triangles/025x025.mdl"),
+        
+        array(vec(-5.5,-4.5, 1.25), vec(0.25, 7.5, 4.5), ang(90, 0, 0), vec(50), "", "models/hammy/pci_card.mdl"),
+        array(vec(-2,-11, 0), vec(9, 0.2, 3), ang(0, 0, 0), vec(150), Mat, "cube"),
+        array(vec( 2.5,-11.4, 0), vec(0.2, 1, 3), ang(0, 0, 0), vec(150), Mat, "cube")
+    )
+    
+    local Word = "RTX 4069"
+    
+    for (I = 1, Word:length()) {
+        local Model = "models/sprops/misc/alphanum/alphanum_" + Word[I] + ".mdl"
+        if (Word[I] != " ") {
+            Scale = vec(0.7)
+            Spacing = 0.55
+        } else {
+            Scale = vec()
+            Spacing = -0.7
+        }
+        
+        local Array = array(vec( 0, -8.5 + (I - 1) * Spacing, 1.2), Scale, ang(0, -90, 90), vec(255), Mat, Model)
+        HoloInfo:pushArray(Array)
+    }
+    
+    local Word2 = "GEFORCE RTX"
+    
+    for (I = 1, Word2:length()) {
+        local Model = "models/sprops/misc/alphanum/alphanum_" + Word2[I] + ".mdl"
+        if (Word2[I] != " ") {
+            Scale = vec(0.5)
+            Spacing = 0.55
+        } else {
+            Scale = vec()
+            Spacing = -0.7
+        }
+        
+        local Array = array(vec( 4.2, 4.5 + (I - 1) * Spacing, 0), Scale, ang(0, -90, 0), vec(255), Mat, Model)
+        HoloInfo:pushArray(Array)
+    }
+    
+    for (I = 1, 8) {
+        local Array = array(vec(0, 3.5 - (I-1) * 1, 0), vec(6, 6, 2.5), ang(0, -135, 0), vec(0), Mat, "models/mechanics/solid_steel/sheetmetal_90_4.mdl")
+        HoloInfo:pushArray(Array)
+    }
+}
+
+function holo_create(Pos:vector, Scl:vector, Ang:angle, Col:vector, Mat:string, Mod:string)
+{
+    Num++
+    holoCreate(Num)
+    holoModel(Num, Mod)
+    holoColor(Num, Col)
+    holoMaterial(Num, Mat)
+    holoScaleUnits(Num, Scl)
+    holoParent(Num, entity())
+    holoPos(Num, entity():toWorld(Pos))
+    holoAng(Num, entity():toWorld(Ang))
+}
+    
+event tick() {
+    local Curtick = curtime()
+    local Tick    = GlobalVar["tick", number]
+    local Delta   = Tick - Curtick
+    local Created = GlobalVar["created", number]
+    local RPM     = GlobalVar["rpm", number]
+    
+    if (Curtick > Tick + 0.02) {
+        GlobalVar["tick", number] = Curtick
+        
+        if (Created < HoloInfo:count() & holoCanCreate()) {
+            Created++
+            local Pos = HoloInfo[Created, array][1, vector] * GlobalVar["factor", number]
+            local Scl = HoloInfo[Created, array][2, vector] * GlobalVar["factor", number]
+            local Ang = HoloInfo[Created, array][3, angle]
+            local Col = HoloInfo[Created, array][4, vector]
+            local Mat = HoloInfo[Created, array][5, string]
+            local Mod = HoloInfo[Created, array][6, string]
+            holo_create(Pos, Scl, Ang, Col, Mat, Mod)
+            GlobalVar["created", number] = Created
+        } else {
+            Acc  += clamp(Active - Acc, -0.01, 0.01)
+            Spin += Delta * Acc * RPM
+            #Fin  = Spin
+            holoAng(1, CPU:toWorld(ang(180, Spin, 0)))
+            holoAng(2, CPU:toWorld(ang(0, Spin, 0)))
+            holoAng(3, CPU:toWorld(ang(180, Spin + 180, 0)))
+            holoAng(4, CPU:toWorld(ang(0, Spin + 180, 0)))
+        }
+    }
+}
+
+

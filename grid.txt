@@ -1,0 +1,85 @@
+@name Grid
+@inputs 
+@outputs 
+@persist Table:table 
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    Table = table()
+    Table = table(
+        "side"  = 19,
+        "count" = 0,
+        "size"  = 47.95,
+        "type"  = 32,
+        
+        "created" = 0,
+        "x" = 0,
+        "y" = 0,
+        
+        "mats" = array(
+            "debug/debugdrawflat",
+            "models/shadertest/predator",
+            "models/shadertest/shader4",
+            "models/shadertest/shader3"
+        ),
+        "mat" = 1,
+        "color" = vec(50, 50, 155),
+        "alpha" = 0
+    )
+    
+    local Side  = Table["side", number]
+    Table["x", number] = -Side/2
+    Table["y", number] = -Side/2
+}
+
+event tick() {
+    local Created = Table["created", number]
+    local Side  = Table["side", number]
+    local Count = Side*Side
+    local Size  = (Table["size", number] - 0.5) * Table["type", number]
+    
+    local X = Table["x", number]
+    local Y = Table["y", number]
+    
+    if (Created < Count & holoCanCreate() & propCanCreate() & Y <= Side/2 - 1) {
+        Created++
+        local Num = Created
+        Table["created", number] = Created
+        local Pos = vec(Size*(X+0.5), Size*(Y+0.5), 0)
+        
+        Model = "models/hunter/plates/plate" + Table["type", number] + "x" + Table["type", number] + ".mdl"
+        
+        local Prop = propSpawn(Model, entity():toWorld(Pos), entity():toWorld(ang()), 1)
+        Prop:setMaterial("sprops/sprops_grid_12x12")
+        Prop:noCollideAll(1)
+        Prop:propStatic(1)
+        Prop:setAlpha(255)
+        
+        
+        holoCreate(Num, entity():toWorld(Pos), vec(0), entity():toWorld(ang()), Table["color", vector], Model)
+        holoScale(Num, vec(1))
+        
+        holoAlpha(Num, 0)
+        holoMaterial(Num, Table["mats", array][Table["mat", number], string])
+        
+        X++
+        if (X > Side/2 - 1) {
+            Y++
+            X = -Side/2
+        }
+        
+        Table["x", number] = X
+        Table["y", number] = Y
+    } else {
+        local Count = Table["count", number]
+        if (Count < Created) {
+            Count++
+            Table["count", number] = Count
+            
+            holoAlpha(Count, Table["alpha", number])
+        }
+    }
+}

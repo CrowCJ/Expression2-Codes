@@ -1,0 +1,23 @@
+@name LandingGears
+@inputs  [Gear1 Gear2]:entity Active
+@outputs 
+@persist 
+@strict
+@model models/sprops/rectangles/size_1/rect_3x3x3.mdl
+
+if (first() | dupefinished()) {
+    
+}
+
+event input(InputName:string) {
+    if (!Gear1 | !Gear2) { exit() }
+    if (InputName == "Active") {
+        if (Active) {
+            Gear1:setMass(1)
+            Gear2:setMass(1)
+        } else {
+            Gear1:setMass(100)
+            Gear2:setMass(100)
+        }
+    }
+}

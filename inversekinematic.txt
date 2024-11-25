@@ -1,0 +1,43 @@
+@name InverseKinematic
+@inputs 
+@outputs 
+@persist Length Max_Segments Target:vector
+@trigger 
+@strict
+
+if (first()) {
+    Target = entity():pos()
+    Max_Segments = 10
+    Length = 24
+    
+    for (I = 1, Max_Segments) {
+        holoCreate(I, entity():toWorld(vec(0, 0, 0)), vec(1), entity():toWorld(ang()), vec(255), "hq_icosphere")
+        #holoCreate(I+Max_Segments, entity():toWorld(vec(Length, 0, 0)), vec(1), entity():toWorld(ang()), vec(255), "cube")
+        
+        #holoParent(I+Max_Segments, I)
+    }
+}
+
+function follow(Index:number, Vector:vector) {
+    local Target = Vector
+    local Dir = (Target - holoPos(Index)):normalized()
+    local RDir = Dir * Length * -1
+    local Ang = Dir:toAngle()
+    
+    holoPos(Index, Target + RDir)
+    holoAng(Index, Ang)
+}
+
+event tick() {
+    #local R = rangerOffset(1000, owner():shootPos(), owner():eye())
+    R = owner()
+    Target += clamp(R:pos() - Target, -vec(10), vec(10))
+    #Target += clamp(owner():pos() + vec(0, 0, 36) - Target, -vec(10), vec(10))
+    for (I = 1, Max_Segments) {
+        if (I == 1) {
+            follow(I, Target)
+        } else {
+            follow(I, holoPos(I-1))
+        }
+    }
+}

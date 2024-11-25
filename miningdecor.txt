@@ -1,0 +1,119 @@
+@name MiningDecor
+@inputs  EGP:wirelink
+@outputs Active
+@persist [Print]:array RandOut:table Max OutID EpochID ShareID Addr:string Diff Second Bandwidth Diff2 Est_Time Init
+@trigger 
+@strict
+
+if (first() | ~EGP) {
+    Active = 1
+    Print = array()
+    RandOut = table()
+    EpochID = randint(1, 2048)
+    ShareID = 1
+    Addr    = format("%016x", randint(32767, 999999999))
+    Diff    = random(1, 99)
+    Diff2   = random(1, 99)
+    Est_Time= randint(1, 100)
+    Second  = random(1, 5)
+    Bandwidth = randint(1024, 4096)
+    
+    if (->EGP) {
+        EGP:egpClear()
+        
+        Max = floor(512/11)
+
+        for (I = 1, Max) {            
+            EGP:egpText(I, "", vec2(2, (I-1)*11))
+            EGP:egpSize(I, 12)
+            EGP:egpFont(I, "Consolas")
+        }
+    }
+    
+    Init = time()
+    
+    RandOut = table(
+        format("Started Mining on GPU0: MiSS NVidia GeForce RTX 4069 69GB [0000:01:00.0]"),
+        format("GPU0: Generating DAG for epoch #%d [Single Buffer 4800 MB]", EpochID),
+        format("New Job: %s Epoch: #%d Diff: %.03fG", Addr, EpochID, Diff),
+        format("GPU0: DAG Generated in %.02fs [%d MB/s]", Second, Bandwidth),
+        format("GPU0: DAG Verification passed"),
+        format("GPU0: Share #%d verified on CPU, difficulty: %.02fG", ShareID, Diff2),
+        format("GPU0: Share #%d accepted %d ms", ShareID, Est_Time),
+        format("Pool: daggerhashimoto.usa-west.nicehash.com:3353 Shares/Minute: %.02f", random(8, 32)),
+        format("Pool Hashrate: %.02f MH/s Efficiency: %.02f %s", random(100, 300), random(50, 99), "%"),
+        format("Uptime: %dd %02d:%02d:%02d Electricity: %.03f kWh", 0, 0, 0, time() - Init, random(0, 1)),
+        format("+---+-----+-----------+------+------+-------------+"),
+        format("| ID  GPU     Speed    Shares  Best   Efficiency  |"),
+        format("+---+-----+-----------+------+------+-------------+"),
+        format("|  0  4069 %.02f MH/s   3/0/0 %.02fG  %.02f KH/W |", random(100, 500), Diff2, random(255, 900)),
+        format("+---+-----+-----------+------+------+-------------+"),
+        format("+---+-----+------+-----+----+-----+-----+"),
+        format("| ID  GPU   Temp   Fan  Core  Mem  Kern |"),
+        format("+---+-----+------+-----+----+-----+-----+"),
+        format("| 0   4069  %d/%d  %d %s %d %d      -|", randint(40, 99), randint(40, 99), randint(1, 99), "%", randint(1000, 2000), randint(5000, 9000)),
+        format("+---+-----+------+-----+----+-----+-----+"),
+        format("")
+    )
+    
+    OutID = 0
+}
+
+interval(250)
+
+OutID++
+if (OutID > 10) {
+    OutID = 3
+    
+    if (OutID == 3) {
+        OutID+=3
+    }
+    
+    ShareID++
+    Addr    = format("%016x", randint(32767, 999999999))
+    Diff    = random(1, 99)
+    Diff2 = random(1, 99)
+    Est_Time= randint(1, 100)
+    RandOut = table(
+        format("Started Mining on GPU0: MiSS NVidia GeForce RTX 4069 69GB [0000:01:00.0]"),
+        format("GPU0: Generating DAG for epoch #%d [Single Buffer 4800 MB]", EpochID),
+        format("New Job: %s Epoch: #%d Diff: %.03fG", Addr, EpochID, Diff),
+        format("GPU0: DAG Generated in %.02fs [%d MB/s]", Second, Bandwidth),
+        format("GPU0: DAG Verification passed"),
+        format("GPU0: Share #%d verified on CPU, difficulty: %.02fG", ShareID, Diff2),
+        format("GPU0: Share #%d accepted %d ms", ShareID, Est_Time),
+        format("Pool: daggerhashimoto.usa-west.nicehash.com:3353 Shares/Minute: %.02f", random(8, 32)),
+        format("Pool Hashrate: %.02f MH/s Efficiency: %.02f %s", random(100, 300), random(50, 99), "%"),
+        format("Uptime: %dd %02d:%02d:%02d Electricity: %.03f kWh", 0, 0, 0, time() - Init, random(0, 1)),
+        format("+---+-----+-----------+------+------+-------------+"),
+        format("| ID  GPU     Speed    Shares  Best   Efficiency  |"),
+        format("+---+-----+-----------+------+------+-------------+"),
+        format("|  0  4069 %.02f MH/s   3/0/0 %.02fG  %.02f KH/W |", random(100, 500), Diff2, random(255, 900)),
+        format("+---+-----+-----------+------+------+-------------+"),
+        format("+---+-----+------+-----+----+-----+-----+"),
+        format("| ID  GPU   Temp   Fan  Core  Mem  Kern |"),
+        format("+---+-----+------+-----+----+-----+-----+"),
+        format("| 0   4069  %d/%d  %d %s %d %d      -|", randint(40, 99), randint(40, 99), randint(1, 99), "%", randint(1000, 2000), randint(5000, 9000)),
+        format("+---+-----+------+-----+----+-----+-----+"),
+        format("")
+    )
+}
+
+local Status = RandOut[OutID, string]
+
+local H = time("hour")
+local M = time("min")
+local S = time("sec")
+local Time = format("%02d:%02d:%02d", H, M, S)
+local String = format("%s %s", Time, Status)
+
+Print:pushString(String)
+
+if (Print:count() > Max) {
+    Print:shift()
+}
+
+for (I = 1, Max) {    
+    EGP:egpSetText(I, Print[I, string])
+}
+

@@ -1,0 +1,138 @@
+@name LightController
+@inputs  [Seat]:entity [LightFL LightFR LightBL LightBR BlinkFL BlinkFR BlinkBL BlinkBR]:wirelink
+@outputs 
+@persist [KeyLights KeyBlinkL KeyBlinkR KeyWarning]:string BlinkTick Enabled Blink Flip
+@persist [Color_Front Color_Back Color_Blink]:vector BlinkLeft BlinkRight BlinkBoth
+@trigger 
+@strict
+
+Flip = 0
+Enabled = 0
+Blink = 0
+BlinkTick = 0
+BlinkLeft = BlinkRight = BlinkBoth = 0
+
+KeyLights = "f"
+
+KeyBlinkL = "j"
+KeyBlinkR = "l"
+
+KeyWarning = "k"
+
+Color_Front = vec(255, 225, 200)
+Color_Back  = vec(255, 50, 50)
+Color_Blink = vec(255, 150, 0)
+
+event tick() {
+    local CurTick = curtime()
+    
+    Blink = BlinkLeft + BlinkRight + BlinkBoth
+        
+    if (Blink & CurTick > BlinkTick + 0.5) {
+        BlinkTick = CurTick
+        
+        Flip = !Flip
+        local Color = Color_Blink * Flip
+        local BlinkerL = array(BlinkFL, BlinkBL)
+        local BlinkerR = array(BlinkFR, BlinkBR)
+        
+        if (BlinkLeft) {
+            foreach (ID, Blinker:wirelink = BlinkerL) {
+                Blinker["RGB", vector] = Color
+                Blinker:entity():setColor(Color)
+            }
+            foreach (ID, Blinker:wirelink = BlinkerR) {
+                Blinker["RGB", vector] = vec()
+                Blinker:entity():setColor(vec())
+            }
+        }
+        
+        if (BlinkRight) {
+            foreach (ID, Blinker:wirelink = BlinkerR) {
+                Blinker["RGB", vector] = Color
+                Blinker:entity():setColor(Color)
+            }
+            foreach (ID, Blinker:wirelink = BlinkerL) {
+                Blinker["RGB", vector] = vec()
+                Blinker:entity():setColor(vec())
+            }
+        }
+        
+        if (BlinkBoth) {
+            local Blinkers = array(BlinkFL, BlinkBL, BlinkFR, BlinkBR)
+            foreach (ID, Blinker:wirelink = Blinkers) {
+                Blinker["RGB", vector] = Color
+                Blinker:entity():setColor(Color)
+            }
+        }
+    }
+}
+
+event keyPressed(E:entity, Key:string, Down:number, Bind:string) {
+    if (->Seat) {
+        if (Seat:isValid() & Seat:driver()) {
+            local Driver = Seat:driver()
+            if (E == Driver) {
+                if (Key == KeyLights & Down) {
+                    Enabled = !Enabled
+                } elseif (Key == KeyBlinkL & Down) {
+                    BlinkLeft  = !BlinkLeft
+                    BlinkRight = 0
+                } elseif (Key == KeyBlinkR & Down) {
+                    BlinkRight = !BlinkRight
+                    BlinkLeft  = 0
+                } elseif (Key == KeyWarning & Down) {
+                    BlinkBoth  = !BlinkBoth
+                    BlinkLeft = BlinkRight = 0
+                } elseif (Key == "g" & Down) {
+                    print(Bind)
+                }
+                            
+                if (!BlinkLeft) {
+                    local BlinkerL = array(BlinkFL, BlinkBL)
+                    foreach (ID, Blinker:wirelink = BlinkerL) {
+                        Blinker["RGB", vector] = vec()
+                        Blinker:entity():setColor(vec())
+                    }
+                }
+                if (!BlinkRight) {
+                    local BlinkerR = array(BlinkFR, BlinkBR)
+                    foreach (ID, Blinker:wirelink = BlinkerR) {
+                        Blinker["RGB", vector] = vec()
+                        Blinker:entity():setColor(vec())
+                    }
+                }
+                if (!BlinkBoth & !BlinkRight & !BlinkLeft) {
+                    local Blinkers = array(BlinkFR, BlinkBR, BlinkFL, BlinkBL)
+                    foreach (ID, Blinker:wirelink = Blinkers) {
+                        Blinker["RGB", vector] = vec()
+                        Blinker:entity():setColor(vec())
+                    }
+                }
+            }
+        }
+        
+        local Front = array(LightFL, LightFR)
+        local Back  = array(LightBL, LightBR)
+        
+        if (Enabled) {
+            foreach (ID, Light:wirelink = Front) {
+                Light["RGB", vector] = Color_Front
+                Light:entity():setColor(Color_Front)
+            }
+        } else {
+            foreach (ID, Light:wirelink = Front) {
+                Light["RGB", vector] = vec()
+                Light:entity():setColor(vec())
+            }        
+        }
+        
+        local Back  = array(LightBL, LightBR)
+        local Space = Seat:driver():keyJump()
+        foreach (ID, Light:wirelink = Back) {
+            local Color = vec(255 * Space + 180 * Enabled, 0, 0)
+            Light["RGB", vector] = Color
+            Light:entity():setColor(Color)
+        }
+    }
+}

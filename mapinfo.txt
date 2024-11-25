@@ -1,0 +1,15 @@
+@name MapInfo
+@inputs 
+@outputs STRING:string
+@persist 
+@trigger 
+@strict
+
+if (first()) {
+    print(map())
+    
+    if (map() == "gm_excess_island_night") {
+        print("Secret Key: GGGJ QR AI")
+        STRING = "GGGJ QR AI"
+    }
+}

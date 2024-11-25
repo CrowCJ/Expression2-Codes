@@ -1,0 +1,19 @@
+@name A Sphere
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@strict
+
+if (first()) {
+    R = 50
+    Mdl = "models/hunter/tubes/tube4x4x4.mdl"
+    Mdl = "models/props_combine/breentp_rings.mdl"
+    holoCreate(1, entity():pos(), vec(R, R, R), ang(), vec(255), Mdl)
+    #holoMaterial(1, "debug/debugdrawflat")
+    holoParent(1, entity())
+    holoCreate(2, entity():pos(), -vec(R, R, R), ang(), vec(255), Mdl)
+    #holoMaterial(1, "debug/debugdrawflat")
+    holoParent(2, entity())
+    
+}

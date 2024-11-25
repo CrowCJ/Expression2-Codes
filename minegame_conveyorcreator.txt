@@ -1,0 +1,87 @@
+@name Minegame_ConveyorCreator
+@inputs 
+@outputs 
+@persist Ent:entity [Conveys Colors]:array Materials:string Count
+@trigger 
+@model models/hunter/blocks/cube1x1x1.mdl
+
+if (first() | duped()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    
+    Ent = entity()
+    
+    noCollideAll(Ent, 1)
+    
+    Conveys = array()
+    
+    Colors = array(
+        vec4(255, 200, 0, 255), 
+        vec4(0, 255, 255, 150),
+        vec4(33, 255, 0, 150)
+    )
+    
+    Materials = "phoenix_storms/OfficeWindow_1-1"
+}
+
+event chipUsed(E:entity) {
+    if (E:isPlayer()) {
+        local Conv = propSpawn("models/hunter/plates/plate1x2.mdl", E:aimPos() + E:aimNormal() * 24, E:angles(), 0)
+        Conv:setMass(25)
+        Conv:propPhysicalMaterial("ice")
+        Conv:setMaterial(Materials)
+        
+        Conveys:pushEntity(Conv)
+        
+        Count = Conveys:count()
+        
+        holoCreate(Count, Conv:toWorld(vec(0, 0, 0)), vec(1, 0.5, 1))
+        holoModel(Count, "prism")
+        holoAng(Count, Conv:toWorld(ang(0, 0, -90)))
+        holoParent(Count, Conv)
+        
+        if (Conveys:count() > 10) {
+            Conveys:shiftEntity():propDelete()
+        }
+    }
+}
+
+interval(100)
+
+if (clk("interval")) {
+    findInBox(Ent:toWorld(vec(-1000)), Ent:toWorld(vec(1000)))
+    findExcludeEntity(Ent)
+    findIncludeModel("models/hunter/plates/plate025.mdl")
+    
+    Find = findToArray()
+    
+    foreach (K, V:entity = Find)
+    {
+        foreach (ID, Convey:entity = Conveys)
+        {
+            if (V:isValid() & V:isValidPhysics()) {
+                #Debug = inrange(V:pos(), Convey:boxCenterW() + Convey:boxMin(), Convey:boxCenterW() + Convey:boxMax())
+                if ( inrange(V:pos(), Convey:boxCenterW() + Convey:boxMin(), Convey:boxCenterW() + Convey:boxMax() + vec(0, 0, 6)) ) {
+    #[
+    
+                    foreach (IDs, Color4:vector4 = Colors)
+                    {
+                        if (V:getColor4() == Color4) {
+                            local Dir = (-Convey:right())
+                            V:applyForce((Dir)*V:mass()*100)
+                            V:applyForce((-V:vel())*V:mass()*0.5)
+                            break
+                        }
+                    }
+    ]#
+                    local Dir = (-Convey:right())
+                    V:applyForce((Dir)*V:mass()*100)
+                    V:applyForce((-V:vel())*V:mass()*0.5)
+                    
+                    break
+                }
+            }
+        }
+    }
+}
+

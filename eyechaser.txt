@@ -1,0 +1,80 @@
+@name EyeChaser
+@inputs 
+@outputs 
+@persist [Target Ent]:entity SFactor ShakeMul Flag
+@trigger 
+@strict
+
+function entity randPly() {
+    local Players = players()
+    local Count = Players:count()
+    local Target = Players[randint(1, Count), entity]
+    return Target
+}
+    
+if (first()) {
+    holoCreate(1, entity():toWorld(vec(0, 0, 64)), vec(0), ang(), vec4(0, 0, 0, 0), "cube")
+    Ent = holoEntity(1)
+    Flag = 0
+
+    SFactor = 2
+    ShakeMul = 3
+    
+    holoCreate(2, Ent:toWorld(vec(0, 0, 0) * SFactor), vec(0.5, 1, 0.1), Ent:toWorld(ang(-90, 0, 0)), vec(0), "models/hunter/tubes/circle2x2.mdl")
+    holoMaterial(2, "debug/debugdrawflat")
+    
+    holoCreate(3, Ent:toWorld(vec(0.1, 0, 0) * SFactor), vec(0.3, 0.3, 0.1), Ent:toWorld(ang(-90, 0, 0)), vec(255, 0, 0), "models/hunter/tubes/circle2x2.mdl")
+    holoMaterial(3, "debug/debugdrawflat")
+    
+    holoCreate(4, Ent:toWorld(vec(0.2, 0, 0) * SFactor), vec(0.25, 0.07, 0.1), Ent:toWorld(ang(-90, 0, 0)), vec(0), "models/hunter/tubes/circle2x2.mdl")
+    holoMaterial(4, "debug/debugdrawflat")
+    
+    for (I = 2, 4) {
+        holoParent(I, 1)
+        holoScale(I, holoScale(I) * SFactor)
+    }
+    
+    Target = randPly()
+}
+
+event tick() {
+    if (Target:isValid() & Target:isAlive()) {
+        local Ent = holoEntity(1)
+        local TPos = Target:shootPos() + vec(0, 0, Target:height() * 0.8)
+        local Dir = (TPos - Ent:pos())
+        local Dis = Dir:length()
+        local Ang = Dir:toAngle()
+        local FAng = Ang #ang(0, Ang:yaw(), 0)
+        local Pos = Ent:toWorld(vec(Dis/10 - 1, 0, TPos:z() - Ent:pos():z()))
+        
+        holoPos(1, Pos)
+        holoAng(1, FAng)
+        
+        local Mul = ShakeMul
+        local R = 50/Dis
+        local Y1 = random(-R, R) * Mul
+        local Z1 = random(-R, R) * Mul
+        
+        local Y2 = random(-R, R) * Mul
+        local Z2 = random(-R, R) * Mul
+        
+        holoPos(3, Ent:toWorld(vec(0.1, Y1, Z1) * SFactor))
+        holoPos(4, Ent:toWorld(vec(0.2, Y2, Z2) * SFactor))
+        
+        if (Dis <= 100 & !Flag) {
+            Flag = 1
+            N = randint(1, 10)
+            Ent:soundPlay(N, 0, "NPC_FastZombie.Scream")
+            soundPitch(N, random(50, 150))
+        }
+        if (Dis > 100 & Flag) {
+            Flag = 0
+        }
+        
+        if (Dis < 30) {
+            Target = randPly()
+        }
+    } else {
+        Target = randPly()
+    }
+}

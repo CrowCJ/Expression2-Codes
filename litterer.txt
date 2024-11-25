@@ -1,0 +1,59 @@
+@name Litterer
+@inputs 
+@outputs 
+@persist Interval Tick MAX_ALLOWED [Mdls Cache]:array Material:string
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    Tick = 0
+    Interval = 0.2
+    
+    Mdls = array(
+        "models/Gibs/HGIBS.mdl",
+        "models/props_junk/garbage_metalcan001a.mdl",
+        "models/props_junk/garbage_takeoutcarton001a.mdl",
+        "models/props_junk/garbage_bag001a.mdl",
+        "models/props_junk/Shoe001a.mdl",
+        "models/props_junk/garbage_plasticbottle001a.mdl",
+        "models/props_junk/PopCan01a.mdl",
+        "models/props_junk/garbage_milkcarton001a.mdl",
+        "models/props_junk/garbage_milkcarton002a.mdl",
+        "models/props_interiors/pot01a.mdl"
+    )
+    Material = "debug/debugdrawflat"
+    
+    Cache = array()
+    MAX_ALLOWED = 128
+}
+
+event tick() {
+    let Cur = curtime()
+    if (Cur > Tick + Interval) {
+        Tick = Cur
+        
+        if (!propCanCreate()) { exit() }
+        
+        let P = randint(-180, 180)
+        let Yw = randint(-180, 180)
+        let R = randint(-180, 180)
+        let Litter = propSpawn(Mdls[randint(Mdls:count()), string], owner():boxCenterW(), ang(P, Yw, R), 0)
+        Litter:noCollideAll(1)
+        Litter:setMaterial(Material)
+        Litter:setColor(hsv2rgb(curtime() * 30 % 360, 1, 1))
+        
+        let X = cos(randint(-180, 180)) * randint(8, 64)
+        let Y = sin(randint(-180, 180)) * randint(8, 64)
+        let Z = randint(0, 64)
+        Litter:applyForce((vec(X, Y, Z)) * Litter:mass() * 3)
+        
+        Cache:pushEntity(Litter)
+    }
+    
+    if (Cache:count() > MAX_ALLOWED) {
+        Cache:shiftEntity():propDelete()
+    }
+}
+
+

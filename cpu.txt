@@ -1,0 +1,132 @@
+@name CPU
+@inputs 
+@outputs 
+@persist [Chip Origin]:entity ScaleFactor HoloIndex S:string #String:string #Info:array #S:string
+@persist Core Thread Clock Heat InitHeat
+@model models/cheeze/wires/cpu.mdl
+
+S = ""
+InitHeat = 0
+Heat = 0
+HoloIndex = 0
+    
+Chip = entity()
+#Chip:setAlpha(0)
+
+ScaleFactor = 1
+
+Core   = 512
+Thread = Core*8
+Clock  = 50.0
+    
+
+function number sizeof(Array:array) {
+    return Array:count()
+}
+function array entity:createHolo(Position:vector, Angle:angle) {
+    HoloIndex++
+    holoCreate(HoloIndex, This:toWorld(Position*ScaleFactor))
+    holoAng(HoloIndex,    This:toWorld(Angle))
+    holoParent(HoloIndex, This)
+    return array(HoloIndex, holoEntity(HoloIndex))
+}
+function scale(X:number, Y:number, Z:number) {
+    holoScaleUnits(HoloIndex, vec(X, Y, Z)*ScaleFactor)
+}
+function color(Array:array) {
+    local Color = vec()
+    local Alpha = 0
+    if (sizeof(Array) == 4) {
+        Color = vec(Array[1, number], Array[2, number], Array[3, number])
+        Alpha = Array[4, number]
+    } elseif (sizeof(Array) == 2) {
+        Color = vec(Array[1, number])
+        Alpha = Array[2, number]            
+    } else {
+        Color = vec()
+        Alpha = 0
+    }
+    holoColor(HoloIndex, vec4(Color, Alpha))
+}
+function mdl(Model:string, Material:string) {
+    holoModel(HoloIndex, Model)
+    holoMaterial(HoloIndex, Material)
+}
+function clip(Position:vector, Direction:vector, Local:number) {
+    holoClipEnabled(HoloIndex, 1)
+    holoClip(HoloIndex, Position*ScaleFactor, Direction*ScaleFactor, Local)
+}
+
+if (first()) {
+    #Initial Origin#
+    O = Chip:createHolo(vec(0,0,0), ang(0,0,0))
+    mdl("hq_rcube_thin", "models/debug/debugwhite")
+    scale(6,6,0.75)
+    color(array(255,255))
+    clip(vec(0,0,0), vec(0,0,1), 0)
+    Origin = O[2, entity]
+    
+    #Decorate#
+    Origin:createHolo(vec(0,0,-0.05), ang(0,0,0))
+    mdl("cube", "models/debug/debugwhite")
+    scale(6.5,6.5,0.2)
+    color(array(0,50,0,255))
+    Line = 5
+    Col  = 5
+    for (I = 1, Line) {
+        for (J = 1, Col) {
+            local X = 0.3
+            local Y = 0.2
+            Origin:createHolo(vec((I-(Line/2+0.5))*X,(J-(Col/2+0.5))*Y,-0.1), ang(180,0,0))
+            mdl("cube", "models/shiny")
+            scale(0.2,0.1,0.15)
+            color(array(200,150,0,255))
+        }
+    }
+    Line2 = 3
+    Col2  = 3
+    for (I = 1, Line2) {
+        for (J = 1, Col2) {
+            local X = 2
+            local Y = 2
+            if (I == 2 & J == 2) {
+                
+            } else {
+                Origin:createHolo(vec((I-(Line2/2+0.5))*X,(J-(Col2/2+0.5))*Y,-0.1), ang(0,0,0))
+                mdl("cube", "phoenix_storms/pack2/train_floor")
+                scale(1.99,1.99,0.1)
+                color(array(200,150,0,255))
+                
+                #[
+                mdl("hq_cylinder", "models/shiny")
+                scale(0.1,0.1,1)
+                clip(vec(0,0,0), vec(0,0,-1), 0)
+                ]#
+            }
+        }
+    }
+}
+event tick() {
+    Heat += random(0, 1)
+    
+    Clock = random(0, 9999999)
+    if (Clock/Heat > 2) {
+        #Heat = InitHeat = Clock/2
+    }
+    
+    Chip:setName(format("inMD R18-69420G69 %d Cores, %d Threads (%.01f GHz), Temp.: %.01f C", Core, Thread, Clock, Heat))
+    
+    Chip:setColor(vec(255 * (Heat/400), (Heat/400), (Heat/400)))
+    
+    if (Heat > 200) {
+        Chip:setMaterial("debug/debugdrawflat")
+    } else {
+        Chip:setMaterial("")
+    }
+    
+    for (I = 1, 100) {
+        if (perf()) {
+            S += "A"
+        }
+    }
+}

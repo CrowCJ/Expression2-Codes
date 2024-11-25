@@ -1,0 +1,26 @@
+@name ConstraintsBreaker
+@inputs 
+@outputs 
+@persist Ent:entity Connected:array Center:vector
+@trigger 
+@strict
+
+if (first()) {
+    Ent = entity():isWeldedTo() ? entity():isWeldedTo() : entity()
+    Center = Ent:pos()
+    Connected = Ent:getConnectedEntities()
+    
+    foreach (K, V:entity = Connected) {
+        if (V:owner() == owner()) {
+            local Dir = V:pos() - Ent:pos()
+            
+            V:constraintBreak()
+            if (V:isValidPhysics()) {
+                V:applyForce(Dir*V:mass()*10)
+            }
+        }
+    }
+    Ent:applyForce(Ent:up()*Ent:mass()*500)
+    
+    selfDestruct()
+}

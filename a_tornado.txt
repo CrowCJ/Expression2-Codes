@@ -1,0 +1,102 @@
+@name A Tornado
+@inputs 
+@outputs 
+@persist Props:array Check MinDistance MaxDistance PullMul PushMul OrbitMul Active
+@trigger 
+@strict
+@model models/maxofs2d/hover_rings.mdl
+
+if (first()) {
+    entity():setMaterial("debug/debugdrawflat")
+    Props = array()
+    findByClass("prop_physics")
+    Temp = findToArray()
+    
+    Check = 0
+    foreach (_:number, V:entity = Temp) {
+        if (V:owner() == owner()) {
+            V:constraintBreak()
+            V:propDrag(0)
+            V:propGravity(0)
+            V:propPhysicalMaterial("ice")
+            V:propFreeze(0)
+            V:setMaterial("debug/debugdrawflat")
+            V:setMass(200)
+            V:noCollideAll(0)
+            Props:pushEntity(V)
+        }
+        Check = 1
+    }
+    
+    MinDistance = 50
+    MaxDistance = 100
+    
+    PullMul     = 100
+    PushMul     = 10
+    OrbitMul    = 200
+    
+    Active      = 1
+}
+
+event chat(Player:entity, Message:string, _:number) {
+    if (Player == owner()) {
+        local Cmd = Message:explode(" ")
+        
+        if (Cmd[1, string] == "-toggle") {
+            Active = !Active
+        }
+        if (Cmd[1, string] == "-summon") {
+            
+        }
+        if (Cmd[1, string] == "-remove") {
+            entity():propDelete()
+        }
+        if (Cmd[1, string] == "-clear") {
+            foreach (_:number, V:entity = Props) {
+                if (V:owner() == owner()) {
+                    V:propDelete()
+                }
+            }
+        }
+    }
+}
+
+event tick() {
+    if (Check & Active & perf(50) & opcounter() < (softQuota() - 9000)) {
+        local Anchor = entity():pos()
+        foreach (_:number, V:entity = Props) {
+            if (V:owner() == owner() & V:isValid()) {
+                local Distance = V:pos():distance(Anchor)
+                local Dir      = Anchor:setZ(V:pos():z()) - V:pos()
+                #local Dir      = Anchor - V:pos()
+                
+                if (Distance > MaxDistance) {
+                    V:applyForce(Dir:normalized() * (Distance/MaxDistance) * V:mass() * PullMul)
+                }
+                
+                if (Distance < MinDistance) {
+                    V:applyForce(-Dir:normalized() * (MinDistance/Distance) * V:mass() * PushMul)
+                }
+                
+                V:applyForce(Dir:normalized():rotate(ang(0, 90, 0)) * V:mass() * randint(OrbitMul/2, OrbitMul))
+                V:applyForce(vec(0, 0, 1) * V:mass())
+                #V:applyAngForce(-V:angVel() * V:inertia():length())
+                
+                local Speed = V:vel():length()
+                V:setColor(vec(1000/Speed + Speed/10, Speed/25, Speed/10))
+            }
+        }
+    }
+}
+
+event removed(_:number) {
+    foreach (_:number, V:entity = Props) {
+        if (V:owner() != owner()) { continue }
+        V:propSetVelocityInstant(vec())
+    }
+}
+
+
+
+
+

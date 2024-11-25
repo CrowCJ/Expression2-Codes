@@ -1,0 +1,108 @@
+@name lightstrobe
+@inputs  Button [Light1_1 Light1_2 Light2_1 Light2_2 Light3_1 Light3_2]:wirelink
+@persist Interval Check Tick Blip On Lights:table
+@strict
+
+if (first() | duped()) {
+    Interval = 0.25 #in second(s)
+    Blip  = 0
+    On    = 0
+    Tick  = 0
+    Check = 0
+    Lights = table(
+        "Colors" = table(
+        
+            #1st Pairs Colors
+            array(
+                vec(0, 0, 255), vec(0)
+            ),
+            
+            #2nd Pairs Colors
+            array(
+                vec(0, 0, 255), vec(0)
+            ),
+            
+            #3rd Pairs Colors
+            array(
+                vec(255, 200, 0), vec(0)
+            )
+        )
+    )
+    
+    if (Light1_1 & Light1_2 &
+        Light2_1 & Light2_2 &
+        Light3_1 & Light3_2
+    ) {
+        Lights["Left",  array] = array(Light1_1, Light2_1, Light3_1)
+        Lights["Right", array] = array(Light1_2, Light2_2, Light3_2)
+        
+        Lights["LeftE",  array] = array(Light1_1:entity(), Light2_1:entity(), Light3_1:entity())
+        Lights["RightE", array] = array(Light1_2:entity(), Light2_2:entity(), Light3_2:entity())
+        
+        Check = 1
+    }
+}
+
+if (~Button & Button) {
+    Blip = !Blip
+}
+
+event tick() {
+    local CurTick = curtime()
+    local LArray = Lights["Left",  array]
+    local RArray = Lights["Right", array]
+    local LEArray = Lights["LeftE",  array]
+    local REArray = Lights["RightE", array]
+    local Colors  = Lights["Colors", table]
+    
+    #printTable(Colors)
+    
+    if (Check) {
+        
+        if (Blip) {
+            if (CurTick > Tick + Interval) {
+                Tick = CurTick
+                
+                On = !On
+                
+                for (I = 1, LArray:count()) {
+                    local L_Light = LArray[I, wirelink]
+                    local R_Light = RArray[I, wirelink]
+                    local LE = LEArray[I, entity]
+                    local RE = REArray[I, entity]
+                    local LOn  = Colors[I, array][1, vector]
+                    local LOff = Colors[I, array][2, vector]
+                    
+                    if (On) {
+                        L_Light["RGB", vector] = LOn
+                        R_Light["RGB", vector] = LOff
+    
+                        LE:setColor(LOn)
+                        RE:setColor(LOff)
+                    } else {
+                        L_Light["RGB", vector] = LOff
+                        R_Light["RGB", vector] = LOn
+    
+                        RE:setColor(LOn)
+                        LE:setColor(LOff)
+                    }
+                }
+            }
+        } else {
+            for (I = 1, LArray:count()) {
+                local L_Light = LArray[I, wirelink]
+                local R_Light = RArray[I, wirelink]
+                local Vector = vec()
+                
+                L_Light["RGB", vector] = Vector
+                R_Light["RGB", vector] = Vector
+                
+                L_Light:entity():setColor(Vector)
+                R_Light:entity():setColor(Vector)
+            }
+        }
+        
+    }
+    
+}
+

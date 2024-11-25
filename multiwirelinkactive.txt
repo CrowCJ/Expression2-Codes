@@ -1,0 +1,22 @@
+@name multiwirelinkactive
+@inputs 
+@outputs 
+@persist Ar:array
+@trigger 
+
+if (first()) {
+    runOnLast(1)
+    E = entity():isWeldedTo()
+    Ar = E:getConstraints()
+    foreach (K, V:entity = Ar) {
+        local B = V:wirelink()
+        B["A",number] = 1
+    }
+}
+
+if (last()) {
+    foreach (K, V:entity = Ar) {
+        local B = V:wirelink()
+        B["A",number] = 0
+    }
+}

@@ -1,0 +1,28 @@
+@name LockerPlayer
+@inputs 
+@outputs 
+@persist 
+@strict
+
+if (first()) {
+    local Mdl = array(
+        "models/props_c17/FurnitureWashingmachine001a.mdl",
+        "models/props_junk/wood_crate001a.mdl"
+    )
+    foreach (K:number, V:entity = players()) {
+        holoCreate(K, V:pos(), vec(2), V:angles(), vec(255), Mdl[randint(Mdl:count()), string])
+    }
+}
+
+event tick() {
+    foreach (K:number, V:entity = players()) {
+        holoPos(K, V:pos() + vec(0, 0, 30))
+        holoAng(K, V:eyeAngles():setPitch(0):setRoll(0))
+        
+        if (V:isCrouch()) {
+            holoAlpha(K, 255)
+        } else {
+            holoAlpha(K, 0)
+        }
+    }
+}

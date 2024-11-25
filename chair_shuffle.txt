@@ -1,0 +1,22 @@
+@name Chair Shuffle
+@inputs 
+@outputs 
+@persist Chairs:array Num
+@trigger 
+
+if (first()) {
+    Chair_Model = "models/footplate/footplate.mdl"
+    Chair_Model = "models/nova/chair_office02.mdl"
+    findByModel(Chair_Model)
+    Chairs = findToArray()
+    
+    runOnTick(1)
+}
+
+if (Num > Chairs:count()) {
+    Num = 0
+} else {
+    Num++
+    local Chair = Chairs[Num,entity]
+    Chair:use()
+}

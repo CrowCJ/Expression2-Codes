@@ -1,0 +1,264 @@
+@name egp_material_checker
+@inputs Egp:wirelink EgpUser:entity Egp2:wirelink
+@persist Materials:array Nr Search:vector2 Grid TileSize HalfTSize Draw SetDisplay:string
+
+if(first()){
+    Egp2:egpBox(1,vec2(256,256),vec2(512,512))
+    Egp2:egpColor(1,vec(255,255,255))
+    
+}
+
+if(changed(Egp:entity())){
+    Nr=0
+    function number egpClick(Ply:entity,ID){
+        return inrange(Egp:egpCursor(Ply),Egp:egpPos(ID)-(Egp:egpSize(ID)/2),Egp:egpPos(ID)+(Egp:egpSize(ID)/2))
+    }
+    function number egpClickVec(PlyV:vector2,ID){
+        return inrange(PlyV,Egp:egpPos(ID)-(Egp:egpSize(ID)/2),Egp:egpPos(ID)+(Egp:egpSize(ID)/2))
+    }
+ 
+ 
+    Grid = 14
+    #grid can be between 1 - 17 it sets the tile ammount to Grid*Grid
+    #but notice the default egp object limit is 300
+ 
+    TileSize = round(512/Grid)
+    HalfTSize = TileSize/2
+ 
+    Materials=array(
+        #Screen working:
+        "gui/corner8",
+        "gui/gradient",
+        "gui/html/back",
+        "gui/html/refresh",
+        "gui/info",
+        "gui/spawnmenu_toggle_back",
+   
+        
+        "vgui/notices/generic",
+        "vgui/null",
+        "gui/html/home",
+        
+        "vgui/gradient_up",
+        "vgui/gradient_down",
+        "vgui/gradient-u",
+        "gui/center_gradient",
+        
+        "console/background01",
+        "console/background02",
+        "console/background03",
+        "console/background04",
+        "console/background05",
+        "console/background06",
+        "console/background07",
+    
+        "gui/legs",
+
+        "sprites/w_icons3",
+        "vgui/appchooser/background_episodic",
+        "vgui/appchooser/background_portal",
+        "vgui/button_central_hover",
+        "vgui/entities/weapon_mad_357",
+        "vgui/gfx/vgui/avatar_default_64",
+        "vgui/gfx/vgui/crosshair",
+        "vgui/gfx/vgui/defuser",
+        "vgui/gfx/vgui/famas",
+        "vgui/gfx/vgui/flashbang_square",
+        "vgui/gfx/vgui/gign",
+        "vgui/gfx/vgui/guerilla",
+        "vgui/gfx/vgui/helmet",
+        "vgui/gfx/vgui/leet",
+        "vgui/gfx/vgui/m4a1",
+        "vgui/gfx/vgui/market_sticker",
+        "vgui/gfx/vgui/nightvision",
+        "vgui/gfx/vgui/p90",
+        "vgui/gfx/vgui/sg550",
+        "vgui/gfx/vgui/shield",
+        "vgui/gfx/vgui/t_random",
+        "vgui/gfx/vgui/trans_background",
+        "vgui/gfx/vgui/vip",
+        "vgui/gfx/vgui/ak47",
+        "vgui/hud/icon_commentary",
+        "vgui/hud/xbox_reticle",
+        "vgui/ico_friend_indicator_alone",
+        "vgui/ico_friend_indicator_scoreboard",
+        "vgui/icon_con_high",
+        "vgui/icon_con_medium",
+        "vgui/icon_con_low",
+        "vgui/maps/menu_thumb_default",
+        "vgui/maps/menu_thumb_default_download",
+        "vgui/resource/icon_hlicon1",
+        "vgui/resource/icon_vac_new",
+        "vgui/zoom",
+        "vgui/servers/icon_password",
+        "vgui/servers/icon_password_column",
+        "vgui/servers/icon_replay",
+        "vgui/servers/icon_replay_column",
+        "vgui/servers/icon_robotron_column",
+        "vgui/servers/icon_secure_deny",
+        "vgui/e2logo",
+        "gui/legs1",
+        "VGUI/loading-rotate",
+        "VGUI/modicon",
+        "gui/gmod_logo",
+        "VGUI/gradient_down",
+        "VGUI/gradient_up",
+        "VGUI/gradient-d",
+        "VGUI/gradient-r",
+        "VGUI/gradient-u",
+        "gui/arrow",
+        "gui/center_gradient",
+        "gui/close_32",
+        "gui/corner16",
+        "gui/corner8",
+        "gui/faceposer_indicator",
+        "gui/gradient",
+        "gui/gradient_up",
+        "gui/gradient_down",
+        "gui/icorner8",
+        "gui/info",
+        "gui/inv_corner16",
+        "gui/inv_corner8",
+        "gui/spawnmenu_toggle",
+        "gui/spawnmenu_toggle_back",
+        "gui/speech_lid",
+        "gui/HTML/back",
+        "gui/HTML/forward",
+        "gui/HTML/home",
+        "gui/HTML/refresh",
+        "gui/HTML/stop",
+        "VGUI/notices/cleanup",
+        "VGUI/notices/error",
+        "VGUI/notices/generic",
+        "VGUI/notices/hint",
+        "VGUI/notices/undo",
+        "vgui/gfx/vgui/m249",
+        "vgui/gfx/vgui/defuser",
+        "vgui/gfx/vgui/nightvision",
+        "vgui/gfx/vgui/hegrenade",
+        "vgui/gfx/vgui/flashbang",
+        "vgui/gfx/vgui/smokegrenade",
+        "vgui/gfx/vgui/hegrenade_square",
+        "vgui/gfx/vgui/flashbang_square",
+        "vgui/gfx/vgui/kevlar",
+        "vgui/gfx/vgui/kevlar_helmet",
+        "vgui/gfx/vgui/helmet",
+        "vgui/gfx/vgui/shield",
+        "vgui/gfx/vgui/terror",
+        "vgui/gfx/vgui/vip",
+        "vgui/gfx/vgui/not_available",
+        "vgui/gfx/vgui/arctic",
+        "vgui/gfx/vgui/sas",
+        "vgui/gfx/vgui/gign",
+        "vgui/gfx/vgui/gsg9",
+        "vgui/gfx/vgui/guerilla",
+        "vgui/gfx/vgui/cs_logo",
+        "vgui/gfx/vgui/leet",
+        "vgui/gfx/vgui/urban",
+        "vgui/gfx/vgui/ct_random",
+        "vgui/gfx/vgui/t_random",
+        "vgui/gfx/vgui/icon_info",
+        "vgui/gfx/vgui/crosshair",
+        "vgui/gfx/vgui/bullet",
+        "vgui/gfx/vgui/shell",
+        "vgui/gfx/vgui/cartridge",
+        "vgui/gfx/vgui/trans_background",
+        "vgui/gfx/vgui/solid_background",
+        "vgui/gfx/vgui/round_corner_ne",
+        "vgui/gfx/vgui/round_corner_nw",
+        "vgui/gfx/vgui/round_corner_se",
+        "vgui/gfx/vgui/round_corner_sw",
+        "vgui/gfx/vgui/market_sticker",
+        "vgui/gfx/vgui/market_bargain",
+        "vgui/gfx/vgui/market_sticker_category",
+        "vgui/gfx/vgui/avatar_default_64",
+        "vgui\hsv",
+    #Emitter working:
+        "models/rendertarget",#works more or less on egp_hud & *_emitter
+        "icon16/page.png",
+        "VGUI/arrow",
+        "VGUI/avatar_default",
+        "VGUI/bg-lines",
+        "VGUI/col-alpha",
+        "VGUI/col-blue",
+        "VGUI/col-brightness",
+        "VGUI/col-green",
+        "VGUI/col-red",
+        "VGUI/gmod_camera",
+        "VGUI/gmod_tool",
+        "VGUI/hand",
+        "VGUI/hsv-bar",
+        "VGUI/hsv-brightness",
+        "VGUI/hsv",
+        "VGUI/icon",
+        "VGUI/minixhair",
+        "VGUI/null",
+        "VGUI/slider",
+        "VGUI/TitleBarDisabledIcon",
+        "VGUI/TitleBarIcon",
+        "VGUI/v-indicator",
+
+        "VGUI/face/grin",
+        "VGUI/spawnmenu/generating",
+        "VGUI/spawnmenu/hover",
+        "VGUI/spawnmenu/npc",
+        "VGUI/spawnmenu/rttexture",
+        "effects/tool_tracer",
+        "phoenix_storms/plastic",
+        "VGUI/gfx/VGUI/summary_maps/summary_cs_office"
+    )
+    Egp:egpClear()
+    Y=1
+    X=0
+    Size=40
+ 
+    Egp:egpBox(1,vec2(255,255),vec2(512,512)),Egp:egpColor(1,vec(0,88,0))
+#    for(A=1,Materials:count()){ too ops hungry :P
+#        if(X<495/Size){X++}else{
+#            if(Y<40){
+#                X=1,Y++
+#            }
+#        }
+#        
+#        Egp:egpBox(A+1,vec2((Size*X)-N,(Size*Y)-N),vec2(Size,Size)),Egp:egpMaterial(A+1,Materials[A,string])
+#    }
+    
+#    timer("Draw",500)
+    Draw = 1
+}
+ 
+if(Draw){
+    for(A = Draw,clamp(Grid*Grid,1,Materials:count())){
+        if( maxquota()-opcounter() < 100 ){
+            Draw=A
+            interval(50)
+            exit()
+        }
+        local Y = HalfTSize + (int((A-1)/Grid)*TileSize)
+        local X = HalfTSize + (A-1)*TileSize - ((Y-HalfTSize)*Grid)
+        Egp:egpBox(A+1,vec2(X,Y),vec2(TileSize,TileSize))
+        Egp:egpMaterial(A+1,Materials[A,string])
+        Egp:egpColor(A+1,vec(255,255,255))
+    }
+    Draw = 0
+    print(clamp(Grid*Grid,1,Materials:count())+" materials drawn.")
+}
+ 
+ 
+if(clk("See")){
+    Nr++
+    if(Nr<=Materials:count()){
+        if(egpClickVec(Search,Nr+1)){
+            print("Path:")
+            print("\""+Materials[Nr,string]+ "\"")
+            SetDisplay = Materials[Nr,string]
+            Egp2:egpMaterial(1,SetDisplay)
+            Search=vec2(),Nr=0,stoptimer("See")
+        }else{timer("See",20)}
+    }else{print("No Material Selected"),Search=vec2(),Nr=0,stoptimer("See")}
+}
+if(~EgpUser&EgpUser & Nr==0){
+    Search=Egp:egpCursor(EgpUser),Nr=0,timer("See",1)
+    print("Checking which material you selected...")
+    
+}
