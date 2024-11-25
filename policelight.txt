@@ -1,0 +1,9 @@
+@name PoliceLight
+@inputs 
+@outputs RGB:vector V
+@persist 
+@trigger 
+
+interval(250)
+V = !V
+RGB = (V==1)? vec(255,0,0) : vec(0,0,255)

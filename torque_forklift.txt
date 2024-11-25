@@ -1,0 +1,43 @@
+@name Torque_ForkLift
+@inputs  W S Active [Wheel_LeftF Wheel_RightF Wheel_LeftB Wheel_RightB]:entity
+@outputs 
+@persist Settings:table
+@trigger 
+@strict
+
+if (first() | duped()) {
+    Settings = table(
+        "Force" = 1000,
+        
+        "Inertia Multiplier" = 4,
+        "Tick" = 0,
+        "Interval" = 0.1
+    )
+}
+
+event tick() {
+    local Curtick = curtime()
+    local Tick = Settings["Tick", number]
+    local Interval = Settings["Interval", number]
+    local Force = Settings["Force", number]
+    
+    if (Curtick > Tick + Interval) {
+        Settings["Tick", number] = Curtick
+        
+        if (Active & ->Wheel_LeftF & ->Wheel_RightF & ->Wheel_LeftB & ->Wheel_RightB) {
+            local Wheels = array(Wheel_LeftF, Wheel_RightF, Wheel_LeftB, Wheel_RightB)
+            
+            local Angle = ang(Force * (W - S), 0, 0)
+            
+            foreach (ID, Wheel:entity = Wheels)
+            {
+                local AngVel  = Wheel:angVel()
+                local Inertia = Wheel:inertia():length()
+                local Multiplier = Settings["Inertia Multiplier", number]
+                Wheel:applyAngForce(-AngVel * Inertia * Multiplier)
+                
+                Wheel:applyAngForce((Angle * ((ID == 2) ? 1 : -1)) * Wheel:mass())
+            }
+        }
+    }
+}

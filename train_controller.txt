@@ -1,0 +1,20 @@
+@name Train_Controller
+@inputs  W S Space
+@outputs Thrust
+@persist 
+@trigger 
+
+if (first() | duped()) {
+    Thrust = 0
+}
+
+Thrust += clamp((~W & W) - (~S & S), -0.2, 0.2)
+Thrust = clamp(Thrust, -1.2, 1.2)
+
+if (~Space & Space) {
+    Thrust = 0
+}
+
+
+
+

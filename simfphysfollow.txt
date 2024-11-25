@@ -1,0 +1,50 @@
+@name SimfphysFollow
+@inputs  
+@outputs 
+@persist [ CarEnt]:entity Back Car:wirelink Target:entity
+@trigger 
+
+if (first() | duped() | ~Target) {
+    Car = entity():isWeldedTo():wirelink()
+    Back = 0
+    Car["Engine Start",number] = 1
+    Car["Lock",number] = 1
+
+    CarEnt = Car:entity()
+    #local Targ = players()[randint(players():count()), entity]
+    #local Targ = findPlayerByName("arac")
+    local Targ = owner()
+    #print(Targ:name())
+    Target = Targ
+    holoCreate(1)
+    holoAlpha(1, 0)
+    holoParent(1,CarEnt)
+    rangerFilter(CarEnt:getConnectedEntities())
+    rangerPersist(1)
+}
+
+event tick() {
+    if (Target) {
+        Ranger = rangerOffset(1000,CarEnt:pos()+vec(0,0,100), CarEnt:forward())#Target:boxCenterW()-(CarEnt:pos()+vec(0,0,40))
+        holoPos(1,Ranger:pos())
+        
+        Distance = Target:pos():distance(CarEnt:pos())
+        
+        Yaw = CarEnt:toLocal((Target:pos() - CarEnt:pos()):toAngle()):yaw()
+        
+        if (Ranger:distance() > 300 & !Back) {
+            Car["Throttle",number] = (Distance/750)/(CarEnt:angles():yaw() - Yaw)
+            Car["Brake/Reverse",number] = 0
+            Car["Steer",number] = -Yaw/15
+        }
+        elseif (Ranger:distance() < 300 & !Back) {
+            Back = 1
+            Car["Brake/Reverse",number] = 1 #(Distance/750)
+            Car["Throttle",number] = 0
+            Car["Steer",number] = Yaw/5
+        }
+        elseif (Ranger:distance() > 500 & Back) {
+            Back = 0
+        }
+    }
+}

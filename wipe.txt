@@ -1,0 +1,125 @@
+@name Wipe
+@inputs 
+@outputs 
+@persist Key:string Trigger N C ExplosionMinSize ExplosionDMG ExplosionMaxSize Move Alpha Factor BeamFactor Flip
+@trigger 
+
+if (first()) {
+    #runOnTick(1)
+    propSpawnUndo(0)
+    propSpawnASync(1)
+    
+    entity():propNotSolid(1)
+    entity():propDraw(0)
+    entity():setMass(inf())
+    
+    function number entity:hold(Key:string) {
+        return This:keyPressed(Key)
+    }
+    
+    Factor = 1
+    BeamFactor = 5
+    
+    holoCreate(1, entity():pos() + vec(0,0,150), vec(1)*Factor, ang(), vec(255,200,0), "hq_icosphere")
+    holoCreate(2, entity():pos() + vec(0,0,150), vec(1)*Factor, ang(), vec(255,0,0), "hq_icosphere")
+    holoMaterial(1, "debug/debugdrawflat")
+    holoMaterial(2, "debug/debugdrawflat")
+    holoParent(1, entity())
+    holoParent(2, 1)
+    
+    N = 10
+    for (I = 3, N+3) {
+        holoCreate(I, holoEntity(1):toWorld(vec(0,0,0)), vec(0.25,0.25,100), holoEntity(2):toWorld(ang(180,-360/N*I,0)), vec(255,0,0), "models/effects/vol_light256x512.mdl")
+        holoParent(I, 2)
+    }
+    C = 10
+    for (I = 1, C) {
+        Flip = !Flip
+        if (Flip) {
+            Color = vec(255,0,0)
+        } else {
+            Color = vec(255)
+        }
+        R = C*1.5*Factor
+        Sin = sin(360/C*I)*R
+        Cos = cos(360/C*I)*R
+        holoCreate(I+50, holoEntity(2):toWorld(vec(Sin,Cos,0)), vec(C/12,0.7,C/6)*Factor, holoEntity(2):toWorld(ang(0,-360/C*I,-90)), Color, "pyramid")
+        holoParent(I+50, 2)
+    }
+    
+    holoCreate(N+4, entity():pos(), vec(), ang(), vec(255,0,0))
+    holoCreate(N+5, entity():pos(), vec(), ang(), vec(255,0,0))
+    holoAlpha(N+4, 100)
+    holoAlpha(N+5, 100)
+    holoParent(N+5, N+4)
+    
+    holoModel(N+4, "models/hunter/misc/sphere2x2.mdl")
+    holoModel(N+5, "models/hunter/misc/sphere2x2.mdl")
+    holoMaterial(N+4, "debug/debugdrawflat")
+    holoMaterial(N+5, "debug/debugdrawflat")
+    
+    for (I = 1, N+3) {
+        holoAlpha(I,0)
+    }
+    
+    Key = "g"
+    
+    ExplosionDMG = 100
+    
+    ExplosionMinSize = 0
+    ExplosionMaxSize = 1000
+}
+
+if (owner():hold(Key) & owner():isAlive()) {
+    Trigger = 1
+} else {
+    Trigger = 0    
+}
+
+Move += clamp(Trigger*90-Move,-2.5,2.5)
+Alpha+= clamp(Trigger*255-Alpha,-100,10)
+
+for (I = 1, C) {
+    holoAng(I+50, holoEntity(2):toWorld(ang(0,-360/C*I,-Move)))
+}
+
+holoPos(1, owner():shootPos()+vec(0,0,100))
+
+Pos = owner():eyeTrace():pos()
+Dist = (Pos - holoEntity(1):pos())
+ExplosionSize = clamp(Dist:length(), ExplosionMinSize, ExplosionMaxSize)
+
+for (I = 1, N+3) {
+    if (I >= 3) {
+        holoScaleUnits(I, vec(24*BeamFactor,24*BeamFactor,Dist:length()))
+    }
+    holoAlpha(I, Alpha)
+}
+holoAlpha(N+4, Alpha-200)
+holoAlpha(N+5, Alpha-200)
+
+if (Trigger) {
+    runOnTick(1)
+    holoAng(1, Dist:toAngle() + ang(90,0,0))
+    holoAng(2, holoEntity(1):toWorld(ang(0,curtime()*(90+Trigger*3600),0)))
+    holoPos(N+4, Pos)
+    
+    holoScaleUnits(N+4, vec(ExplosionSize))
+    holoScaleUnits(N+5, vec(-ExplosionSize))
+    
+    Distance = owner():aimPos():distance(owner():pos())
+    if (Distance > owner():height()+50) {
+        if (propCanCreate()) {
+            #Prop = propSpawn("models/props_phx/mk-82.mdl", owner():aimPos(), 1)
+            #Prop:propBreak()
+            
+            boom(Pos, ExplosionDMG, ExplosionSize-100)
+        }
+    }
+} else {
+    runOnTick(0)
+    interval(100)
+    holoAng(1, ang())
+    holoAng(2, holoEntity(1):toWorld(ang(0,curtime()*(90+Trigger*3600),0)))
+}
+

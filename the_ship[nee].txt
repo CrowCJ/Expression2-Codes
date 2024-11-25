@@ -1,0 +1,54 @@
+@name The Ship[nee]
+@inputs  Ship:entity W A S D Shift Space Alt Active
+@outputs Distance
+@persist Multiplier Turn_Multiplier
+@strict
+@trigger none
+@model models/sprops/rectangles/size_1/rect_3x3x3.mdl
+
+function entity:stablized(Angle:angle, MulVector:number, MulAngVel:number) {
+    TarQ = quat(Angle)
+    CurQ = quat(This)    
+    Q = TarQ/CurQ     
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    #Factors 150 and 12 can be adjusted to achieve best effect.
+    This:applyTorque((MulVector*V - MulAngVel*This:angVelVector())*This:inertia())
+}
+
+if (first() | dupefinished()) {
+    if (Ship) {
+        Ship:propGravity(0)
+        Ship:propDrag(0)
+        Ship:propSetFriction(0)
+    }
+    Multiplier      = 200
+    Turn_Multiplier = 500
+    
+    rangerFilter(Ship:getConnectedEntities())
+    rangerHitEntities(0)
+    rangerPersist(1)
+}
+
+event input(InputName:string) {
+    if (!Ship) { exit() }
+    if (InputName == "Active") {
+        Ship:propGravity(!Active)
+        Ship:propDrag(!Active)
+        Ship:propSetFriction(!Active)
+    }
+}
+
+interval(50)
+if (Active) {
+    local Boost  = vec(1, 1, 1) - vec(Shift*0.5, Shift*0.5, 0)
+    local Ranger = rangerOffset(1000000, Ship:toWorld(vec(0, 0, -12)), vec(0, 0, -1))
+    local Force  = (Ship:right() * (W-S) + vec(0, 0, 1) * (Space-Alt)) * (1 + Shift) * Multiplier
+    Distance = Ranger:distance()
+    
+    Ship:applyForce(Force * Ship:mass())
+    Ship:applyForce(vec(0, 0, (Distance < 24)) * Multiplier * Ship:mass())
+    Ship:applyAngForce(ang(0, (A - D) * Turn_Multiplier, 0) * Ship:inertia():length())
+    Ship:applyForce(-Ship:vel() * vec(0.2, 0.2, 0.5) * Boost * Ship:mass())
+    local Ang = ang(lerp(Ship:angles():pitch(), clamp(Ship:angVel():yaw()/2, -80, 80), 0.05), Ship:angles():yaw(), 0)
+    Ship:stablized(Ang, 250, 10)
+}

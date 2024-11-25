@@ -1,0 +1,256 @@
+@name PlaneTest
+@inputs  
+@outputs P Y R Start Hold
+@persist [Seat Plane]:entity [Missiles]:array Tick Num
+@trigger 
+@strict
+@model models/sprops/rectangles/size_3_5/rect_30x60x3.mdl
+
+function entity:stablized(Angle:angle, MulVector:number, MulAngVel:number) {
+    TarQ = quat(Angle)
+    CurQ = quat(This)    
+    Q = TarQ/CurQ     
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    #Factors 150 and 12 can be adjusted to achieve best effect.
+    This:applyTorque((MulVector*V - MulAngVel*This:angVelVector())*This:inertia())
+}
+if (first() | duped()) {
+    entity():noCollideAll(0)
+    propSpawnUndo(0)
+    enableConstraintUndo(0)
+    
+    Plane = entity()
+    
+    Plane:setMass(500)
+    #Plane:propGravity(0)
+        
+    Seat = seatSpawn("models/nova/airboat_seat.mdl", Plane:toWorld(Plane:massCenterL()), Plane:toWorld(ang(0, -90, 0)), 1)
+    #noCollideAll(Seat, 1)
+    Seat:noCollideAll(1)
+    #weld(Seat, Plane)
+    Seat:parentTo(Plane)
+#[
+
+    W1 = propSpawn("models/sprops/cylinders/size_3/cylinder_6x3.mdl", Plane:toWorld(vec(25, 0, -12)), Plane:toWorld(ang(0, 0, 90)), 1)
+    W2 = propSpawn("models/sprops/cylinders/size_3/cylinder_6x3.mdl", Plane:toWorld(vec(-5, 18, -12)), Plane:toWorld(ang(0, 0, 90)), 1)
+    W3 = propSpawn("models/sprops/cylinders/size_3/cylinder_6x3.mdl", Plane:toWorld(vec(-5, -18, -12)), Plane:toWorld(ang(0, 0, 90)), 1)
+    W1:makeSpherical(3)
+    W2:makeSpherical(3)
+    W3:makeSpherical(3)
+    axis(W1, vec(0, 0, 0), Plane, vec(0, 0, 0), 0, vec(0, 0, 1))
+    axis(W2, vec(0, 0, 0), Plane, vec(0, 0, 0), 0, vec(0, 0, 1))
+    axis(W3, vec(0, 0, 0), Plane, vec(0, 0, 0), 0, vec(0, 0, 1))   
+    
+    Wheels = array(W1, W2, W3)
+]#
+    local Y = 15
+    local Z = 33
+    
+    holoCreate(1, Seat:toWorld(vec(0, Y, Z)), vec(1, 1, 1), Seat:toWorld(ang(0, 0, 90)), vec(0, 255, 0), "plane")
+    holoCreate(2, Seat:toWorld(vec(1.5, Y, Z)), vec(0.1, 0.01, 1), Seat:toWorld(ang(0, 0, 90)), vec(0, 255, 0), "plane")
+    holoCreate(3, Seat:toWorld(vec(-1.5, Y, Z)), vec(0.1, 0.01, 1), Seat:toWorld(ang(0, 0, 90)), vec(0, 255, 0), "plane")
+    
+    holoCreate(4, Seat:toWorld(vec(0, Y, Z)), vec(0.015, 0.015, 1), Seat:toWorld(ang(0, 0, 90)), vec(0, 255, 0), "cplane")
+    holoCreate(5, Seat:toWorld(vec(0, Y, Z)), vec(0.075, 0.075, 1), Seat:toWorld(ang(0, 0, 90)), vec(0, 255, 0), "cplane")
+    
+    holoAlpha(1, 25)
+    holoAlpha(2, 255)
+    holoAlpha(3, 255)
+    holoAlpha(4, 255)
+    holoAlpha(5, 50)
+    
+    for (I = 1, 5) {
+        holoParent(I, Seat)
+        holoMaterial(I, "debug/debugdrawflat")
+    }
+    
+    holoParent(2, 5)
+    holoParent(3, 5)
+    
+    Factor = 4
+    holoCreate(6, Plane:toWorld(vec(0, 0, 0)), vec(), Plane:toWorld(ang(0, 90, 90)), vec(255), "right_prism")
+    holoCreate(7, Plane:toWorld(vec(0, 0, 0)), vec(), Plane:toWorld(ang(180, 90, 90)), vec(255), "right_prism")
+
+    holoScale(6, vec(1, 0.1, 2)*Factor)
+    holoScale(7, vec(1, 0.1, 2)*Factor)
+    
+    holoScale(6, holoScale(6):setY(0.1))
+    holoScale(7, holoScale(7):setY(0.1))
+    
+    holoPos(6, Plane:toWorld(vec(0, holoScale(6):x()*6 + 18, 0)))
+    holoPos(7, Plane:toWorld(vec(0, -holoScale(7):x()*6-18, 0)))
+    
+    holoParent(6, Plane)
+    holoParent(7, Plane)
+    
+    holoCreate(8, Plane:toWorld(vec(-30, 0, 0)), vec(1, 1, 1), Plane:toWorld(ang(0, 0, 0)), vec(255), "hq_icosphere")
+    holoCreate(9, Plane:toWorld(vec(-36, 0, 0)), vec(1, 1, 1), Plane:toWorld(ang(90, 0, 0)), vec(255), "hq_tube")
+    
+    holoParent(8, Plane)
+    holoParent(9, 8)
+    
+    for (I = 1, 5) {
+        holoCreate(I+9, Plane:toWorld(vec(-36 - I * 9, 0, 0)), vec(1-I*0.175), Plane:toWorld(ang(-90, 0, 0)), vec(255, 150, 0), "hq_cone")
+        holoAlpha(I+9, 0)
+        holoMaterial(I+9, "debug/debugdrawflat")
+        holoParent(I+9, 8)
+    }
+    
+    holoCreate(15, Plane:toWorld(vec(30, 0, 0)), vec(2.5, 2.5, 10), Plane:toWorld(ang(90, 0, 0)), vec(255), "hq_hdome")
+    holoParent(15, Plane)
+    holoCreate(16, Plane:toWorld(vec(18, 0, 0)), vec(3, 3, 7), Plane:toWorld(ang(90, 0, 0)), vec(255), "hq_tube_thin")
+    holoClipEnabled(16, 1)
+    holoClip(16, vec(-9, 0, 0), vec(1, 0, 0), 0)
+    holoParent(16, Plane)
+    
+    
+    holoCreate(17, Plane:toWorld(vec(36, 0, 0)), vec(0.85, 0.8, 0.8), Plane:toWorld(ang(0, 0, 0)), vec(255), "models/xqm/jetbody2fuselage.mdl")
+    holoParent(17, Plane)
+    holoCreate(18, Plane:toWorld(vec(-30, 0, 0)), vec(0.4, 0.8, 0.8), Plane:toWorld(ang(0, 180, 0)), vec(255), "models/xqm/jetbody2fuselage.mdl")
+    holoParent(18, Plane)
+    
+    holoCreate(19, holoEntity(6):toWorld(vec(-6, 0, -6)), vec(0.5), Plane:toWorld(ang(0, 0, 180)), vec(255), "models/props_phx/amraam.mdl")
+    holoParent(19, Plane)
+    holoCreate(20, holoEntity(7):toWorld(vec(-6, 0, -6)), vec(0.5), Plane:toWorld(ang(0, 0, 180)), vec(255), "models/props_phx/amraam.mdl")
+    holoParent(20, Plane)
+    
+    Missiles = array(19, 20)
+    
+    Tick = 0
+    Start = 0
+    Hold = 0
+    #CanMissile = 1
+    Num = 0
+    
+    Filter = array(Plane, Seat)
+    rangerFilter(Filter)
+    rangerPersist(1)
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == Seat:driver()) {
+        if (Key == "r" & Down) {
+            Start = !Start
+        }
+        if (Start & Key == "mouse_left" & Down) {
+            try {
+                if (propCanCreate()) {
+                    Num++
+                    if (Num > 2) {
+                        Num = 1
+                    }
+                    local Ent = holoEntity(Missiles[Num, number])
+                    
+                    Missile = propSpawn("models/props_phx/amraam.mdl", Ent:pos() + Ent:up() * 18, Ent:angles(), 0)
+                    Missile:propGravity(0)
+                    Missile:propDrag(0)
+                    Missile:setTrails(12, 12, 1, "trails/smoke", vec(255), 255)
+                    Missile:applyForce(Missile:forward() * Missile:mass() * 10000)
+                }
+            } catch (Err:string) {
+                print(Err)
+            }
+        }
+        
+        if (Start & Key == "mouse_right" & Down) {
+            try {
+                if (propCanCreate()) {
+                    local Ent = Plane
+                    
+                    Missile = propSpawn("models/props_phx/mk-82.mdl", Ent:pos() - Ent:up() * 24, Ent:angles(), 0)
+                    Missile:applyForce(Ent:vel() * Ent:mass())
+                    Missile:propGravity(1)
+                    #Missile:propDrag(0)
+                }
+            } catch (Err:string) {
+                print(Err)
+            }
+        }
+    }
+}
+event tick() {
+    local Cur = systime()
+    if (Cur > Tick + 0.025) {
+        Tick = Cur
+        if (Seat & Seat:driver()) {
+            P = vec(0, Seat:driver():eye():dot(Seat:up()), Seat:driver():eye():dot(Seat:up())):z()
+            Y = vec(Seat:driver():eye():dot(Seat:right()), Seat:driver():eye():dot(Seat:right()), 0):y()
+            R = 0
+            
+            P = clamp(P, -0.8, 0.8)
+            Y = clamp(Y, -0.8, 0.8)
+            
+            W = Seat:driver():keyForward()
+            S = Seat:driver():keyBack()
+            A = Seat:driver():keyLeft()
+            D = Seat:driver():keyRight()
+            
+            if (Start) {
+                Plane:applyForce(Plane:forward() * (1 + W * 2 - S * 0.9) * Plane:mass() * 50)
+            }
+        } else {
+            Start = 0
+            W = 0
+            S = 0
+            A = 0
+            D = 0
+            P = 0
+            Y = 0
+        }
+        
+        local Ang = ang(-P, -Y + (A-D)*0.2, Y)
+        Hold += clamp(S - Hold, -0.1, 0.1)
+        
+        if (Start) {
+            holoPos(4, holoEntity(1):toWorld(vec(Y, P, 0)*2))
+            holoAng(5, ang(0, Seat:angles():yaw(), Seat:angles():roll() + 90))
+            
+            if (P < 0.02 & P > -0.02 & Y < 0.02 & Y > -0.02) {
+                holoColor(4, vec(0, 255, 0))
+            } else {
+                holoColor(4, vec(255, 0, 0))
+            }
+            
+            holoAng(8, Plane:angles() - Plane:angVel()*0.15 - ang(lerp(0, 65, Hold), 0, 0))
+            
+            for (I = 1, 5) {
+                local A = 100 + Plane:vel():length()/10
+                A = clamp(A, 100, 225)
+                holoAlpha(I+9, A)
+                local D = -6 - I*Plane:vel():length()/200
+                D = clamp(D, -48, -6)
+                holoPos(I+9, holoEntity(8):toWorld(vec(D, 0, 0)))
+            }                        
+#[
+            if (Plane:vel():length() > 250) {
+                foreach (_, W:entity = Wheels) {
+                    if (W:isValid()) {
+                        W:propNotSolid(1)
+                    }
+                }
+            } else {
+                foreach (_, W:entity = Wheels) {
+                    if (W:isValid()) {
+                        W:propNotSolid(0)
+                    }
+                }
+            }
+]#
+        } else {
+            holoAng(8, Plane:angles())
+            for (I = 1, 5) {
+                holoAlpha(I+9, 0)
+            }
+        }
+        
+        local Ranger = rangerOffset(1000000, Plane:pos(), vec(0, 0, -1))
+        
+        local Up = Ranger:distance() < 25
+        local Down = Ranger:distance() > 25
+        
+        Plane:applyAngForce(Ang * Plane:mass() * 150 * Start)
+        Plane:applyForce((vec(0, 0, gravity()*0.42/2 - Down * !Start + Up * 100)-Plane:vel()) * Plane:mass() * 0.1)
+        Plane:applyAngForce((-ang(Plane:angles():pitch(), 0, Plane:angles():roll())*3 - Plane:angVel()*3) * Plane:inertia():length())
+    }
+}
+

@@ -1,0 +1,55 @@
+@name RGB Func
+@inputs  Ent:entity
+@outputs X Y Z DEC INC NUM
+@persist RGBArray:array Speed Temp1 Temp2
+@trigger 
+
+if (first() | duped()) {
+    RGBArray = array(0, 0, 0)
+    DEC = 1
+    function entity:rgb(Speed) {
+        if (DEC <= 3 & Temp1 <= 0) {
+            DEC++
+            NUM = 0
+        }
+        if (DEC > 3) { DEC = 1 }
+        INC = DEC == 3 ? 1 : DEC + 1
+        Temp1 = RGBArray[DEC, number]
+        Temp2 = RGBArray[INC, number]
+
+        if (Temp2 >= 255) { Temp1 -= Speed }
+        Temp2 += Speed
+
+        RGBArray[DEC, number] = Temp1
+        RGBArray[INC, number] = Temp2
+        
+        Temp1 = clamp(Temp1, 0, 255)
+        Temp2 = clamp(Temp2, 0, 255)
+
+        X = RGBArray[1, number]
+        Y = RGBArray[2, number]
+        Z = RGBArray[3, number]
+
+        Color = vec(X, Y, Z)
+        This:setColor(Color)
+    }
+
+    function entity:hsv2rgb(Speed) {
+        Color = hsv2rgb(Speed*30*curtime()%360, 1, 1)
+        X = Color:x()
+        Y = Color:y()
+        Z = Color:z()
+        This:setColor(Color)
+    }
+}
+
+if (~Ent & Ent) {
+    Ent:setMaterial("debug/debugdrawflat")
+}
+
+event tick() {
+    if (Ent) {
+	    Ent:rgb(5)
+	    #Ent:hsv2rgb(1)
+    }
+}

@@ -1,0 +1,59 @@
+@name UP
+@inputs 
+@outputs 
+@persist Prop:entity Table:table PropModel:string Mass Multiplier
+@trigger 
+@strict
+@model models/hunter/plates/plate1x1.mdl
+
+if (first()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    runOnTick(1)
+    rangerFilter(entity())
+    rangerPersist(1)
+    
+    noCollideAll(entity(), 0)
+    
+    holoCreate(1, entity():pos(), vec(5, 5, 0.15), entity():angles(), vec(255), "cube")
+    holoMaterial(1, "phoenix_storms/stripes")
+    holoParent(1, entity())
+    
+    PropModel = "models/hunter/plates/plate1x1.mdl"
+    Mass       = 50000
+    Multiplier = 2000
+}
+
+if (tickClk() & perf(10)) {
+    foreach (K, V:entity = players()) {
+        local Dist = V:pos():distance(entity():pos())
+        local Jump = changed(V:keyJump()) & V:keyJump()
+        if (Dist < 100 & Jump & !Prop & propCanCreate()) {
+            local Dir   = entity():up()
+            
+            Table["Dir", vector] = Dir
+            Prop = propSpawn(PropModel, entity():toWorld(vec(0, 0, 0)), entity():toWorld(ang()), 0)
+            Prop:setMass(Mass)
+            Prop:propPhysicalMaterial("ice")
+            Prop:propDrag(0)
+            Prop:propSetFriction(0)
+            Prop:propDraw(1)
+            Prop:propGravity(0)
+            Prop:propNotSolid(1)
+            
+            timer("force", 250)
+            break
+        }
+    }
+}
+
+if (clk("force")) {
+    local Dir = Table["Dir", vector]
+    Prop:propNotSolid(0)
+    Prop:applyForce(Dir*Prop:mass()*Multiplier)
+    timer("delete", 50)
+}
+
+if (clk("delete")) {
+    Prop:propDelete()
+}

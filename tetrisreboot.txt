@@ -1,0 +1,328 @@
+@name TetrisReboot
+@inputs 
+@outputs 
+@persist [Chip Seat]:entity [BWidth BHeight X Y Z CurX CurY Finish ID D L R ScaleFactor]:number
+@persist [OData PData Tetro KickTable]:table [NameBag TempArray]:array [GameTick Interval GravityTick GravityInterval CountDown]:number CurRot [CurPiece]:string
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    Chip = entity()
+    Seat = seatSpawn("models/nova/chair_wood01.mdl", Chip:toWorld(vec(64, 0, 0)), Chip:toWorld(ang(0, 90, 0)), 1)
+    
+    #Board Settings
+    
+    BWidth  = 10
+    BHeight = 20
+    ScaleFactor = 0.2
+    
+    Finish  = 0
+    ID = 1
+    X  = 1
+    Y  = 1
+    Z  = 16
+    #U  = 0
+    D  = 0
+    L  = 0
+    R  = 0
+    CountDown = 0
+    GameTick = 0
+    GravityTick = 0
+    Interval = 0.1
+    GravityInterval = 0.25
+    
+    CurX = 4
+    CurY = 1
+    
+    OData = table()
+    PData = table()
+    TempArray = array()
+    Tetro = table()
+    Tetro["I", table] = table(
+        array(0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0),
+        array(0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0),
+        array(0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0),
+        array(0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0)
+    )
+    Tetro["L", table] = table(
+        array(0,0,0,0,0,0,1,0,1,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,0,0,0,1,0,0,0,1,1,0),
+        array(0,0,0,0,0,0,0,0,1,1,1,0,1,0,0,0),
+        array(0,0,0,0,1,1,0,0,0,1,0,0,0,1,0,0)
+    )
+    Tetro["J", table] = table(
+        array(0,0,0,0,1,0,0,0,1,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,1,0,0,1,0,0,0,1,0,0),
+        array(0,0,0,0,0,0,0,0,1,1,1,0,0,0,1,0),
+        array(0,0,0,0,0,1,0,0,0,1,0,0,1,1,0,0)
+    )
+    Tetro["N", table] = table(
+        array(0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0)
+    )
+    Tetro["S", table] = table(
+        array(0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0),
+        array(0,0,0,0,0,1,0,0,0,1,1,0,0,0,1,0),
+        array(0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,0),
+        array(0,0,0,0,1,0,0,0,1,1,0,0,0,1,0,0)
+    )
+    Tetro["Z", table] = table(
+        array(0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,0,1,0,0,1,1,0,0,1,0,0),
+        array(0,0,0,0,0,0,0,0,1,1,0,0,0,1,1,0),
+        array(0,0,0,0,0,1,0,0,1,1,0,0,1,0,0,0)
+    )
+    Tetro["T", table] = table(
+        array(0,0,0,0,0,1,0,0,1,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,0,0,0,1,1,0,0,1,0,0),
+        array(0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,0),
+        array(0,0,0,0,0,1,0,0,1,1,0,0,0,1,0,0)
+    )
+    
+    KickTable = table()
+    
+    KickTable["NotI", table] = table(
+        array(vec2( 0, 0), vec2(-1, 0), vec2(-1, 1), vec2( 0,-2), vec2(-1,-2)),
+        array(vec2( 0, 0), vec2( 1, 0), vec2( 1,-1), vec2( 0, 2), vec2( 1, 2)),
+        array(vec2( 0, 0), vec2( 1, 0), vec2( 1, 1), vec2( 0,-2), vec2( 1,-2)),
+        array(vec2( 0, 0), vec2(-1, 0), vec2(-1,-1), vec2( 0, 2), vec2(-1, 2))
+    )
+    
+    KickTable["I", table] = table(
+        array(vec2( 0, 0), vec2(-2, 0), vec2( 1, 0), vec2(-2,-1), vec2( 1, 2)),
+        array(vec2( 0, 0), vec2(-1, 0), vec2( 2, 0), vec2(-1, 2), vec2( 2,-1)),
+        array(vec2( 0, 0), vec2( 2, 0), vec2(-1, 0), vec2( 2, 1), vec2(-1,-2)),
+        array(vec2( 0, 0), vec2( 1, 0), vec2(-2, 0), vec2( 1,-2), vec2(-2, 1))
+    )
+    
+    NameBag = array("I", "L", "J", "N", "S", "Z", "T")
+    
+    local Index = randint(1, 7)
+    CurPiece = NameBag[Index, string]
+    NameBag:remove(Index)
+    CurRot   = 1
+    
+    function number isCollided(Xoffset, Yoffset, RotOffset) {
+        local CX = CurX + Xoffset
+        local CY = CurY + Yoffset
+        local Rotation = CurRot + RotOffset
+        if (Rotation > 4) { Rotation = 1 }
+        local Index = 0
+        for (I = CY, CY + 3) {
+            for (J = CX, CX + 3) {
+                Index++
+                local Te = Tetro[CurPiece, table][Rotation, array][Index, number]
+                
+                if (!PData[I, array][J, number] & Te) {
+                    return 1
+                }
+                
+                if (PData[I, array][J, number] == 500 & Te) {
+                    return 1
+                }
+                
+                if (Te & (I > BHeight | J < 0 | J > BWidth)) {
+                    return 1
+                }
+            }
+        }
+        
+        return 0
+    }
+    
+    function settleDown() {
+        local Index = 0
+        for (I = CurY, CurY+3) {
+            for (J = CurX, CurX+3) {
+                Index++
+                local Te = Tetro[CurPiece, table][CurRot, array][Index, number]
+                if (Te & PData[I, array][J, number] != 500) {
+                    PData[I, array][J, number] = 500
+                }
+            }
+        }
+    }
+    
+    function refresh() {
+        for (I = 1, BHeight) {
+            for (J = 1, BWidth) {
+                local ID = OData[I, array][J, number]
+                if (PData[I, array][J, number] == 500 | PData[I, array][J, number] == 1000) {
+                    holoColor(ID, vec(255))
+                } else {
+                    holoColor(ID, vec(0))
+                }
+            }
+        }
+        
+        CountDown = 0
+    }
+    
+    function array array:shuffle() {
+        local Array = This
+        if (Array:count() > 1) {
+            for (I = 1, Array:count()) {
+                local J = I + randint(1, Array:count() - 1 - I)
+                local T = Array[J, string]
+                Array[J, string] = Array[I, string]
+                Array[I, string] = T
+            }
+        }
+        
+        return Array
+    }
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == Seat:driver()) {
+        if (Key == "up" & Down) {
+            #U = Down    
+            if (CurPiece != "I") {
+                for (_ = 1, KickTable["NotI", table][CurRot, array]:count()) {
+                    local Xx = KickTable["NotI", table][CurRot, vector2]:x()
+                    local Yx = KickTable["NotI", table][CurRot, vector2]:y()
+                    
+                    if (!isCollided(Xx, Yx, 1)) {
+                        CurRot++
+                        if (CurRot > 4) {
+                            CurRot = 1
+                        }
+                        
+                        CurX += Xx
+                        CurY += Yx
+                        break
+                    }
+                }
+            } else {
+                for (_ = 1, KickTable["I", table][CurRot, array]:count()) {
+                    local Xx = KickTable["I", table][CurRot, vector2]:x()
+                    local Yx = KickTable["I", table][CurRot, vector2]:y()
+                    
+                    if (!isCollided(Xx, Yx, 1)) {
+                        CurRot++
+                        if (CurRot > 4) {
+                            CurRot = 1
+                        }
+                        
+                        CurX += Xx
+                        CurY += Yx
+                        break
+                    }
+                }
+            }
+            #hint("Brug" + CurRot, 3)
+        }
+        if (Key == "down") {
+            D = Down
+        }
+        if (Key == "left") {
+            L = Down
+        }
+        if (Key == "right") {
+            R = Down
+        }
+    }
+}
+
+event tick() {
+    if (!Finish) {
+        if (holoCanCreate()) {
+            local Pos = Chip:toWorld(vec(0, (-(BWidth/2 + 0.5) + X )* 12 * ScaleFactor, (BHeight + 0.5 - Y) * 12 * ScaleFactor + Z))
+            holoCreate(ID, Pos, vec(0.9) * ScaleFactor, Chip:toWorld(ang()), vec(0), "rcube")
+            holoMaterial(ID, "debug/debugdrawflat")
+            holoParent(ID, Chip)
+            TempArray:pushNumber(ID)
+            X++
+            ID++
+            if (X > BWidth) {
+                OData:pushArray(TempArray)
+                TempArray = array()
+                X = 1
+                Y++
+                if (Y > BHeight) {
+                    Finish = 1
+                    PData = OData:clone()
+                }
+            }
+        }
+    } else {
+        local CurT = curtime()
+        local Drop = 0
+        if (CurT > GravityTick + GravityInterval) {
+            GravityTick = CurT
+            Drop = 1
+        }
+        if (CurT > GameTick + Interval) {
+            GameTick = CurT
+            CurY += (D + Drop) * !isCollided(0, 1, 0)
+            CurX += (R & !isCollided(1, 0, 0))
+            CurX -= (L & !isCollided(-1, 0, 0))
+            
+            if (isCollided(0, 1, 0)) {
+                CountDown++
+                
+                if (CountDown > 10) {
+                    settleDown()
+                    refresh()
+                    Chip:soundPlay(1, 0, "buttons/button22.wav")
+                    
+                    local Index = randint(1, NameBag:count())
+                    CurPiece = NameBag[Index, string]
+                    NameBag:remove(Index)
+                    
+                    if (NameBag:count() < 1) {
+                        NameBag = array("I", "L", "J", "N", "S", "Z", "T"):shuffle()
+                        local Index = randint(1, NameBag:count())
+                        CurPiece = NameBag[Index, string]
+                        NameBag:remove(Index)                    
+                    }
+                    CurY = 0
+                    CurX = 4
+                }
+            }
+                        
+                    
+            #local ID = PData[CurY, array][CurX, number]
+            local Index = 0
+            for (I = CurY-1, CurY+4) {
+                for (J = CurX-1, CurX+4) {
+                    if (I >= CurY & I <= CurY+3 & J >= CurX & J <= CurX+3) {
+                        Index++
+                        local Te = Tetro[CurPiece, table][CurRot, array][Index, number]
+                        if (OData[I, array][J, number]) {
+                            local ID = OData[I, array][J, number]
+                            if (Te | PData[I, array][J, number] == 500) {
+                                holoColor(ID, vec(255))
+                            } else {
+                                holoColor(ID, vec(0))
+                            }
+                        }
+                    } else {
+                        if (OData[I, array][J, number]) {
+                            local ID = OData[I, array][J, number]
+                            holoColor(ID, vec(0))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

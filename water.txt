@@ -1,0 +1,51 @@
+@name Water
+@inputs 
+@outputs 
+@persist Chip:entity
+@trigger 
+
+if (first()) {
+    Chip = entity()
+    #Chip:propNotSolid(1)
+    #Chip:propDraw(0)
+    Model = "models/hunter/plates/plate32x32.mdl"
+    #Material = #"debug/debugdrawflat"
+    #Material = "debug/debugempty"
+    Material = "models/antlion/antlion_innards"
+    #Material = "models/debug/debugwhite"
+    Material2= "waterizer/shader"
+    Material2 = "debug/debugdrawflat"
+    Material2 = "models/shadertest/predator"
+    Material2 = "models/shadertest/shader3"
+    Color  = vec(100, 100, 200)
+    Color2 = vec(100, 100, 200)
+    Alpha  = 10
+    Alpha2 = 255
+    Pos  = Chip:toWorld(vec(0,0,-32))
+    Pos2 = Chip:toWorld(vec(0,0,-32))
+    Ang  = Chip:toWorld(ang(0, 0, 0))
+    Ang2 = Chip:toWorld(ang(0,90, 0))
+    Scale = vec(25,25,25)
+    
+    holoCreate(3, Pos, vec())
+    holoParent(3, Chip)
+    
+    holoCreate(1, Pos, Scale, Ang, Color, Model)
+    holoMaterial(1, Material)
+    holoAlpha(1, Alpha)
+    holoParent(1, 3)
+    
+    holoCreate(2, Pos2, Scale, Ang2, Color2, Model)
+    holoMaterial(2, Material2)
+    holoAlpha(2, Alpha2)
+    holoParent(2, 3)
+    
+    Chip:emitSound("ambient/nature/water_gently_lapping.wav")
+}
+event removed(_:number) {
+    Chip:emitSoundStop("ambient/nature/water_gently_lapping.wav")
+}
+event tick() {
+    holoPos(3, entity():toWorld(vec(0, 0, -32 + 6 * sin(curtime() * 10))))
+    #holoAng(3, entity():toWorld(ang(sin(curtime() * 15), 0, cos(curtime() * 15)) * 0.2))
+}

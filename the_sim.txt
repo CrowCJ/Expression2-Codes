@@ -1,0 +1,76 @@
+@name The Sim
+@inputs 
+@outputs 
+@persist TimeScale [Mdl Mat]:string Scale Ang:angle Z
+@trigger 
+@strict
+
+if (first()) {
+    
+    #Mat = "models/debug/debugwhite"
+    Mat = "debug/debugdrawflat"
+    Mdl = "models/hunter/misc/cone4x2mirrored.mdl"
+    Mdl = "models/fasteroid/pointer.mdl"
+    
+    Ang   = ang(180, 0, 0)
+    #Scale = vec(0.05, 0.05, 0.2)
+    Scale = 0.1
+    
+    TimeScale = 2
+    foreach (K:number, V:entity = players()) {
+        holoCreate(K, V:pos(), vec(0), Ang, vec(0, 255, 0), "cube")
+        holoCreate(K+20, V:pos(), vec(3, 3, 0.1), Ang, vec(0, 255, 0), "hq_tube_thin")
+        holoCreate(K+40, holoEntity(K):toWorld(vec(3, -6, 0) * Scale), vec(0.05, 0.25, 0.25), Ang, vec(0, 255, 0), Mdl)
+        holoMaterial(K+20, Mat)
+        holoMaterial(K+40, Mat)
+        holoParent(K+40, K)
+        
+        local Color = teamColor(V:team())
+        holoColor(K+20, Color)
+        holoColor(K+40, Color)
+    }
+        
+    Z = 1000000
+    rangerHitEntities(0)
+    rangerPersist(1)
+}
+
+event playerConnected(_:entity) {
+    foreach (K:number, V:entity = players()) {
+        holoCreate(K, V:pos(), vec(0), Ang, vec(0, 255, 0), "cube")
+        holoCreate(K+20, V:pos(), vec(3, 3, 0.1), Ang, vec(0, 255, 0), "hq_tube_thin")
+        holoCreate(K+40, holoEntity(K):toWorld(vec(3, -6, 0) * Scale), vec(0.05, 0.25, 0.25), Ang, vec(0, 255, 0), Mdl)
+        holoMaterial(K+20, Mat)
+        holoMaterial(K+40, Mat)
+        holoParent(K+40, K)
+        
+        local Color = teamColor(V:team())
+        holoColor(K+20, Color)
+        holoColor(K+40, Color)
+    }
+}
+
+event playerDisconnected(_:entity) {
+    reset()
+}
+
+event tick() {
+    foreach (K:number, V:entity = players()) {
+        local R = rangerOffset(1000000, V:boxCenterW(), vec(0, 0, -1))
+        if (V:inVehicle()) {
+            holoPos(K, V:vehicle():pos() + vec(0, 0, 120 + sin(curtime() * 45 * TimeScale + 360/players():count()*K) * 5))
+            holoPos(K+20, R:pos())
+            
+            local Box = V:vehicle():boxSize()
+            local Max = max(Box:x(), max(Box:y(), Box:z()))
+            holoScaleUnits(K+20, vec(Max, Max, 0.1)) 
+        } else {
+            holoPos(K, V:pos() + vec(0, 0, 120 + sin(curtime() * 45 * TimeScale + 360/players():count()*K) * 5))
+            holoPos(K+20, R:pos())
+            holoScale(K+20, vec(3, 3, 0.1)) 
+        }
+        holoAng(K, Ang + ang((V:pos():z() >= Z) ? 180 : 0, curtime() * 35 * TimeScale, 0))
+        
+        #holoColor(K, hsv2rgb((curtime() * 35 * TimeScale + 360/players():count()*K)%360, 1, 1))
+    }
+}

@@ -1,0 +1,36 @@
+@name Waypoint Placer
+@inputs 
+@outputs 
+@persist WP:array Mdl:string Index
+@trigger 
+@strict
+
+if (first()) {
+    WP = array()
+    Index = 0
+    Mdl = "models/hunter/tubes/tube1x1x5.mdl"
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Key == "h" & Down) {
+        if (holoCanCreate()) {
+            Index++
+            WPs = holoCreate(Index, Player:aimPos(), vec(4, 4, 10), ang(), vec(255, 200, 100), Mdl)
+            holoMaterial(Index, "debug/debugdrawflat")
+            holoAlpha(Index, 50)
+            
+            WP:pushEntity(WPs)
+        }
+    }
+}
+
+event tick() {
+    if (WP:count() == 0) { exit() }
+    foreach (_:number, V:entity = WP) {
+        if (holoEntity(holoIndex(V)):isValid() & owner():pos():distance(holoPos(holoIndex(V))) < 100) {
+            holoDelete(holoIndex(V))
+            WP:remove(WP:indexOf(V))
+            break
+        }
+    }
+}

@@ -1,0 +1,56 @@
+@name Streamcore Replacement with WebAudio Backend
+@persist WSTRCORE_TBL:table
+
+function streamHelp() {}
+function number streamCanStart() { return webAudioCanCreate() }
+
+function entity:streamStart(Index, Url:string) {
+    local Wa = webAudio(Url)
+    Wa:setParent(This)
+    Wa:play()
+    WSTRCORE_TBL[Index, webaudio] = Wa
+}
+
+function entity:streamStart(Index, Url:string, Volume) {
+    local Wa = webAudio(Url)
+    Wa:setVolume(Volume * 100)
+    Wa:setParent(This)
+    Wa:play()
+    WSTRCORE_TBL[Index, webaudio] = Wa
+}
+
+function entity:streamStart(Index, Volume, Url:string) {
+    local Wa = webAudio(Url)
+    Wa:setVolume(Volume * 100)
+    Wa:setParent(This)
+    Wa:play()
+    WSTRCORE_TBL[Index, webaudio]:destroy() # Might not be necessary
+    WSTRCORE_TBL[Index, webaudio] = Wa
+}
+
+function streamStop(Index) {
+    local Wa = WSTRCORE_TBL[Index, webaudio]
+    if(Wa:isValid()) {
+        Wa:destroy()
+    }
+}
+function streamVolume(Index, Volume) {
+    local Wa = WSTRCORE_TBL[Index, webaudio]
+    if (Wa:isValid()){
+        Wa:setVolume(Volume * 100)
+        Wa:update()
+    }
+}
+function streamRadius(Index, Radius) {
+    local Wa = WSTRCORE_TBL[Index, webaudio]
+    if (Wa:isValid()){
+        Wa:setRadius(Radius)
+        Wa:update()
+    }
+}
+
+function number streamLimit() { return 0.3 }
+function number streamMaxRadius() { return 3000 }
+function number streamAdminOnly() { return webAudioAdminOnly() }
+
+function streamDisable3D(N) {}

@@ -1,0 +1,24 @@
+@name UP2
+@inputs  Main:entity Button
+@outputs 
+@persist H
+@trigger 
+@strict
+
+if (first()) {
+    runOnTick(1)
+    
+    H = 25
+}
+
+if (Main) {
+    if (!Button) {
+        Main:setPos(entity():toWorld(vec(24, 0, 0)))
+    } else {
+        Main:setPos(entity():toWorld(vec(24, 0, H)))
+    }
+    
+    if (!Main:isFrozen()) {
+        Main:propFreeze(1)
+    }
+}

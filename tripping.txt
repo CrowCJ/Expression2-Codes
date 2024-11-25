@@ -1,0 +1,22 @@
+@name tripping
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@strict
+
+if (first()) {
+    local N = 80
+    for (I = 1, N) {
+        holoCreate(I, entity():toWorld(vec(0, 0, 6*50)))
+        holoAng(I, entity():toWorld(ang(0, 360/N*I, 0)))
+        holoModel(I, "icosphere")
+        holoScale(I, vec(-50))
+        holoMaterial(I, "shadertest/cubemapdemocameraspace")
+        holoParent(I, entity())
+    }
+}
+
+event tick() {
+    entity():applyAngForce(ang(0, 0.1, 0) - entity():angVel() * entity():inertia():length())
+}

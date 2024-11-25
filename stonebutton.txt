@@ -1,0 +1,41 @@
+@name StoneButton
+@inputs  
+@outputs Out
+@persist [Chip]:entity Num [LightCube_ID] BaseTick
+@trigger 
+@model models/hunter/blocks/cube025x025x025.mdl
+
+if (first() | duped()) {
+    Chip = entity()
+    Chip:setAlpha(0)
+    
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, -5)), vec(0.4, 0.65, 0.25), Chip:toWorld(ang()), vec(100), "cube")
+    
+    for (I = 1, Num) {
+        holoParent(I, Chip)
+    }
+    
+    runOnTick(1)
+    runOnUse(1)
+    
+    BaseTick = 150
+}
+
+holoPos(1, Chip:toWorld(vec(0, 0, -5 - Out)))
+
+local Tick = BaseTick*3
+
+if (useClk() & !Out) {
+    Chip:soundPlay(1, 0, "buttons/lightswitch2.wav")
+    soundPitch(1, 80)
+    Out = 1
+    
+    timer("off", Tick)
+}
+
+if (clk("off")) {
+    Chip:soundPlay(2, 0, "buttons/lightswitch2.wav")
+    soundPitch(1, 100)
+    
+    Out = 0
+}

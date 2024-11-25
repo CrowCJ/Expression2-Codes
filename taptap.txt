@@ -1,0 +1,24 @@
+@name TapTap
+@inputs 
+@outputs TapCounted
+@persist 
+@trigger 
+@model models/props_phx/construct/metal_angle360.mdl
+
+entity():setAlpha(0)
+holoCreate(1, entity():pos(), vec(1), entity():angles(), vec(255), entity():model())
+holoParent(1, entity())
+
+event chipUsed(E:entity) {
+    TapCounted++
+    
+    entity():setName("Tap Count: " + TapCounted)
+}
+
+event tick() {
+    if (changed(TapCounted)) {
+        holoAng(1, entity():angles() + ang(random(-5, 5), 0, random(-5, 5)))
+    } else {
+        holoAng(1, entity():angles())
+    }
+}

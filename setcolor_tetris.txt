@@ -1,0 +1,535 @@
+@name SetColor_Tetris
+@inputs  Seat:entity Reset Active
+@outputs STR_Playtime:string
+@persist [Table Data CData Tetris KicksCW KicksCCW Control]:table [TempArr Name]:array
+@persist [CurPiece]:string CurRotation PrevPly:entity
+@persist Height Width X Y CurX CurY ID Done Draw Touch L R S GameTick Delay Delay2 Playtime PlaytimeT
+
+@outputs NextPiece:string
+@strict
+@model models/holograms/plane.mdl
+
+function array shuffle(Array:array, N:number) {
+    local A = array()
+    if (N > 1) {
+        for (I = 1, N-1, 1) {
+            local J = I + randint(N - I)
+            local T = Array[J, string]
+            Array[J, string] = Array[I, string]
+            Array[I, string] = T
+        }
+        
+        A = Array:clone()
+    }
+    
+    return A
+}
+
+if (first() | duped()) {
+    propSpawnUndo(0)
+    PrevPly = noentity()
+    TempArr = array()    
+    Tetris = table(
+        "L" = table(
+            array(0,0,1,0,1,1,1,0,0,0,0,0,0,0,0,0),
+            array(0,1,0,0,0,1,0,0,0,1,1,0,0,0,0,0),
+            array(0,0,0,0,1,1,1,0,1,0,0,0,0,0,0,0),
+            array(1,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0)
+        ),
+        "J" = table(
+            array(1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0),
+            array(0,1,1,0,0,1,0,0,0,1,0,0,0,0,0,0),
+            array(0,0,0,0,1,1,1,0,0,0,1,0,0,0,0,0),
+            array(0,1,0,0,0,1,0,0,1,1,0,0,0,0,0,0)
+        ),
+        "S" = table(
+            array(0,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0),
+            array(0,1,0,0,0,1,1,0,0,0,1,0,0,0,0,0),
+            array(0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0),
+            array(1,0,0,0,1,1,0,0,0,1,0,0,0,0,0,0)
+        ),
+        "Z" = table(
+            array(1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0),
+            array(0,0,1,0,0,1,1,0,0,1,0,0,0,0,0,0),
+            array(0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0),
+            array(0,1,0,0,1,1,0,0,1,0,0,0,0,0,0,0)
+        ),
+        "I" = table(
+            array(0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0),
+            array(0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0),
+            array(0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0),
+            array(0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0)
+        ),
+        "T" = table(
+            array(0,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0),
+            array(0,1,0,0,0,1,1,0,0,1,0,0,0,0,0,0),
+            array(0,0,0,0,1,1,1,0,0,1,0,0,0,0,0,0),
+            array(0,1,0,0,1,1,0,0,0,1,0,0,0,0,0,0)
+        ),
+        "N" = table(
+            array(0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0),
+            array(0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0),
+            array(0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0),
+            array(0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0)
+        )
+    )
+    
+    KicksCW = table(
+        "=I" = table(
+            array(vec2(-2, 0), vec2( 1, 0), vec2(-2,-1), vec2( 1, 2)),
+            array(vec2(-1, 0), vec2( 2, 0), vec2(-1, 2), vec2( 2,-1)),
+            array(vec2( 2, 0), vec2(-1, 0), vec2( 2, 1), vec2(-1,-2)),
+            array(vec2( 1, 0), vec2(-2, 0), vec2( 1,-2), vec2(-2, 1))
+        ),
+        "!I" = table(
+            array(vec2(-1, 0), vec2(-1, 1), vec2( 0,-2), vec2(-1,-2)),
+            array(vec2( 1, 0), vec2( 1,-1), vec2( 0, 2), vec2( 1, 2)),
+            array(vec2( 1, 0), vec2( 1, 1), vec2( 0,-2), vec2( 1,-2)),
+            array(vec2(-1, 0), vec2(-1,-1), vec2( 0, 2), vec2(-1, 2))
+        )
+    )
+    
+    KicksCCW = table(
+        "=I" = table(
+            array(vec2( 2, 0), vec2(-1, 0), vec2( 2, 1), vec2(-1,-2)),
+            array(vec2( 1, 0), vec2(-2, 0), vec2( 1,-2), vec2(-2, 1)),
+            array(vec2(-2, 0), vec2( 1, 0), vec2(-2,-1), vec2( 1, 2)),
+            array(vec2(-1, 0), vec2( 2, 0), vec2(-1, 2), vec2( 2,-1))
+        ),
+        "!I" = table(
+            array(vec2( 1, 0), vec2( 1,-1), vec2( 0, 2), vec2( 1, 2)),
+            array(vec2(-1, 0), vec2(-1, 1), vec2( 0,-2), vec2(-1,-2)),
+            array(vec2(-1, 0), vec2(-1,-1), vec2( 0, 2), vec2(-1, 2)),
+            array(vec2( 1, 0), vec2( 1, 1), vec2( 0,-2), vec2( 1,-2))
+        )
+    )
+    
+    Data   = table()
+    CData  = table()
+    Table  = table(
+        #"screen_mdl" = "models/holograms/plane.mdl",
+        #"screen_mdl"   = "models/hunter/triangles/trapezium3x3x1.mdl",
+        "screen_mdl"   = "models/holograms/hq_rcube_thick.mdl",
+        "holo_mat"     = "debug/debugdrawflat",
+        #"holo_mat"     = "models/debug/debugwhite",
+        "holo_col_sta" = vec(125),
+        "holo_col_act" = vec(255),
+        "holo_col"     = vec(50),
+        "touch_tick"   = 20,
+        "shadow_piece" = 1
+    )
+    
+    Control = table(
+        "l" = "left",
+        "r" = "right",
+        "u"    = "up",
+        "s"    = "down",
+        "hd"   = "space",
+        "cw"   = "s",
+        "ccw"  = "a",
+        "hold" = "d"
+    )
+    
+    Height = 20
+    Width  = 10
+    
+    L = R = S = 0
+    ID = 0
+    X = 0
+    Y = Height
+    CurX = 4
+    CurY = 0
+    Done = 0
+    Draw = 1
+    Touch = 0
+    GameTick = 0
+    Delay = Delay2 = 0
+    Playtime = PlaytimeT = 0
+    
+    Name = array()
+    if (Name:count() < 1) {
+        Name = shuffle(array("I", "J", "L", "N", "S", "T", "Z"), 7)
+    }
+    
+    Piece = Name:shiftString()
+    NextPiece = format("Next\n%s", Name[1, string])
+    
+    #local Piece = "I"
+    
+    CurRotation = 1
+    CurPiece = Piece
+    
+    STR_Playtime = format("Playtime:\n00:00:00\nTotal Playtime:\n00:00:00")
+}
+
+function number isCollision(OffsetX:number, OffsetY:number, RotationOffset:number) {
+    local Index = 0
+    local Rot = CurRotation + RotationOffset
+    
+    if (Rot > 4) { Rot = 1 }
+    if (Rot < 1) { Rot = 4 }
+    
+    for (I = CurY + OffsetY, CurY+3 + OffsetY) {
+        for (J = CurX + OffsetX, CurX+3 + OffsetX) {
+            Index++
+            if (Tetris[CurPiece, table][Rot, array][Index, number]) {
+                if (I <= Height & J > 0 & J <= Width) {
+                    if (Data[I, array][J, entity]) {
+                        if (CData[I, array][J, number] == 5000) {
+                            return 1
+                        }
+                    } else {
+                        return 1
+                    }
+                } else {
+                    return 1
+                }
+            }
+        }
+    }
+    
+    return 0
+}
+
+function draw() {
+    local Index = 0
+    for (I = CurY-1, CurY+3) {
+        for (J = CurX-1, CurX+4) {
+            if (I >= CurY & I <= CurY+3 & J >= CurX & J <= CurX+3) {
+                Index++
+                if (Data[I, array][J, entity]) {
+                    if (Tetris[CurPiece, table][CurRotation, array][Index, number] == 1) {
+                        if (CData[I, array][J, number] != 5000) {
+                            CData[I, array][J, number] = 1000
+                        }
+                    } else {
+                        if (CData[I, array][J, number] != 5000) {
+                            CData[I, array][J, number] = 0
+                        }
+                    }
+                }
+            } else {
+                if (Data[I, array][J, entity]) {
+                    if (CData[I, array][J, number] != 5000) {
+                        CData[I, array][J, number] = 0
+                    }
+                }
+            }
+            
+            if (Data[I, array][J, entity]) {
+                if (CData[I, array][J, number] == 1000) {
+                    Data[I, array][J, entity]:setColor(Table["holo_col_act", vector])
+                } elseif (CData[I, array][J, number] == 5000) {
+                    Data[I, array][J, entity]:setColor(Table["holo_col_sta", vector])
+                } else {
+                    Data[I, array][J, entity]:setColor(Table["holo_col", vector])
+                }
+            }
+        }
+    }
+}
+
+function settle() {
+    local Index = 0
+    for (I = CurY, CurY+3) {
+        for (J = CurX, CurX+3) {
+            Index++
+            
+            if (Data[I, array][J, entity]) {
+                if (Tetris[CurPiece, table][CurRotation, array][Index, number]) {
+                    CData[I, array][J, number] = 5000
+                }
+            }
+        }
+    }
+}
+
+function clearLine() {
+    for (I = CurY, CurY+3) {
+        local Count = 0
+        for (J = 1, Width) {
+            if (CData[I, array][J, number] == 5000) {
+                Count++
+            }
+            
+            if (Count == Width) {
+                CData:removeArray(I)
+                CData:insertArray(1, array(0,0,0,0,0,0,0,0,0,0))
+                break
+            }
+        }
+        
+    }
+}
+
+function refresh(N:number) {
+    #local Index = 0
+    if (N == 1) {
+        for (I = 1, Y+3) {
+            for (J = 1, Width) {      
+                if (Data[I, array][J, entity]) {
+                    if (CData[I, array][J, number] == 5000) {
+                        Data[I, array][J, entity]:setColor(Table["holo_col_sta", vector])
+                    } else {
+                        CData[I, array][J, number] = 0
+                        Data[I, array][J, entity]:setColor(Table["holo_col", vector])
+                    }
+                }
+            }
+        }
+    } else {
+        for (I = 1, Height) {
+            for (J = 1, Width) {      
+                if (Data[I, array][J, entity]) {
+                    if (CData[I, array][J, number] == 5000) {
+                        Data[I, array][J, entity]:setColor(Table["holo_col_sta", vector])
+                    } else {
+                        CData[I, array][J, number] = 0
+                        Data[I, array][J, entity]:setColor(Table["holo_col", vector])
+                    }
+                }
+            }
+        }
+    }
+}
+
+function restart() {
+    CData = Data:clone()
+    Touch = 0
+    Delay = 0
+    GameTick = 0
+    Playtime = 0
+    refresh(2)
+    timer("res", 500)
+}
+
+if (~Active & Active) {
+    PrevPly = Seat:driver()
+    local WC = "Control:                      "
+    local Rt = "Up or S:     Rotate Clock Wise"
+    local RR = "A:               Rotate Counter Clock Wise"
+    local LR = "Left, Right: Move left, right"
+    local SD = "Down:        Soft drop"
+    local HD = "Space:       Hard drop"
+    local RS = "R:               Restart"
+    
+    local Array = array(WC, Rt, RR, LR, SD, HD, RS)
+    
+    foreach (_:number, Str:string = Array) {
+        Seat:printDriver(3, Str)
+    }
+    
+    restart()
+}
+
+if (~Active & !Active) {
+    Playtime = 0
+    STR_Playtime = format("Playtime:\n00:00:00\nTotal Playtime:\n00:00:00")
+}
+
+event tick() {
+    if (!Done) {
+        if (propCanCreate() & Y > 0) {
+            ID++
+            local XX = X
+            local YY = Y
+            local Mdl    = Table["screen_mdl", string]
+            local Mat    = Table["holo_mat", string]
+            local Ent    = propSpawn(Mdl, entity():toWorld(vec(XX - Width/2 + 0.5, YY, 0) * 12), entity():toWorld(ang(0, 0, 90)), 1)
+            #Ent:setColor(Table["holo_col", vector])
+            Ent:setColor(vec(255))
+            Ent:setMaterial(Mat)
+            Ent:propStatic(1)
+            
+            #Ent:parentTo(entity())
+            
+            TempArr:pushEntity(Ent)
+            
+            X++
+            if (X > Width - 1) {
+                X = 0
+                Y--
+                
+                Data:pushArray(TempArr)
+                TempArr = array()
+                
+                if (Y < 1) {
+                    Done = 1
+                    Draw = 1
+                    CData = Data:clone()
+                    print("Done")
+                }
+            }
+        }
+    } else {
+        #local Index = Data[CurY, array][CurX, number]
+        local Tick = curtime()
+        if (Tick > Delay2 + 1 & Active) {
+            Delay2 = Tick
+            Playtime++
+            if (Seat:driver() == PrevPly) {            
+                PlaytimeT++
+            }
+            
+            local S = round(Playtime%60)
+            local M = floor(Playtime/60%60)
+            local H = floor(Playtime/60/60)
+            
+            local ST = round(PlaytimeT%60)
+            local MT = floor(PlaytimeT/60%60)
+            local HT = floor(PlaytimeT/60/60)
+            
+            STR_Playtime = format("Playtime:\n%02d:%02d:%02d\nTotal Playtime:\n%02d:%02d:%02d", H, M, S, HT, MT, ST)
+        }
+        if (Tick > Delay + 0.05 & Draw) {
+            GameTick++
+            
+            if (GameTick%(4 - S*2)==0) {
+                draw()
+            
+                CurX += (R) * (!isCollision( 1, 0, 0) & (GameTick%2 == 0))
+                CurX -= (L) * (!isCollision(-1, 0, 0) & (GameTick%2 == 0))
+        
+                if (isCollision(0, 1, 0)) {
+                    if (Touch < Table["touch_tick", number]) {
+                        Touch++
+                    } else {
+                        Draw = 0
+                        settle()
+                        refresh(1)
+                        timer("clear", 50)
+                    }
+                } else {        
+                    CurY += 1
+                    if (CurY > 20) {
+                        CurY = 0
+                    }
+                }
+                
+                if (isCollision(0, 1, 0) & CurY == 0) {
+                    if (Touch < Table["touch_tick", number]) {
+                        Touch += 1
+                    } else {
+                        restart()
+                    }
+                }
+            }
+        }
+    }
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (->Seat & Seat:driver() & Player == Seat:driver()) {
+        
+        if (Key == Control["s", string]) {
+            S = Down
+        }
+        if (Key == Control["l", string]) {
+            L = Down
+        }
+        if (Key == Control["r", string]) {
+            R = Down
+        }
+        if ((Key == Control["u", string] | Key == Control["cw", string]) & Down) {
+            if (isCollision(0, 0, 1) & CurPiece != "N") {
+                local GetStr = CurPiece == "I" ? "=I" : "!I"
+                local Rot = CurRotation
+                for (I = 1, 4) {
+                    local GetXV2 = KicksCW[GetStr, table][Rot, array][I, vector2]
+                    local X = GetXV2:x()
+                    local Y = GetXV2:y()
+                    if (!isCollision(X, Y, 1)) {
+                        CurX += X
+                        CurY += Y
+                        CurRotation += 1
+                        break
+                    }
+                }
+            } else {
+                CurRotation += 1
+            }
+            
+            if (CurRotation > 4) { CurRotation = 1 }
+        }
+        elseif (Key == Control["ccw", string] & Down) {
+            if (isCollision(0, 0, -1) & CurPiece != "N") {
+                local GetStr = CurPiece == "I" ? "=I" : "!I"
+                local Rot = CurRotation
+                for (I = 1, 4) {
+                    local GetXV2 = KicksCCW[GetStr, table][Rot, array][I, vector2]
+                    local X = GetXV2:x()
+                    local Y = GetXV2:y()
+                    if (!isCollision(X, Y, 1)) {
+                        CurX += X
+                        CurY += Y
+                        CurRotation -= 1
+                        break
+                    }
+                }
+            } else {
+                CurRotation -= 1
+            }
+            
+            if (CurRotation < 1) { CurRotation = 4 }
+        }
+        elseif (Key == Control["hd", string] & Down) {
+            if (Draw) {
+                while (!isCollision(0, 1, 0)) {
+                    CurY++
+                }
+                
+                if (isCollision(0, 1, 0) & CurY == 0) {
+                    Draw = 0
+                    restart()
+                }
+                
+                if (isCollision(0, 1, 0)) {
+                    Draw = 0
+                    settle()
+                    refresh(1)
+                    timer("clear", 50)   
+                }
+            }
+        }
+    }
+}
+
+if (clk("clear")) {
+    clearLine()
+    Touch = 0
+    Y = CurY
+    CurY = 0
+    if (!Active) {
+        CurX = randint(1, 7)
+    } else {
+        CurX = 4
+    }
+    timer("f5", 200)
+}
+
+if (clk("f5")) {
+    Piece = Name:shiftString()
+    
+    if (Name:count() < 1) {
+        Name = shuffle(array("I", "J", "L", "N", "S", "T", "Z"), 7)
+    }
+    NextPiece = format("Next\n%s", Name[1, string])
+
+    CurRotation = 1
+    CurPiece = Piece
+        
+    refresh(1)
+    
+    Draw = 1
+}
+
+if (~Reset & Reset & Draw) {
+    Draw = 0
+    restart()
+}
+
+if (clk("res")) {
+    CurY = 0
+    CurX = 4
+    Draw = 1
+}

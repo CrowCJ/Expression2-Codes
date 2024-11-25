@@ -1,0 +1,112 @@
+@name parkour
+@inputs  Replay
+@outputs HighPoint Point
+@persist [Ents Models]:array [Ent Chip]:entity LastSize 
+@trigger 
+@strict
+@model models/sprops/geometry/sphere_42.mdl
+
+if (first()) {
+    HighPoint = 0
+    Point     = 0
+    Ent = noentity()
+    Ents = array()
+    local Name = "parkour"
+    
+    for (I = 1, Name:length()) {
+        local Rand = randint(0, 1)
+        if (Rand == 1) {
+            local This = Name[I]
+            local Up = Name[I]:upper()
+            Name = Name:replace(This, Up)
+        }
+    }
+    
+    Chip = entity()
+    Chip:setName(Name)
+    
+    propSpawnUndo(0)
+    
+    Models = array(
+        "models/hunter/blocks/cube1x1x1.mdl",
+        "models/hunter/blocks/cube075x075x075.mdl",
+        "models/hunter/triangles/1x1x1.mdl",
+        "models/hunter/triangles/1x05x1.mdl",
+        "models/hunter/triangles/trapezium3x3x1.mdl",
+        "models/hunter/tubes/circle2x2.mdl",
+        "models/hunter/tubes/tube2x2x025.mdl",
+        "models/hunter/misc/sphere1x1.mdl",
+        "models/hunter/misc/cone1x05.mdl",
+        "models/hunter/misc/cone2x05.mdl",
+        "models/hunter/blocks/cube05x8x05.mdl",
+        "models/props_phx/construct/metal_wire1x1x1.mdl"
+    )
+
+    LastSize = 0
+}
+
+event input(InputName:string) {
+    if (InputName == "Replay" & Replay) {
+        propDeleteAll()
+        Point = 0
+    }
+}
+
+event tick() {
+    if (propCanCreate()) {
+        if (!Ent) {
+            Ent = propSpawn("models/hunter/blocks/cube3x3x025.mdl", Chip:pos() + vec(0, 0, 0), ang(), 1)
+            Ent:setAlpha(100)
+            Ent:setMass(50000)
+            Ent:propStatic(1)
+            Ent:setMaterial("models/combine_scanner/scanner_eye")
+            
+            LastSize = Ent:boxSize():x()
+            Ents:pushEntity(Ent)
+        } else {
+            local Next = 0
+            foreach (_:number, V:entity = players()) {
+                if (inrange(V:pos(), Ent:pos() + Ent:aabbMin() * 1.2, Ent:pos() + Ent:aabbMax() * 1.2 + vec(0, 0, 48))) {
+                    if (Ent:boxSize():x() > LastSize) {
+                        LastSize = Ent:boxSize():x()
+                    }
+                    #Ent:noCollideAll(0)
+                    Ent:setAlpha(255)
+                    Ent:setColor(vec(100))
+                    Next = 1
+                    Point++
+                    
+                    break
+                }
+            }
+            
+            local NextPos = vec()
+            local RandDeg = randint(0, 360)
+            local Box = max(48, LastSize)
+            
+            NextPos = Ent:pos() + vec(sin(RandDeg)*Box, cos(RandDeg)*Box, random(12, 24))
+                              
+            if (Next & NextPos:isInWorld() & NextPos:distance(Ent:pos()) > 100) {
+                Ent = propSpawn(Models[randint(1, Models:count()), string], NextPos, ang(0, random(1, 8) * (360/8), 0), 1)
+                Ent:setAlpha(200)
+                Ent:setMass(50000)
+                Ent:propStatic(1)
+                Ent:emitSound("buttons/button24.wav")
+                #Ent:noCollideAll(1)
+                Ent:setMaterial("models/combine_scanner/scanner_eye")
+                
+                Ents:pushEntity(Ent)
+            } else {
+                Next = 0
+            }
+            
+            if (Point > HighPoint) { HighPoint = Point }
+        }
+    }
+
+    if (Ents:count() > 10) {
+        if (Ents[1, entity]:isValid()) {
+            Ents:shiftEntity():propDelete()
+        }
+    }
+}

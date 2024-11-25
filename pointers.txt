@@ -1,0 +1,40 @@
+@name Pointers
+@inputs 
+@outputs 
+@persist [Mdl Snd]:string
+@trigger 
+@strict
+
+if (first()) {
+    Mdl = "models/fasteroid/pointer.mdl"
+    Snd = "buttons/button11.wav"
+    
+    foreach (K:number, V:entity = players()) {
+        holoCreate(K, V:pos(), vec(0.25), ang(), vec(255), Mdl)
+    }
+}
+
+event tick() {
+    foreach (K:number, V:entity = players()) {
+        local Sound = 0
+        if (!holoEntity(K):isValid()) { exit() }
+        holoPos(K, V:aimPos() + V:eye() * (-6 + abs(sin(curtime() * 8400) * 6) * V:keyAttack1()) + V:right() * 2)
+        holoAng(K, V:eyeAngles() + ang(90, 0, 0))
+        
+        if (V:keyAttack1() & !Sound) {
+            Sound = 1
+            holoEntity(K):emitSound(Snd)
+            #holoEntity(K):soundPlay(K, 0, Snd)
+        } else {
+            Sound = 0
+            holoEntity(K):emitSoundStop(Snd)
+            #soundStop(K)
+        }
+    }
+}
+
+event playerConnected(_:entity) {
+    foreach (K:number, V:entity = players()) {
+        holoCreate(K, V:pos(), vec(0.25), ang(), vec(255), Mdl)
+    }
+}

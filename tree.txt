@@ -1,0 +1,192 @@
+@name Tree
+@inputs 
+@outputs 
+@persist [Model Log_Mat Leave_Mat]:string Height [Logs Leaves]:array X Y Z Count Tree_Height LogDone LeaveDone Fell
+@persist MinHeight MaxHeight
+@trigger 
+@strict
+
+if (first() | duped()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    enableConstraintUndo(0)
+    
+    Logs = array()
+    Leaves = array()
+    
+    Size = 1
+    local Temp = format("models/hunter/blocks/cube%dx%dx%d.mdl", Size, Size, Size)
+    Model = Temp
+    
+    Log_Mat = "sprops/textures/sprops_wood2"
+    Log_Mat = "sprops/trans/misc/tracks_wood"
+    
+    Leave_Mat = "phoenix_storms/ps_grass"
+    
+    Height = 47.950001*Size/2
+    
+    MinHeight = 5
+    MaxHeight = 8
+    
+    Tree_Height = randint(MinHeight, MaxHeight)
+    
+    function void tree_log(CountH) {
+        
+        if (Logs:count() < CountH & propCanCreate()) {
+            Height = 40.237839/2
+            #Model = "models/props_junk/wood_crate001a.mdl"
+            local Log = propSpawn(Model, entity():toWorld(vec(0, 0, Logs:count()*Height*2+Height)), ang(), 1)
+            Log:setMaterial(Log_Mat)
+            Log:setMass(250)
+            
+            if (Logs[1, entity]) {
+                Logs[1, entity]:setMass(2500)
+                weld(Log, Logs[Logs:count(), entity])
+                noCollide(Log, Logs[Logs:count(), entity])
+            }
+            
+            Logs:pushEntity(Log)
+        }
+        
+        if (Logs:count() >= CountH) {
+            LogDone = 1
+        }
+    }
+    
+#    H = 1/sin(45)
+    
+    Y = -2
+    X = -3
+    Z = 0
+    
+    function void tree_leaves() {
+        local MaxLeave = 25+9
+        if (Logs[Tree_Height, entity] & Leaves:count() < MaxLeave & propCanCreate()) {
+            Count++
+            if (Z < 1) {
+                X++
+                if (X > 2) {
+                    Y++
+                    X = -2
+                }
+            } else {
+                X++
+                if (X > 1) {
+                    Y++
+                    X = -1
+                }
+            }
+            
+#[
+            if (changed(Leaves:count()) & Leaves:count() == 25) {
+                Z++
+                X = -2
+                Y = -2
+            }
+            elseif (changed(Leaves:count()) & Leaves:count() == 50) {
+                Z++
+                X = -1
+                Y = -1
+            }
+]#
+            if (changed(Leaves:count()) & Leaves:count() == 25) {
+                Z++
+                X = -1
+                Y = -1
+            }
+            
+            local Log = Logs[Tree_Height, entity]
+            local Up  = Z*Height*2
+            local Pos = Log:pos() + vec(X*Height*2, Y*Height*2, Up)
+            local Leave = propSpawn(Model, Pos, ang(), 1)
+            Leave:setMass(5)
+            Leave:setMaterial(Leave_Mat)
+            Leave:setColor(vec4(255, 255, 255, 150))
+            weld(Leave, Log)
+            noCollideAll(Leave, 1)
+            
+            Leaves:pushEntity(Leave)
+        }
+        
+        if (Leaves:count() >= MaxLeave) {
+            LeaveDone = 1
+        }
+    }
+        
+    LogDone = 0
+    LeaveDone = 0
+    Fell = 0
+    
+    timer("create", 0)
+}
+
+if (clk("create")) {
+    if (!LogDone) {
+        tree_log(Tree_Height)
+    }
+    
+    if (LogDone & !LeaveDone) {
+        tree_leaves()
+    }
+    
+    if (LogDone & LeaveDone) {
+        foreach (K, V:entity = Logs) {
+            V:propFreeze(0)
+        }
+        foreach (K, V:entity = Leaves) {
+            V:propFreeze(0)
+        }
+        stopAllTimers()
+    } else {
+        timer("create", 100)
+    }
+}
+
+if (LogDone & LeaveDone) {
+    event tick() {
+#[
+        if (Logs[1, entity] & !Logs[1, entity]:isFrozen()) {
+            Logs[1, entity]:propFreeze(1)
+        }
+]#
+        if (Logs[Tree_Height, entity] & Logs[Tree_Height, entity]:hasConstraints() & !Fell) {
+            local Log = Logs[Tree_Height, entity]
+            
+            local Ang = Log:angles()
+            
+            local Pitch = abs(Ang:pitch())
+            local Roll  = abs(Ang:roll())
+            
+            if (Pitch >= 60 | Roll >= 60) {
+                foreach (K, V:entity = Logs) {
+                    if (V:isValid()) {
+                        V:constraintBreak()
+                        #V:applyForce((V:pos() - Logs[Tree_Height, entity]:pos()) * V:mass()*10)
+                    }
+                }
+                
+                Fell = 1
+                
+                timer("reset", 3000)
+            }
+        }
+    }
+}
+
+if (clk("reset")) {
+    propDeleteAll()
+    
+    Logs = array()
+    Leaves = array()
+    
+    Y = -2
+    X = -3
+    Z = 0
+    
+    LogDone = 0
+    LeaveDone = 0
+    Fell = 0
+    
+    Tree_Height = randint(MinHeight, MaxHeight)
+    timer("create", 100)
+}

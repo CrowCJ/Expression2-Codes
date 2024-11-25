@@ -1,0 +1,51 @@
+@name RGB Func2
+@inputs  
+@outputs X Y Z DEC INC RGB:vector
+@persist RGBArray:array Speed Temp1 Temp2
+@strict
+
+if (first() | duped()) {
+    RGBArray = array(255,0,0)
+    Temp1 = Temp2 = 0
+    DEC = 1
+    INC = 0
+    Speed = 4
+}
+
+function vector rgb(Speed:number) {    
+    if (DEC <= 3 & Temp1 <= 0) {
+        DEC++
+        INC = 0
+    }
+    if (DEC > 3) { DEC = 1 }
+    
+    Temp1 = RGBArray[DEC, number]
+    Temp2 = RGBArray[INC, number]
+    INC = DEC == 3 ? 1 : DEC + 1
+    
+    Temp1 -= Speed * (Temp2 >= 255)
+    Temp2 += Speed
+    Temp1 = clamp(Temp1, 0, 255)
+    Temp2 = clamp(Temp2, 0, 255)
+    
+    RGBArray[DEC, number] = Temp1
+    RGBArray[INC, number] = Temp2
+    X = RGBArray[1, number]
+    Y = RGBArray[2, number]
+    Z = RGBArray[3, number]
+    
+    Color = vec(RGBArray[1, number], RGBArray[2, number], RGBArray[3, number])
+    return Color
+}
+    
+function entity:hsv2rgb(Speed:number) {
+    Color = hsv2rgb(Speed*30*curtime()%360,1,1)
+    X = Color:x()
+    Y = Color:y()
+    Z = Color:z()
+    This:setColor(Color)
+}
+
+event tick() {
+    RGB = rgb(Speed)
+}

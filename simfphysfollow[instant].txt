@@ -1,0 +1,61 @@
+@name SimfphysFollow
+@inputs  
+@outputs Yaw
+@persist [Target CarEnt]:entity Car:wirelink [RangerL RangerR Ranger2]:ranger Go
+@trigger 
+
+if (first() | duped()) {
+    Car = entity():isWeldedTo():wirelink()
+    Car["Engine Start",number] = 1
+    Car["Lock",number] = 1
+    
+    CarEnt = Car:entity()
+    Target = owner()
+    
+    holoCreate(1)
+    holoCreate(2)
+    
+    holoColor(1, vec(255,0,0))
+    holoColor(2, vec(0,255,0))
+    
+    Go =1
+    
+    rangerFilter(CarEnt)
+    rangerPersist(1)
+}
+event tick() {
+    RangerL = rangerOffset(1000,CarEnt:pos()+vec(0,0,0)+CarEnt:right()*-55,CarEnt:forward())#Target:boxCenterW()-(CarEnt:pos()+vec(0,0,40))
+    RangerR = rangerOffset(1000,CarEnt:pos()+vec(0,0,0)+CarEnt:right()*55,CarEnt:forward())#Target:boxCenterW()-(CarEnt:pos()+vec(0,0,40))
+    Ranger2 = rangerOffset(1000,CarEnt:pos()+vec(0,0,40),Target:boxCenterW()-(CarEnt:pos()+vec(0,0,35)))
+    
+        
+    holoPos(1, RangerL:pos())
+    holoPos(2, RangerR:pos())
+        
+    Distance = Target:pos():distance(CarEnt:pos())
+    
+    Yaw = CarEnt:toLocal((Target:pos() - CarEnt:pos()):toAngle()):yaw()
+    
+    if (Ranger2:distance() > 250 & RangerL:distance() > 250 & RangerR:distance() > 250 & Go) {
+        Car["Throttle",number] = (Distance/750) * (1 - (abs(Yaw)>20)*0.5 - (abs(Yaw)>30)*0.25)
+        Car["Brake/Reverse",number] = 0
+        Car["Steer",number] = (-Yaw/10)
+    } else {
+        Go = 0
+    }
+    
+    if (!Go) {
+        if (RangerL:distance() > 400 & RangerR:distance() > 400) {
+            Go = 1
+        }
+        Car["Brake/Reverse",number] = 3
+        Car["Throttle",number] = 0
+        Car["Steer",number] = (Yaw/15)
+    }
+}
+
+event removed(_:number) {
+    Car["Engine Stop",number] = 1
+    Car["Engine Start",number] = 0
+    Car["Lock",number] = 0
+}

@@ -1,0 +1,70 @@
+@name RoundPlates
+@inputs 
+@outputs  
+@persist Count Max R R2 H PropCount Props:array Mdl:string Size
+@trigger 
+@strict
+
+if (first()) {
+    runOnTick(1)
+    #propSpawnUndo(0)
+    propSpawnEffect(0)
+    
+    Max = 4
+    
+    Size = 6
+    
+    Mdl = "models/hunter/plates/plate" + Size + "x" + Size + ".mdl"
+    
+    R  = 47.950001*Size/2
+    R2 = 4000
+    
+    H   = R
+}
+
+event tick() {
+    if (PropCount < Max) {
+        if (propCanCreate() & Count < Max) {
+            PropCount++
+            Count++
+    
+            Sin = sin(360/Max*Count)*(R + (Max>4)*R*0.5)
+            Cos = cos(360/Max*Count)*(R + (Max>4)*R*0.5)
+            
+            # Math = cos(Deg) = Height/R
+            # Height = cos(Deg)*R
+            local Deg = 90
+            local Height = cos(Deg)*R + R - 1.5
+            
+            Prop = propSpawn(Mdl, entity():toWorld(vec(Sin, Cos, Height)), entity():toWorld(ang(Deg, -360/Max * Count-90, 0)), 1)
+            Prop:setMaterial("models/debug/debugwhite")
+            #Prop:setMaterial("debug/debugportals")
+            #Prop:setMaterial("debug/debugdrawflat")
+            Prop:setColor(vec4(150, 200, 255, 255))
+            Prop:setMass(50000)
+            Prop:propStatic(1)
+            Prop:propMakePersistent(1)
+            
+            Props:pushEntity(Prop)
+        }
+    } else {
+        selfDestruct()
+    }
+#[
+    
+    Rate = curtime()*10
+    
+    foreach (ID, Prop:entity = Props)
+    {
+        if (Prop:isValid()) {
+            Sin = sin(360/Max*ID + Rate)*(R + (Max>4)*R*0.5)
+            Cos = cos(360/Max*ID + Rate)*(R + (Max>4)*R*0.5)
+            
+            Prop:setColor(sin(Rate)*vec(50, 100, 150))
+            #Prop:setPos(entity():toWorld(vec(Sin, Cos, H)))
+            #Prop:setAng(entity():toWorld(ang(90, -360/Max * ID - 90 - Rate, 0)))
+        }
+    }
+]#
+}
+

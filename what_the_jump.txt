@@ -1,0 +1,61 @@
+@name What The Jump
+@inputs 
+@outputs 
+@persist Seat:entity State
+@strict
+@trigger none
+
+function entity:stablized(Angle:angle, MulVector:number, MulAngVel:number) {
+    TarQ = quat(Angle)
+    CurQ = quat(This)    
+    Q = TarQ/CurQ     
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    #Factors 150 and 12 can be adjusted to achieve best effect.
+    This:applyTorque((MulVector*V - MulAngVel*This:angVelVector())*This:inertia())
+}
+
+if (first()) {
+    State = 0
+    Seat = noentity()
+    propSpawnUndo(0)
+    
+    rangerHitEntities(0)
+    rangerPersist(1)
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player != owner()) { exit() }
+    
+    if (Key == "space" & Down & !Seat & State == 0 & Player:health() > 0 & !Player:inNoclip()) {
+        Seat = seatSpawn("models/nova/airboat_seat.mdl", Player:pos(), ang(0, owner():eyeAngles():yaw() - 90, 0), 0)
+        Seat:propDrag(0)
+        Seat:applyForce((Player:vel()*vec(2, 2, 1) + vec(0, 0, 0) * tickInterval()) * Seat:mass())
+        Seat:noCollideAll(1)
+        Seat:use()
+        
+        State = 1
+        timer("Switch", 500)
+    }
+    
+    if (Key == "space" & Down & Seat & Seat:driver()) {
+        Seat:applyForce((vec(0, 0, 1000)) * Seat:mass())
+    }
+}
+
+if (clk("Switch")) {
+    State = 2
+}
+
+event tick() {
+    if (State == 2) {
+        let Ranger = rangerOffset(1000, Seat:pos(), vec(0, 0, -1))
+        
+        if (Ranger:distance() < 20) {
+            Seat:propDelete()
+            State = 0
+        }
+        if (Seat:driver()) {
+            Seat:stablized(ang(0, Seat:angles():yaw(), 0), 100, 20)
+        }
+    }
+}

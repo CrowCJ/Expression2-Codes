@@ -6,12 +6,14 @@
 @strict
 
 if (first()) {
+    holoCreate(0, entity():pos() + vec(0, 0, 18), vec(1), ang(), vec(255), "models/props_c17/furnituretable001a.mdl")
+    holoCreate(100, entity():pos() + vec(0, 0, 36), vec(1), ang(), vec(255), "models/weapons/w_rif_ak47.mdl")
     I = 0
     Tick = 0
     Seats = array()
     propSpawnUndo(0)
     propSpawnEffect(0)
-    Max = 6
+    Max = 3
 }
 event tick() {
     local Cur = systime()
@@ -48,10 +50,17 @@ event tick() {
             
             if (Start == Max) {
                 Num = randint(1, Max)
+                local Dir = Seats[Num, entity]:pos() - entity():pos()
+                local Ang = ang(0, Dir:toAngle():yaw(), 0)
+                holoAng(100, Ang)
+                holoEntity(100):soundPlay(1, 0, "MetalGrate.BulletImpact")
                 Seats[Num, entity]:killPod()
                 
                 print(Num)
                 break
+            } else {
+                local Ang = ang(0, holoEntity(100):angles():yaw() + 0.3, 0)
+                holoAng(100, Ang)
             }
         }
     }

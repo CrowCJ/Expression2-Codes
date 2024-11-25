@@ -1,0 +1,81 @@
+@name Roller[Rewrite]
+@inputs 
+@outputs 
+@persist [Settings Origin Move]:table Chip:entity
+@trigger 
+@strict
+
+if (first() | duped()) {
+    Origin = table()
+    Chip = entity()
+    Settings = table()
+    Move = table()
+    
+    Settings = table(
+        "tick" = 0,
+        "direction" = 1,
+        "maxholo"   = 50,
+        "scalefactor" = 46,
+        "alpha" = 255,
+        "mul" = 6 * 46
+    )
+    
+    Model = array(
+        "models/props_trainstation/train002.mdl",
+        "models/props_trainstation/train003.mdl"
+        #"models/props_phx/huge/road_short.mdl"
+    )
+    
+    local Max = Settings["maxholo", number]
+    local ScaleFactor = Settings["scalefactor", number]
+    
+    X = 1
+    Y = 1
+
+    for (I = 1, Max) {
+        holoCreate(I, Chip:toWorld(vec((I-Max/2-0.5) * 12 * (ScaleFactor), 0, 0)), vec(X, Y, 1), Chip:toWorld(ang(0, 0, 0)), vec(255), Model[randint(1, Model:count()), string])
+        #holoMaterial(I, "models/debug/debugwhite")
+        #holoColor(I, vec(100, 100, 255)*0.15)
+        #holoDisableShading(I, 1)
+        holoParent(I, Chip)
+        Origin:pushNumber(Chip:toLocal(holoEntity(I):pos()):x())
+    }
+    
+    Move = Origin:clone()
+}
+
+event tick() {
+    #local ScaleFactor = Settings["scalefactor", number]
+    local Max = Settings["maxholo", number]
+    local Mul = Settings["mul", number] * Settings["direction", number]
+    
+    local Curtick = systime()
+    
+    if (Curtick > Settings["tick", number] + 0.1) {
+        Settings["tick", number] = Curtick
+        
+        for (I = 1, Max) {
+            local Mov = Move[I, number]
+            
+            Mov += Mul
+            
+            if (Mov > Origin[Max, number]) {
+                Mov = Origin[1, number]
+                holoAlpha(I, 0)
+            }
+            
+            if (Mov < Origin[1, number]) {
+                Mov = Origin[Max, number]
+            }
+            
+            if (Mov > Origin[2, number]) {
+                holoAlpha(I, Settings["alpha", number])
+            }
+            
+            Move[I, number] = Mov
+            
+            holoPos(I, Chip:toWorld(vec(Move[I, number], 0, 100)))    
+            holoAng(I, Chip:toWorld(ang(0, 90, 0)))    
+        }
+    }
+}

@@ -1,0 +1,101 @@
+@name Torque Rewrite
+@inputs [FrontLeft FrontRight BackLeft BackRight Base]:entity W S Space Shift Active
+@outputs Control
+@persist Settings:table Wheels:array
+@trigger 
+@strict
+
+if (first() | duped() | ~FrontLeft | ~FrontRight | ~BackLeft | ~BackRight) {
+    Settings = table(
+        "drivemode"   = "rwd",
+        "Vector"      = vec(),
+        "BoostMul"    = 0.5,
+        "Multipliers" = 150,
+        "Wheel_Mass"  = 100
+    )
+    
+    Control = 0
+    Wheels  = array(FrontLeft, FrontRight, BackLeft, BackRight)
+    
+    local Mass = Settings["Wheel_Mass", number]
+    foreach (_:number, Wheel:entity = Wheels) {
+        if (Wheel:isValid()) {
+            Wheel:setMass(Mass)
+        }
+    }
+    
+    if (->FrontLeft) {
+        local GetModel = FrontLeft:model()
+        local Find1 = GetModel:find("g")
+        local Find2 = GetModel:find("f")
+        
+        if (Find1 | Find2) {
+            Settings["Vector", vector] = vec(1, 0, 0)
+        } else {
+            Settings["Vector", vector] = vec(0, 1, 0)
+        }
+    }
+}
+
+function entity:applytorque(Vector:vector, Multipliers:number) {
+    local Wheel = This
+    Wheel:applyTorque(Vector * Multipliers * Wheel:mass())
+}
+
+event tick() {
+    if (->Base) {
+        local Mul = Settings["Multipliers", number]
+        local Boost = Settings["BoostMul", number]
+        
+        Control += clamp((W - S) * (1 + Shift*Boost) - Control, -0.1, 0.05)
+        #Base:applyForce(Base:forward() * Base:mass() * (Control))
+        if (Space | !Active) {
+            Control = 0
+            Base:applyForce(-Base:vel():setZ(0) * Base:mass() * tickInterval() * 4)
+        }
+
+        local Mag = -Control * Mul
+        local X = 0
+        local Y = Mag
+        local Z = 0
+        
+        local M = 0
+        local N = 0
+        local Mode = 0
+        if (Settings["drivemode", string] == "rwd") {
+            Mode = 1
+            M = 3
+            N = 4
+        }
+        if (Settings["drivemode", string] == "fwd") {
+            Mode = 2
+            M = 1
+            N = 2
+        }
+        if (Settings["drivemode", string] == "awd") {
+            Mode = 3
+            M = 1
+            N = 4
+        }
+        for (I = 1, 4) {
+            local Wheel = Wheels[I, entity]
+            if (Wheel:isValid()) {
+                #Wheel:applytorque(Direction, -Mul * Control * (1 + Settings["BoostMul", number]*Shift))
+                local Torque = vec()
+                if (Mode != 3 & (I == M | I == N)) {
+                    Torque = vec(X, Y, Z) * Wheel:mass() * ((-1) ^ I)
+                } else {
+                    Torque = vec(X, Y, Z) * Wheel:mass() * ((-1) ^ I)
+                }
+                Wheel:applyForce(-vec(0, 0, 1) * Wheel:mass())
+                Wheel:applyTorque((Torque - Wheel:angVelVector()*(5 + 10 * (!W & !S) + Space * 10))*Wheel:inertia())
+                #Wheel:applyAngForce(-Wheel:angVel() * Wheel:inertia():length() * 2)
+                
+                if (Space) {
+                    Wheel:applyForce(-Wheel:vel() * Wheel:mass() * tickInterval() * 4)
+                }
+            }
+        }
+
+    }
+}

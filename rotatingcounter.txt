@@ -1,0 +1,41 @@
+@name RotatingCounter
+@inputs 
+@outputs 
+@persist MaxDigit [Divider]:array Tick N Factor
+@trigger 
+@strict
+
+if (first()) {
+    N = 1
+    Divider = array()
+    
+    Factor = 5
+
+    Mdl = "models/sprops/misc/numberwheel.mdl"
+    MaxDigit = 9
+    for (I = 1, MaxDigit) {
+        holoCreate(I, entity():toWorld(vec(0, (MaxDigit-(I-1) - MaxDigit/2 - 0.5)*3, 6) * Factor), vec(Factor))
+        holoModel(I, Mdl)
+        holoParent(I, entity())
+        Divider:pushNumber(10^(MaxDigit - I))
+    }
+    
+    holoCreate(MaxDigit + 1, entity():toWorld(vec(0, 0, 6)*Factor), vec(0.3, (MaxDigit/3.5), 1)*Factor, entity():toWorld(ang(90, 0, 0)), vec(255), "hq_stube_thin")
+    holoParent(MaxDigit + 1, entity())
+    
+    function setCounter(Number) {
+        local Num = Number:toString()
+        
+        Num = Num:reverse()
+        
+        for (I = 1, MaxDigit) {
+            #Pitch = lerp(1, 36 * Num[I]:toNumber(), holoEntity(I):angles():pitch())
+            Pitch = 36 * Num[I]:toNumber()
+            holoAng(I, entity():toWorld(ang(Pitch, 0, 0)))
+        }
+    }
+}
+
+interval(1000)
+N++
+setCounter(N)

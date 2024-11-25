@@ -1,0 +1,35 @@
+@name RedstoneLamp
+@inputs  A B C D E
+@outputs Out RGB:vector
+@persist [Chip]:entity Num [LightCube_ID] #Light:entity
+@trigger 
+@model models/hunter/blocks/cube05x05x05.mdl
+
+if (first() | duped()) {
+    Out = 0
+    RGB = vec()
+    Chip = entity()
+    Chip:setAlpha(0)
+    Num = 0
+    Num++, holoCreate(Num, Chip:toWorld(vec(12, 0, 0)), vec(0.5), Chip:toWorld(ang()), vec(255), "models/props_phx/construct/metal_wire1x1x1.mdl")
+    #local Last = holoEntity(Num)
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, 0)), vec(0.9), Chip:toWorld(ang()), vec(255, 0, 0), Chip:model())
+    holoMaterial(Num, "debug/debugdrawflat")
+    
+    LightCube_ID = Num
+    
+    for (I = 1, Num) {
+        holoParent(I, Chip)
+    }
+}
+
+event tick() {
+    holoColor(LightCube_ID, RGB*Out)
+}
+
+local Inputs = array(A, B, C, D, E)
+
+Out = Inputs:sum() > 0
+
+RGB = Out ? vec(255, 127, 100) : vec()
+

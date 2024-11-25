@@ -1,0 +1,67 @@
+@name Torque Rewrite[Bike]
+@inputs [Wheel Base]:entity W S Space Shift
+@outputs 
+@persist Settings:table Control
+@trigger 
+@strict
+
+function entity:applytorque(Vector:vector, Multipliers:number) {
+    local Wheel = This    
+    Wheel:applyTorque(Vector * Multipliers * Wheel:mass())
+}
+
+if (first() | duped() | ~Wheel) {
+    Settings = table(
+        "Vector" = vec(),
+        "BoostMul"    = 2.5,
+        "Multipliers" = 1000.0,
+        "Wheel_Mass"  = 500
+    )
+    
+    Control = 0
+    
+    local Mass = Settings["Wheel_Mass", number]
+    if (->Wheel) {
+        Wheel:setMass(Mass)
+    }
+    
+    if (->Wheel) {
+        local GetModel = Wheel:model()        
+        local Find1 = GetModel:find("g")
+        local Find2 = GetModel:find("f")
+        
+        if (Find1 | Find2) {
+            Settings["Vector", vector] = vec(1, 0, 0)
+        } else {
+            Settings["Vector", vector] = vec(0, 1, 0)
+        }
+    }
+    
+    if (Base:isValid()) {    
+        rangerFilter(Base)
+    }
+    rangerPersist(1)
+}
+
+event tick() {
+    if (->Base) {
+        local Mul = Settings["Multipliers", number] + Settings["BoostMul", number] * Shift
+        local Direction = Settings["Vector", vector]
+        
+        Control += clamp(W - S - Control, -tickInterval() * (8 + Shift * 8), tickInterval() * (8 + Shift * 8))
+        
+        local Ranger = rangerOffset(100, Base:pos() - Base:boxSize():z()/2 - 1, -Base:up())
+
+        if (Wheel:isValid()) {
+            Wheel:applytorque(Direction, -Mul * Control)
+            if (Base:isValid() & Ranger:distance() <= 36) {
+                Wheel:applyForce(-Base:up() * Wheel:mass() * Wheel:angVelVector():length()/5 * tickInterval())
+            }
+            Wheel:applyAngForce(-Wheel:angVel() * Wheel:inertia():length() * 4)
+            
+            if (Space) {
+                Wheel:applyForce(-Wheel:vel() * Wheel:mass() * 0.25)
+            }
+        }
+    }
+}

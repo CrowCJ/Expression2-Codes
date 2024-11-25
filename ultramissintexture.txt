@@ -1,0 +1,50 @@
+@name UltraMissinTexture
+@inputs 
+@outputs 
+@persist N Mats:array Select Fin Num
+@trigger 
+@strict
+
+if (first()) {
+    findInSphere(entity():pos(), 1000)
+    findIncludeClass("prop_*")
+    Props = findToArray()
+    
+    print(Props:count())
+    runOnTick(1)
+    
+    Mats = array(
+                    "debug/debugempty",
+                    "debug/debugportals",
+                    "debug/debugdrawflat"
+                )
+    Select = 1
+    Fin = 0
+}
+
+while (perf() & !Fin & N < 25) {
+    if (holoCanCreate()) {
+        N++
+        local Mat = Mats[Select, string]
+        local Ent = Props[N, entity]
+        holoCreate(N, Ent:pos())
+        holoAng(N, Ent:angles())
+        holoMaterial(N, Mat)
+        holoModel(N, Ent:model())
+        holoScale(N, vec(1.005))
+    }
+    if (holoRemainingSpawns() == 0 | N == Props:count()) {
+        Num = N
+        Fin = 1
+    }
+}
+
+while (perf() & Fin) {
+    for (I = 1, Num) {
+        local Ent = Props[I, entity]
+        holoMaterial(I, Mats[randint(1, Mats:count()), string])
+        holoPos(I, Ent:pos())
+        holoAng(I, Ent:angles())
+    }
+    
+}

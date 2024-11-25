@@ -1,0 +1,44 @@
+@name SetPosFollow
+@inputs 
+@outputs 
+@persist Target:entity Seat:entity
+@trigger 
+@strict
+
+propSpawnUndo(0)
+enableConstraintUndo(0)
+
+Seat = seatSpawn("models/nova/airboat_seat.mdl", entity():toWorld(vec(0, 0, 25)), entity():toWorld(ang(0, -90, 0)), 1)
+Seat:parentTo(entity())
+
+Target = findPlayerByName("Bman")
+
+event tick() {
+    if (Seat:driver()) {
+        
+        local Targ = Target
+#[
+        if (Target:inVehicle()) {
+            Targ = Target:vehicle()
+        }
+]#
+        
+        local Dist = Targ:pos():distance(entity():pos())
+        
+        local Z = Targ:pos():z() - entity():pos():z()
+        #local Pos = entity():toWorld(vec(Dist/50, 0, Z))
+        
+        local Var = curtime()*45
+        local Sin = sin(Var)*50
+        local Cos = cos(Var)*50
+        local Pos = Targ:pos() + vec(Sin, Cos, 100)
+        local Ang = Targ:pos() - entity():pos()
+        
+#[
+        entity():setPos(Pos)
+        entity():setAng(Ang:toAngle())
+]#
+        Seat:setPos(Pos)
+        Seat:setAng(Ang:toAngle() + ang(0, -90, 0))
+    }
+}

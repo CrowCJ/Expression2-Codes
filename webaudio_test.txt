@@ -1,0 +1,47 @@
+@name WebAudio Test
+@inputs  URL:string Play Stop
+@outputs 
+@persist WEBAUDIO:webaudio PlayURL:string Loop
+@trigger 
+@strict
+
+if (first() | duped() | ~URL) {
+    Loop = 1
+    
+    WEBAUDIO = nowebaudio()
+    PlayURL = ""
+    
+    if (WEBAUDIO:isValid()) {
+        WEBAUDIO:destroy()
+    }
+    
+    if (->URL) {
+        URL = URL:replace("https://www.dropbox.com", "https://dl.dropbox.com")
+        URL = URL:replace("dl=0", "dl=1")
+
+        PlayURL = URL
+    }
+}
+
+if (~Play & Play) {
+    if (WEBAUDIO:isValid()) {
+        WEBAUDIO:destroy()
+    }
+    
+    if (webAudioCanCreate()) {
+        if (PlayURL:length() > 0) {
+            WEBAUDIO = webAudio(PlayURL)
+            WEBAUDIO:setPos(entity():pos())
+            WEBAUDIO:setParent(entity())
+            WEBAUDIO:setLooping(Loop)
+            WEBAUDIO:setRadius(1500)
+            WEBAUDIO:play()
+        }
+    }
+}
+
+if (~Stop & Stop) {
+    if (WEBAUDIO:isValid()) {
+        WEBAUDIO:destroy()
+    }
+}

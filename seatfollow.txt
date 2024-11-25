@@ -1,0 +1,75 @@
+@name SeatFollow
+@inputs 
+@outputs 
+@persist [Ch T]:entity Count Flip Array:array
+@trigger 
+
+if (first()) {
+    Ch = entity():isWeldedTo()
+    #Ch:setTrails(64,0,3,"trails/laser",vec(255),255)
+    Ch:removeTrails()
+    T = findPlayerByName("Amane")
+    T = findPlayerByName("Autumn")
+    
+    #[    
+    holoCreate(1, Ch:toWorld(vec()), vec(0), Ch:toWorld(ang(-90,-90,0)), vec4(255,0,0,200), "models/hunter/tubes/tube1x1x6.mdl")
+    holoMaterial(1, "debug/debugdrawflat")
+    holoCreate(2, Ch:toWorld(vec()), vec(0.5), Ch:toWorld(ang(0,0,0)), vec(255), "icosphere")
+    holoMaterial(2, "models/wireframe")
+    
+    holoParent(1, Ch)
+    ]#
+    
+    Count = 10
+    
+    for (I = 1, Count) {
+        holoCreate(I, Ch:toWorld(vec()), vec(0), Ch:toWorld(ang(0,0,0)), vec4(255,255,255,255), "models/hunter/tubes/tube1x1x6.mdl")
+        holoMaterial(I, "debug/debugdrawflat")
+        holoEntity(Count):setTrails(64,0,3,"trails/laser",vec(255),255)
+        Array:pushNumber(randint(-2,2))
+    }
+    
+    runOnTick(1)
+    entity():propDraw(0)
+    entity():parentTo(Ch)
+}
+
+#[
+TracePos = T:eyeTrace():pos()
+Dir  = (TracePos - Ch:pos())
+Ang  = Dir:toAngle()
+Dist = Dir:length()
+
+holoScaleUnits(1, vec(0.5,0.5,Dist))
+holoPos(2, TracePos)
+]#
+
+if (Ch:driver()) {
+    Var = curtime()*90
+    Sin = sin(Var) * 250
+    Cos = cos(Var) * 250
+    
+    Ch:setPos(T:shootPos()+vec(Sin,Cos,0))
+    Ch:propNotSolid(1)
+    Ch:propDraw(0)
+    #Ch:setAng(ang(0,-Var-90,0))
+    Ch:setAng(ang(0,Var,0))
+    Ch:propFreeze(1)
+    
+    for (I = 1, Count) {
+        
+        local Var = curtime()*90*Array[I,number] + I
+        local Sin = sin(Var)*(Count/I)*6
+        local Cos = cos(Var)*(Count/I)*6
+        
+        if (I == 1) {
+            holoPos(I, Ch:pos() + vec(Sin,Cos,0))
+        } else {
+            holoPos(I, holoEntity(I-1):pos() + vec(Sin,Cos,0))
+        }
+    }
+} else {
+    Ch:propNotSolid(0)
+    Ch:propDraw(1)
+    Ch:propFreeze(0)
+}

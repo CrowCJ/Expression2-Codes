@@ -1,0 +1,29 @@
+@name TrashBin
+@inputs 
+@outputs 
+@persist Ent:entity
+@trigger 
+@strict
+
+if (first() | duped()) {
+    Ent = entity():isWeldedTo()
+    entity():setAlpha(0)
+    entity():parentTo(Ent)
+    noCollideAll(Ent, 0)
+    Ent:setMass(1000)
+}
+
+interval(50)
+
+findInBox(Ent:toWorld(Ent:boxMin()), Ent:toWorld(Ent:boxMax()))
+findIncludePlayerProps(owner())
+findExcludeEntities(Ent:getConnectedEntities())
+findClipToClass("prop_*")
+
+R = findToArray()
+
+foreach (K, V:entity = R) {
+    if (V:owner() == owner() & V != Ent) {
+        V:propDelete()
+    }
+}

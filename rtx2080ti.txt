@@ -1,0 +1,107 @@
+@name RTX2080ti
+@inputs A
+@persist S Num HoloInfo:table Count Created Tick Acc Rot
+@model models/sprops/rectangles_thin/size_2/rect_12x24x1_5.mdl
+@autoupdate
+
+if(first()|duped()){
+    entity():setName("RTX 6969")
+    S=50
+    function holo(Pos:vector,Scl:vector,Ang:angle,Col:vector,Mat:string,Mod:string,Alph:number){
+        Num++
+        holoCreate(Num)
+        holoModel(Num,Mod)
+        holoScale(Num,Scl)
+        holoColor(Num,Col)
+        holoAlpha(Num,Alph)
+        holoMaterial(Num,Mat)
+        holoPos(Num,entity():toWorld(Pos))
+        holoAng(Num,entity():toWorld(Ang))
+        holoParent(Num,entity())
+    }
+
+    runOnTick(1)
+    entity():setAlpha(0)
+    
+    Scl = 0.8 # Def 0.8
+    Count++, HoloInfo[Count, array] = array(vec(8.5,0,3.5)*Scl,vec(0.4)*Scl,ang(90,0,0),vec(0),"models/debug/debugwhite","models/xqm/jetenginepropeller.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(-8.5,0,3.5)*Scl,vec(0.4)*Scl,ang(90,0,0),vec(0),"models/debug/debugwhite","models/xqm/jetenginepropeller.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,-4,2.8)*Scl,vec(0.1)*Scl,ang(0,270,90),vec(255),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_R.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,-3,2.8)*Scl,vec(0.1)*Scl,ang(0,270,90),vec(255),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_T.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,-2,2.8)*Scl,vec(0.1)*Scl,ang(0,270,90),vec(255),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_X.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,-1,2.8)*Scl,vec(0.1)*Scl,ang(0,270,90),vec(255),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_6.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,0,2.8)*Scl,vec(0.1)*Scl,ang(0,270,90),vec(255),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_9.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,1,2.8)*Scl,vec(0.1)*Scl,ang(0,270,90),vec(255),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_6.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,2,2.8)*Scl,vec(0.1)*Scl,ang(0,270,90),vec(255),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_9.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,3,2.8)*Scl,vec(0.1)*Scl,ang(0,270,90),vec(255),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_T.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,4,2.8)*Scl,vec(0.1)*Scl,ang(0,270,90),vec(255),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_l_i.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(-2.2,5.4,1.9)*Scl,vec(0.08,0.08,0.06)*Scl,ang(0,180,180),vec(0,255,0),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_G.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(-1.35,5.4,1.9)*Scl,vec(0.08,0.08,0.06)*Scl,ang(0,180,180),vec(0,255,0),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_l_e.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(-0.65,5.4,1.9)*Scl,vec(0.08,0.08,0.06)*Scl,ang(0,180,180),vec(0,255,0),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_F.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,5.4,1.9)*Scl,vec(0.08,0.08,0.06)*Scl,ang(0,180,180),vec(0,255,0),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_l_o.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0.6,5.4,1.9)*Scl,vec(0.08,0.08,0.06)*Scl,ang(0,180,180),vec(0,255,0),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_l_r.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(1.1,5.4,1.9)*Scl,vec(0.08,0.08,0.06)*Scl,ang(0,180,180),vec(0,255,0),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_l_c.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(1.8,5.4,1.9)*Scl,vec(0.08,0.08,0.06)*Scl,ang(0,180,180),vec(0,255,0),"models/debug/debugwhite","models/sprops/misc/alphanum/alphanum_l_e.mdl",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,0,-0.6)*Scl,vec(2.6,1.01,0.05)*Scl,ang(),vec(0),"models/debug/debugwhite","hq_cube",255)    
+    Count++, HoloInfo[Count, array] = array(vec(0,0,1)*Scl,vec(1.5,0.9,0.3)*Scl,ang(),vec(100),"models/shiny","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(8.5,0,3.5)*Scl,vec(0.9,0.9,3)*Scl,ang(),vec(255),"models/debug/debugwhite","hq_torus_thin",255)
+    Count++, HoloInfo[Count, array] = array(vec(-8.5,0,3.5)*Scl,vec(0.9,0.9,3)*Scl,ang(),vec(255),"models/debug/debugwhite","hq_torus_thin",255)
+    Count++, HoloInfo[Count, array] = array(vec(11.5,0,1.3)*Scl,vec(0.7,1,0.35)*Scl,ang(),vec(255),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(-11.5,0,1.3)*Scl,vec(0.7,1,0.35)*Scl,ang(),vec(255),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(5.3,0,1.5)*Scl,vec(0.45,0.98,0.1)*Scl,ang(-30,0,0),vec(255),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(-5.3,0,1.5)*Scl,vec(0.45,0.98,0.1)*Scl,ang(30,0,0),vec(255),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,0,0.8)*Scl,vec(0.8,0.98,0.05)*Scl,ang(0,0,0),vec(255),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(0,0,0.13)*Scl,vec(2.5,0.99,0.06)*Scl,ang(0,0,0),vec(0),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(13,5.5,0)*Scl,vec(0.3,0.1,0.1)*Scl,ang(),vec(0),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(-13,5.8,-0.6)*Scl,vec(0.3,0.1,0.02)*Scl,ang(),vec(0),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(-15.7,-1,0)*Scl,vec(0.01,1.2,0.1)*Scl,ang(0),vec(50),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(-15.7,-1,3)*Scl,vec(0.01,1.2,0.1)*Scl,ang(),vec(50),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(-15.7,-0.4,1.5)*Scl,vec(0.01,1.1,0.2)*Scl,ang(),vec(50),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(-16.2,6.2,1.5)*Scl,vec(0.01,0.1,0.35)*Scl,ang(0,90,0),vec(50),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(-6,-6.5,0)*Scl,vec(1.1,0.1,0.02)*Scl,ang(),vec(100),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(-6,-7.5,0)*Scl,vec(1.1,0.07,0.02)*Scl,ang(),vec(255,200,0),"models/debug/debugwhite","hq_cube",255)
+    Count++, HoloInfo[Count, array] = array(vec(8.5,0,3.5)*Scl,vec(0.85,0.85,0.01)*Scl,ang(0,0,0),vec(255),"models/debug/debugwhite","hq_cylinder",255)
+    Count++, HoloInfo[Count, array] = array(vec(-8.5,0,3.5)*Scl,vec(0.85,0.85,0.01)*Scl,ang(0,0,0),vec(255),"models/debug/debugwhite","hq_cylinder",255)
+    Count++, HoloInfo[Count, array] = array(vec(8.5,0,4)*Scl,vec(0.3,0.3,0.05)*Scl,ang(0,0,0),vec(255),"models/debug/debugwhite","hq_cylinder",255)
+    Count++, HoloInfo[Count, array] = array(vec(-8.5,0,4)*Scl,vec(0.3,0.3,0.05)*Scl,ang(0,0,0),vec(255),"models/debug/debugwhite","hq_cylinder",255)
+    Count++, HoloInfo[Count, array] = array(vec(-15.7,0,1)*Scl,vec(0.05,0.18,0.05)*Scl,ang(90,0,0),vec(10),"models/debug/debugwhite","hq_stube_thin",255)
+    Count++, HoloInfo[Count, array] = array(vec(-15.7,-4,1)*Scl,vec(0.05,0.18,0.05)*Scl,ang(90,0,0),vec(10),"models/debug/debugwhite","hq_stube_thin",255)
+    Count++, HoloInfo[Count, array] = array(vec(-15.7,4,1)*Scl,vec(0.05,0.18,0.05)*Scl,ang(90,0,0),vec(10),"models/debug/debugwhite","hq_stube_thin",255)   
+}
+event tick() {
+    Tick++
+    if (Tick%4 == 0) {
+        if (Created < Count & holoCanCreate()) {
+            Created++
+            local Array = HoloInfo[Created, array]
+            local Pos   = Array[1, vector]
+            local Scale = Array[2, vector]
+            local Ang   = Array[3, angle]
+            local Color = Array[4, vector]
+            local Mat   = Array[5, string]
+            local Model = Array[6, string]
+            local Alpha = Array[7, number]
+            holo(Pos, Scale, Ang, Color, Mat, Model, Alpha)
+        }
+        
+#[
+        if (changed(Created) & Created == Count) {
+            for (I = 1, HoloInfo:count()) {
+                holoAlpha(I, HoloInfo[I, array][7, number])
+            }
+        }
+]#
+    }
+
+    if (A | Acc > 0) {
+        Rot += 30 * Acc
+        Acc += clamp(A - Acc, -0.01, 0.01)
+        
+        if (Rot > 36000) {
+            Rot = -36000
+        }
+        
+        holoAng(1,entity():toWorld(ang(90, Rot,0)))
+        holoAng(2,entity():toWorld(ang(90,-Rot,0)))
+    }
+}

@@ -1,0 +1,56 @@
+@name StairCase
+@inputs 
+@outputs 
+@persist MAX_PROPS PROP_COUNT PROP_MODEL:string PROPS:table RADIUS
+@strict
+
+if (first()) {
+    propSpawnEffect(0)
+    propSpawnUndo(0)
+    
+    PROPS      = table()
+    PROP_COUNT = 0
+    MAX_PROPS  = 100
+    
+    PROP_MODEL = "models/props_junk/wood_pallet001a.mdl"
+    #PROP_MODEL = "models/Cranes/crane_frame.mdl"
+    #PROP_MODEL = "models/props_c17/furniturebed001a.mdl"
+    #PROP_MODEL = "models/props_phx/huge/evildisc_corp.mdl"
+    PROP_MODEL = "models/props/cs_militia/militiawindow02_breakable.mdl"
+
+    RADIUS     = 256
+}
+
+event tick() {
+    while (perf() & PROP_COUNT < MAX_PROPS & propCanCreate()) {
+        PROP_COUNT++
+        local V = 360/16 * PROP_COUNT
+        local X = cos(V) * RADIUS
+        local Y = sin(V) * RADIUS
+        local Z = PROP_COUNT * 6
+        local YAW = V
+        local POS  = entity():toWorld(vec(X, Y, Z))
+        local ANG  = entity():toWorld(ang(90, YAW, 0))
+        local PROP = propSpawn(PROP_MODEL, POS, ANG, 1)
+        PROP:propStatic(1)
+        
+        local Array = array(PROP, PROP_MODEL, POS, ANG)
+        PROPS:pushArray(Array)
+    }
+    
+    if (PROP_COUNT >= MAX_PROPS) {
+        local COUNT = 0
+        while (perf() & COUNT < MAX_PROPS & propCanCreate()) {
+            COUNT++
+            if (!PROPS[COUNT, array][1, entity]:isValid()) {
+                local MODEL = PROPS[COUNT, array][2, string]
+                local POS   = PROPS[COUNT, array][3, vector]
+                local ANG   = PROPS[COUNT, array][4, angle]
+                local PROP  = propSpawn(MODEL, POS, ANG, 1)
+                PROP:propStatic(1)
+                
+                PROPS[COUNT, array][1, entity] = PROP
+            }
+        }
+    }
+}

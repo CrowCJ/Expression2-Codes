@@ -1,0 +1,25 @@
+@name TotalPropHitBox
+@inputs 
+@outputs 
+@persist Model:string Box:entity
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    enableConstraintUndo(0)
+    
+    #Model = "models/sprops/cuboids/height36/size_1/cube_36x60x36.mdl"
+    Model = "models/hunter/blocks/cube2x2x2.mdl"
+    
+    Box = propSpawn(Model, entity():pos(), ang(90, 0, 0), 1)
+    
+    Box:noCollideAll(1)
+    
+    Box:setAlpha(25)
+}
+
+event tick() {
+    Box:setPos(owner():boxCenterW() + owner():vel()*tickInterval())
+}
+

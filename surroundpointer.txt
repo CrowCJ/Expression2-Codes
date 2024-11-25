@@ -1,0 +1,46 @@
+@name SurroundPointer
+@inputs 
+@outputs 
+@persist Tick Interval
+@trigger 
+@strict
+
+if (first()) {
+    Tick = 0
+    Interval = 0.1
+    
+    foreach (K:number, V:entity = players()) {
+        if (V == owner()) { continue }
+        holoCreate(K, entity():pos())
+        holoScale(K, vec(0.5, 0.5, 1))
+        holoModel(K, "models/sprops/misc/pyramids/rsize_1/rpyr_12x12.mdl")
+        holoMaterial(K, "debug/debugdrawflat")
+        #holoMaterial(K, "models/debug/debugwhite")
+    }
+}
+
+event tick() {
+    local Cur = curtime()
+    Origin = owner():boxCenterW() + owner():vel() * tickInterval() * 2.5
+    if (Cur > Tick + Interval) {
+        Tick = Cur
+        foreach (K:number, V:entity = players()) {
+            if (V == owner()) { continue }
+            if (!V:isValid()) { exit() }
+            local Dir = V:boxCenterW() - Origin
+            local Ang = Dir:toAngle() + ang(90, 0, 0)
+            holoPos(K, (Origin + Dir:normalized() * clamp(Dir:length() - 36, 0, 48)):setZ(Origin:z()))
+            holoAng(K, Ang:setPitch(90))
+            
+            if (V:aimEntity() != owner()) {
+                holoColor(K, vec(0, 255 + clamp((V:pos():z() - owner():pos():z())*5, -200, 100), 0))
+            } else {
+                holoColor(K, vec(255, 0, 0))
+            }
+        }
+    }
+}
+
+event playerConnected(_:entity) {
+    reset()
+}

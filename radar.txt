@@ -1,0 +1,33 @@
+@name Radar
+@inputs  EGP:wirelink
+@outputs 
+@persist N
+@trigger 
+
+if (first() | duped() | changed(EGP)) {
+    EGP:egpClear()
+
+    N = 20
+    R = 256
+    for (I = 1, N) {
+        Sin1 = sin(360/N*I)*R
+        Cos1 = cos(360/N*I)*R
+        Sin2 = sin(360/N*I+(360/N))*R
+        Cos2 = cos(360/N*I+(360/N))*R
+        EGP:egpTriangle(I, vec2(256,256), vec2(Sin1+256,Cos1+256), vec2(Sin2+256,Cos2+256))
+        EGP:egpColor(I, vec(255 - 200*(I%2==0)))
+        EGP:egpAlpha(I, 200)
+    }
+    
+    for (I = 1, 4) {
+        EGP:egpCircleOutline(I+N, vec2(R,R), vec2(I*64))
+        EGP:egpColor(I+N, vec(0,255,0))
+        EGP:egpFidelity(I+N, N)
+    }
+}
+
+interval(150)
+
+for (I = 1, N) {
+    EGP:egpColor(I, vec(0,255-(270/N*I+curtime()*90),0))
+}

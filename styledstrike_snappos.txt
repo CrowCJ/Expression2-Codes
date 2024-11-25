@@ -1,0 +1,25 @@
+@name StyledStrike SnapPos
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@strict
+
+function number snap(Num, Res) {
+    return round(Num / Res) * Res
+}
+
+function vector getConstructPosOnEntity(Ent:entity, At:vector) {
+    # toLocal, but using the bounding box position instead of pos()
+    local Pos = toLocal(At, ang(0), Ent:boxCenterW(), Ent:angles())
+
+    local Size = Ent:aabbSize()
+    local SnapSize = (Size / 2)
+
+    Pos[1] = snap(Pos[1], SnapSize[1])
+    Pos[2] = snap(Pos[2], SnapSize[2])
+    Pos[3] = snap(Pos[3], SnapSize[3])
+
+    # toWorld, but using the bounding box position instead of pos()
+    return toWorld(Pos, ang(0), Ent:boxCenterW(), Ent:angles())
+}

@@ -1,0 +1,78 @@
+@name RotaryBarrels
+@inputs  Active
+@outputs Fire
+@persist Accel Yaw Trigger
+@trigger 
+@strict
+
+if (first() | duped()) {
+    Trigger = 0
+    Accel = 0
+    Yaw = 0
+    Model = "models/hunter/tubes/tube1x1x8.mdl"
+    Material = "models/debug/debugwhite"
+    
+    Color = vec(0, 50, 0)
+    
+    MaxBarrel = 6
+    Radius = 3
+    
+    Factor  = 1
+    BarrelW = 0.05
+    BarrelL = 0.25
+    
+    local PlateW = 9
+    
+    Hinge = holoCreate(100, entity():toWorld(vec(0, 0, 3)), vec(0.8), entity():toWorld(ang()), vec(255), "hq_cylinder")
+    holoParent(100, entity())
+    
+    for (I = 1, MaxBarrel)
+    {
+        local Var = 360/MaxBarrel * I
+        local Sin = sin(Var) * Radius
+        local Cos = cos(Var) * Radius
+        
+        holoCreate(I, Hinge:toWorld(vec(Sin, Cos, 0) * Factor), vec(BarrelW, BarrelW, BarrelL) * Factor, Hinge:toWorld(ang()), vec(255), Model)
+        holoParent(I, Hinge)
+        
+        holoColor(I, Color)
+        holoMaterial(I, Material)
+    }
+    
+    holoCreate(50, Hinge:toWorld(vec(0, 0, BarrelL * 380 * 0.95) * Factor), vec(0), Hinge:toWorld(ang()), vec(255), "models/hunter/tubes/circle2x2.mdl")
+    holoCreate(51, Hinge:toWorld(vec(0, 0, BarrelL * 380 * 0.75) * Factor), vec(0), Hinge:toWorld(ang()), vec(255), "models/hunter/tubes/circle2x2.mdl")
+    holoCreate(52, holoEntity(51):toWorld(vec(0, 0, 0)), vec(0), Hinge:toWorld(ang()), vec(255), Model)
+    holoParent(52, Hinge)
+    
+    for (I = 50, 51)
+    {
+        local PlateScl = vec(PlateW, PlateW, 0.3) * Factor
+        
+        holoScaleUnits(I, PlateScl)
+        holoParent(I, Hinge)
+        
+        holoMaterial(I, Material)
+        holoColor(I, Color)
+    }
+    
+    holoMaterial(52, Material)
+    holoColor(52, Color)
+    
+    local Length = (holoEntity(50):pos() - holoEntity(51):pos()):length()
+    holoScaleUnits(52, vec(BarrelW * 24, BarrelW * 24, Length) * Factor)
+}
+
+event tick() {
+    Accel += clamp(Active - Accel, -0.01, 0.01)
+    Trigger += clamp(Active - Trigger, -0.1, 0.1)
+    Yaw   += Accel * 120
+    
+    holoAng(100, entity():toWorld(ang(0, Yaw, 0)))
+    holoEntity(100):emitSound("wac/a10/gun.wav", 100, 100, 100)
+    
+    if (Trigger >= 0.5) {
+        Fire = 1
+    } else {
+        Fire = 0
+    }
+}

@@ -1,0 +1,37 @@
+@name RGB_Stuff
+@persist Car:entity Hue_Speed Tick Interval Alpha
+
+if (first() | duped()) {
+    Alpha = 255
+    Car = entity():isWeldedTo()
+    if (!Car:isValid() | Car:owner() != owner()) {
+        hint("Must spawn on your own car or car not invalid", 3)
+        selfDestruct()
+    } else {
+        hint("Success", 3)
+    }
+
+    # Settings #
+    Hue_Speed = 45 # How fast the hue go
+    Interval = 0.01 # How frequent it change(in second)
+}
+
+event tick() {
+    local Curtick = curtime()
+    if (Curtick > Tick + Interval) {
+        Tick = Curtick
+        if (Car) {
+            local Color = hsv2rgb(Hue_Speed * Tick % 360, 1, 1)
+            Car:setColor(Color)
+            
+            if (entity():getAlpha() > 0) {
+                Alpha-=10
+                entity():setAlpha(Alpha)
+            }
+        }
+    }
+}
+
+event removed(Resetting:number) {
+    Car:setColor(vec(255))
+}

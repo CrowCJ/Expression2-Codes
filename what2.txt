@@ -1,0 +1,67 @@
+@name What2
+@inputs 
+@outputs 
+@persist Ply:array NPCMode:number
+@trigger 
+@strict
+
+entity():setAlpha(0)
+NPCMode = 0
+
+if (NPCMode) {
+    findByClass("npc_*")
+    Ply = findToArray()
+    foreach (K:number, V:entity = Ply) {
+        if (V == owner()) { Ply:remove(K) }
+    }
+    foreach (K:number, V:entity = Ply) {
+        if (holoCanCreate()) {
+            holoCreate(K, V:pos(), vec(1.5), V:angles(), vec(0, 255, 0), "hq_icosphere")
+            holoCreate(K+20, V:pos(), vec(0.5, 0.5, 4), V:angles(), vec(0, 255, 0), "hq_cylinder")
+            #holoParent(K, V)
+            holoMaterial(K, "debug/debugportals")
+            holoMaterial(K+20, "debug/debugportals")
+            holoVisible(K, Ply, 0)
+            holoVisible(K+20, Ply, 0)
+        }
+    }
+} else {
+    Ply = players()
+    foreach (K:number, _:entity = Ply) {
+        if (Ply[K, entity] == owner()) { Ply:remove(K) }
+    }
+    
+    foreach (K:number, V:entity = Ply) {
+        if (holoCanCreate()) {
+            holoCreate(K, V:shootPos(), vec(1.5), ang(), vec(0, 255, 0), "hq_icosphere")
+            holoCreate(K+20, V:boxCenterW(), vec(2, 2, 4), V:angles() + ang(180, 0, 0), vec(0, 255, 0), "hq_cone")
+            #holoParent(K, V)
+            holoMaterial(K, "debug/debugportals")
+            holoMaterial(K+20, "debug/debugportals")
+            holoVisible(K, Ply, 0)
+            holoVisible(K+20, Ply, 0)
+            #holoParent(K, V)
+            #holoParent(K+20, V)
+        }
+    }
+}
+
+event tick() {
+    foreach (K:number, V:entity = Ply) {
+        if (V:isValid()) {
+            holoPos(K, V:attachmentPos("eyes"))
+            holoPos(K+20, V:pos() + vec(0, 0, 6*4))
+            #holoAng(K, ang(0, V:eyeAngles():yaw(), 0))
+        } else {
+            reset()
+            #break
+        }
+    }
+}
+
+event playerConnected(_:entity) {
+    reset()
+}
+
+
+

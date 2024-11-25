@@ -1,0 +1,113 @@
+@name Torque
+@inputs  [BL BR BL2 BR2 FL FR Base]:entity W S Shift Space Active
+@outputs Pitch
+@persist Force Num MaxAngVel Mul StuckIndicator StuckBoost CurTick Tick Wheels:array Height
+@persist [Start Idle Stop]:string
+@trigger 
+
+if (first() || duped()) {
+    
+    local Array = array(BL, BR, FL, FR, BL2, BR2)
+            
+    foreach (K, V:entity = Array) {
+        if (V:isValidPhysics()) {
+            V:propDraw(0)
+            holoCreate(K, V:toWorld(vec()), vec(1, 1, 1)*1.1, V:toWorld(ang()), vec(255), V:model())
+            holoBodygroup(K, 1, 2)
+            holoParent(K, V)
+            
+            Wheels:pushEntity(V)
+        }
+    }
+
+    runOnTick(1)
+    
+    Start = "vehicles/apc/apc_start_loop3.wav"
+    Idle  = "vehicles/apc/apc_idle1.wav"
+    Stop  = "vehicles/apc/apc_shutdown.wav"
+
+    StuckIndicator = 0
+    StuckBoost = 0
+    Force = 0
+    Mul = 7500
+}
+
+if (dupefinished()) { reset() }
+
+if (Base & ~Active & Active) {
+    soundStop(1, 0)
+    soundStop(2, 0)
+    soundStop(3, 0)
+    Base:soundPlay(1, 0, Start)
+    soundPitch(1, 80)
+    timer("Idle", soundDuration(Start))
+}
+
+if (clk("Idle")) {
+    soundStop(1, 1)
+    Base:soundPlay(2, 0, Idle)
+}
+
+if (Base & ~Active & !Active) {
+    soundStop(1, 0)
+    soundStop(2, 0)
+    stopAllTimers()
+    
+    Base:soundPlay(3, 0, Stop)
+}
+
+if (FL & FR & BR & BL & Base & tickClk()) {
+    CurTick = systime()
+    if (CurTick > Tick + 0.05) {        
+        Tick = CurTick
+            
+        Pitch = clamp(abs(Base:angles():pitch()), 0, 20)
+        Speed = toUnit("km/h", round(Base:vel():length()))
+    
+        soundPitch(2, 80 + Speed)
+        
+        Force += clamp((W-S) * (1+Shift*2) - Force, -0.2 - Pitch*0.2, 0.2 + Pitch*0.2)
+        
+        if (Speed < 5) {
+            StuckIndicator++
+        } else {
+            StuckIndicator = 0
+        }
+        
+        if (StuckIndicator > 50) {
+            StuckBoost = 10
+        } else {
+            StuckBoost = 0
+        }
+        
+        Base:applyForce(-Base:forward()*Base:mass()*Force*(Pitch + StuckBoost))
+        Base:applyForce(-Base:up()*Base:mass()*2)
+        
+        foreach (K, V:entity = Wheels) {
+            V:applyForce(vec(0, 0, -1)*V:mass()*5)
+        }
+        
+        if (!Space) {
+            FL:applyAngForce(ang(( Force * Mul - FL:angVel():pitch())*FL:mass()*0.1,0,0))
+            FR:applyAngForce(ang((-Force * Mul - FR:angVel():pitch())*FR:mass()*0.1,0,0))   
+            BL:applyAngForce(ang(( Force * Mul - BL:angVel():pitch())*BL:mass()*0.1,0,0))
+            BR:applyAngForce(ang((-Force * Mul - BR:angVel():pitch())*BR:mass()*0.1,0,0))
+            
+            if (BL2 & BR2) {
+                BL2:applyAngForce(ang(( Force * Mul - BL2:angVel():pitch())*BL2:mass()*0.1,0,0))
+                BR2:applyAngForce(ang((-Force * Mul - BR2:angVel():pitch())*BR2:mass()*0.1,0,0))       
+            }
+                   
+        } else {
+            FL:applyAngForce(ang((-FL:angVel():pitch())*FL:mass()*2,0,0))
+            FR:applyAngForce(ang((-FR:angVel():pitch())*FR:mass()*2,0,0))
+            BL:applyAngForce(ang((-BL:angVel():pitch())*BL:mass()*2,0,0))
+            BR:applyAngForce(ang((-BR:angVel():pitch())*BR:mass()*2,0,0))
+            
+            if (BL2 & BR2) {
+                BL2:applyAngForce(ang(( Force * Mul - BL2:angVel():pitch())*BL2:mass()*0.1,0,0))
+                BR2:applyAngForce(ang((-Force * Mul - BR2:angVel():pitch())*BR2:mass()*0.1,0,0))       
+            }
+        }
+    }
+}

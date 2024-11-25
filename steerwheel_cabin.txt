@@ -1,0 +1,31 @@
+@name SteerWheel_Cabin
+@inputs  Yaw:number Active
+@outputs 
+@persist Model:string PITCH
+@trigger 
+@strict
+
+if (first() | duped()) {
+    Model = "models/sprops/trans/stwheels/stwheel_7.mdl"
+    
+    Ent = entity()
+    Ent:setAlpha(0)
+    
+    PITCH = 75
+    
+    holoCreate(1, Ent:toWorld(vec(0, 0, 0)), vec(0.1), Ent:toWorld(ang(PITCH, 0, 0)), vec(255), "cube")
+    holoCreate(2, holoEntity(1):toWorld(vec(0, 0, holoScale(1):z()*12)), vec(0.3, 0.3, 1.5), holoEntity(1):toWorld(ang(0, 0, 0)), vec(255), "hq_cylinder")
+    holoCreate(3, holoEntity(2):toWorld(vec(0, 0, holoScale(2):z()/2*12 + 0.5)), vec(1), holoEntity(2):toWorld(ang(-90, 0, 0)), vec(255), Model)
+    
+    #holoCreate(4, holoEntity(2):toWorld(vec(0, 0, holoScale(2):z()/2*12 + 0.5)), vec(1), holoEntity(2):toWorld(ang(-90, 0, 0)), vec(255), "models/maxofs2d/motion_sensor.mdl")
+    
+    holoParent(1, Ent)
+    holoParent(2, Ent)
+    holoParent(3, 2)
+}
+
+event tick() {
+    if (->Active) {
+        holoAng(2, holoEntity(1):toWorld(ang(0, Yaw/45*270, 0)))
+    }
+}

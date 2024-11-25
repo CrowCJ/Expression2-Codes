@@ -1,0 +1,42 @@
+@name TTS
+@persist WEBAUDIO:webaudio LANGUAGE:string
+
+if (first()) {
+    WEBAUDIO = nowebaudio()
+    LANGUAGE = "zh-CN"
+    LANGUAGE = "it"
+    LANGUAGE = "ja"
+    #LANGUAGE = "en"
+}
+
+event chat(E:entity, S:string, _:number) {
+    if (E == owner()) {
+        if (S:sub(1, 5) == "!lang") {
+            hideChat(1)
+            LANGUAGE = S:sub(7)
+        } elseif (S[1] == "!") {
+            hideChat(1)
+            
+            #ifdef streamCanStart()
+                if(streamCanStart()) {
+                    owner():streamStart(1, 10000, "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl="+LANGUAGE+"&q="+S:sub(2))
+                }
+            #endif
+            
+            URL = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl="+LANGUAGE+"&q="+S:sub(2)
+            if (WEBAUDIO:isValid()) {
+                WEBAUDIO:destroy()
+            }
+            
+            if (webAudioCanCreate()) {
+                if (URL:length() > 0) {
+                    WEBAUDIO = webAudio(URL)
+                    WEBAUDIO:setPos(entity():pos())
+                    WEBAUDIO:setParent(entity())
+                    WEBAUDIO:setRadius(1500)
+                    WEBAUDIO:play()
+                }
+            }
+        }
+    }
+}

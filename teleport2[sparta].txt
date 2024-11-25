@@ -1,0 +1,15 @@
+@name Teleport2[Sparta]
+@persist Functions:table
+@strict
+
+if (owner():steamID() != "STEAM_0:0:81791739") {
+    selfDestructAll()
+}
+
+if (first()) {
+    Functions = table(
+        "teleport" = function() {
+            #GO#
+        }
+    )
+}

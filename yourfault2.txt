@@ -1,0 +1,61 @@
+@name YourFault2
+@inputs 
+@outputs 
+@persist Settings:table
+@trigger 
+@strict
+
+if (first()) {
+    Settings = table(
+        "num" = 0,
+        "max" = 10,
+        "maxA"= 8,
+        "rad" = 50,
+        "scl" = 1,
+        "mdl" = "models/fasteroid/pointer.mdl",
+        #"mdl" = "models/sprops/misc/cones/size_1/cone_12x24.mdl",
+        
+        "key" = "g"
+    )
+    
+    local Max = Settings["max", number]
+    local MaxA= Settings["maxA", number]
+    local R   = Settings["rad", number]
+    local Scl = Settings["scl", number]
+    local Mdl = Settings["mdl", string]
+    local Num = Settings["num", number]
+    local Color = vec(255)
+    
+    Pos = entity():pos() + vec(0, 0, 250)
+    holoCreate(100, Pos, vec())
+    
+    for (I = 1, MaxA) {
+        for (J = 1, Max) {
+            if (holoCanCreate()) {
+                Num++
+                Settings["num", number] = Num
+                local X = R * Scl * sin(360/Max * J) * cos(360/MaxA * I)
+                local Y = R * Scl * sin(360/Max * J) * sin(360/MaxA * I)
+                local Z = R * Scl * cos(360/Max * J)
+                local Pos = Pos + vec(X, Y, Z)
+                local Ang = (Pos + vec(X, Y, Z) - Pos):toAngle() + ang(90, 0, 180)
+                holoCreate(Num, Pos, vec(Scl), Ang, Color, Mdl)
+            }
+        }
+    }
+    
+    
+    
+    for (I = 1, Settings["num", number]) {
+        holoParent(I, 100)
+    }
+}
+
+event tick() {
+    holoPos(100, owner():aimPos())
+    
+    for (I = 1, Settings["num", number]) {
+        local Ang = (owner():aimPos() - holoEntity(I):pos()):toAngle() + ang(90, 0, 0)
+        holoAng(I, Ang)
+    }
+}

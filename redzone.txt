@@ -1,0 +1,41 @@
+@name RedZone
+@inputs 
+@outputs 
+@persist Mdl:string Interval Tick Ceiling SafeRadius MaxRadius
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    Interval = 0.25
+    Tick = 0
+    Ceiling = 0
+    Mdl = "models/props_phx/mk-82.mdl"
+    #Mdl = "models/props_wasteland/tugtop001.mdl"
+    #Mdl = "models/props_phx/ww2bomb.mdl"
+    SafeRadius = 4500
+    MaxRadius  = 8000
+    
+    Ceiling    = -1000
+    #selfDestruct()
+}
+
+event tick() {
+    local Cur = curtime()
+    if (Cur > Tick + Interval) {
+        Tick = Cur
+        if (!propCanCreate()) { exit() }
+        local X = cosr(random(0, 1) * 360) * random(0, 1) * MaxRadius
+        local Y = sinr(random(0, 1) * 360) * random(0, 1) * MaxRadius
+        local Z = Ceiling
+        local Pos = vec(X, Y, Z)
+        if (!Pos:isInWorld()) { exit() }
+        if (Pos:setZ(0):distance(vec(0, 0, 0)) < SafeRadius) {
+            Tick = Tick - Interval
+            exit()
+        }
+        local P = propSpawn(Mdl, Pos, ang(90, 0, 0), 0)
+        P:propSetFriction(0)
+        
+        P:applyForce(vec(0, 0, -1) * P:mass() * 100000)
+    }
+}

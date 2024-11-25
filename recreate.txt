@@ -1,0 +1,37 @@
+@name ReCreate
+@inputs 
+@outputs 
+@persist Props:array Num
+@trigger 
+@strict
+
+if (first()) {
+    findByClass("prop_*")
+    Props = findToArray()
+    
+    timer("refind", 5000)
+}
+
+interval(10)
+
+for (I = 1, 80) {
+    if (holoCanCreate()) {
+        Num++
+        Ent = Props[Num, entity]
+        
+        if (Ent:isValid()) {
+            holoCreate(Num, Ent:pos(), vec(1), Ent:angles(), Ent:getColor4(), Ent:model())
+            holoMaterial(Num, Ent:getMaterial())
+            
+            if (Num > Props:count()) {
+                Num = 1
+            }
+        }
+    }
+}
+
+if (clk("refind")) {
+    findByClass("prop_*")
+    Props = findToArray()
+    timer("refind", 5000)
+}

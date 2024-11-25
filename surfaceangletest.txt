@@ -1,0 +1,18 @@
+@name SurfaceAngleTest
+@inputs E:entity
+@outputs 
+@persist 
+@trigger 
+@strict
+
+holoCreate(1)
+event tick() {        
+    if (E) {
+        local Ranger = rangerOffset(1000, E:toWorld(vec(0, 0, -10)), vec(0, 0, -1))
+        holoPos(1, E:pos() + E:forward() * 32)
+        local Forward = E:forward()
+        local Normal  = Ranger:hitNormal():normalized()
+        local Ang = (Forward-Normal*Forward:dot(Normal)):toAngle()
+        E:applyAngForce((E:toLocal(Ang)*200 - E:angVel()*20)*shiftL(ang(E:inertia())))
+    }
+}

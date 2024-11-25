@@ -1,0 +1,61 @@
+@name Piston
+@inputs A
+@outputs 
+@persist Chip:entity Num MoveStick_ID [Stick Plate]:entity
+@trigger 
+@model models/hunter/blocks/cube05x05x05.mdl
+
+
+
+if (first() | duped()) {
+    propSpawnUndo(0)
+    enableConstraintUndo(0)
+    Chip = entity()
+    Chip:setAlpha(0)
+    Chip:setMass(1)
+    Chip:noCollideAll(0)
+    Num = 0
+    
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, -0.2*6 - 1.5)), vec(1, 1, 0.8), Chip:toWorld(ang()), vec(255), Chip:model())
+    holoMaterial(Num, "models/debug/debugwhite")
+    
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, 0)), vec(0.35, 0.35, 0.8), Chip:toWorld(ang()), vec(255), Chip:model())
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, 0)), vec(0.3, 0.3, 1), Chip:toWorld(ang()), vec(255), Chip:model())
+    MoveStick_ID = Num
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, 0.8*6 + 5)), vec(1, 1, 0.2), Chip:toWorld(ang()), vec(255), Chip:model())
+    
+    Stick = propSpawn("models/hunter/plates/plate.mdl", holoEntity(Num-1):pos(), holoEntity(Num):angles(), 1)
+    Plate = propSpawn("models/hunter/plates/plate05x05.mdl", holoEntity(Num):pos() + entity():up()*1.5, holoEntity(Num):angles(), 0)
+    
+    Stick:propStatic(1)
+    Stick:setMass(50000)
+    Plate:setMass(50000)
+    
+    Plate:weld(Stick)
+    
+    #Plate:propDraw(0)
+    Plate:setAlpha(0)
+    Stick:propDraw(0)
+    
+    Plate:noCollide(Chip)
+    Stick:noCollideAll(1)
+    
+    for (I = 1, Num) {
+        holoParent(I, Chip)
+        holoMaterial(I, "models/debug/debugwhite")
+    }
+    
+    holoParent(Num, Num-1)
+}
+
+event tick() {
+    local Pos = Chip:toWorld(vec(0, 0, A*24.5))
+    Stick:setPos(Pos)
+    Stick:setAng(Chip:toWorld(ang()))
+}
+
+if (~A) {
+    local Pos = Chip:toWorld(vec(0, 0, A*24.5))
+    holoPos(MoveStick_ID, Pos)
+    holoPos(MoveStick_ID-1, Chip:toWorld(vec(0, 0, A*12.5)))
+}

@@ -1,0 +1,113 @@
+@name ProjectileLauncher
+@inputs  Prev Next Launch
+@outputs Name:string
+@persist Mdl:string Drag Trail [Target P]:entity Num Players:array
+@trigger 
+@strict
+
+function vector calcLaunchVector(Start:vector, Target:vector, AddHeight:number){
+    #Detailed version
+    # Height difference, positive if target is higher than start
+    local TargetHeight=Target:z()-Start:z()
+    
+    # Height at the maximum of the trajectory
+    local PeakHeight=AddHeight+max(TargetHeight,0)
+    
+    # first assume we fire straight up, with start being at height 0
+    # Formula for peak height given upwards speed: `h_peak = v^2 / 2g`
+    # Solving for v gives `v = sqrt(2g*h_peak)`
+    local VerticalSpeed=sqrt(2*gravity()*PeakHeight)
+    
+    # This is the vertical speed we need to lauch at to reach the target peak height
+    # Formula for distance fallen given starting velocity and elapsed time: `h = v*t - 1/2 * g*t^2`
+    # Solving for t gives `t = (v+sqrt(v^2-2gh))/g`
+    local Airtime = (VerticalSpeed+sqrt(VerticalSpeed^2-2*gravity()*TargetHeight))/gravity()
+    
+    timer("dedonate", Airtime * 1000)
+    # This is the time we spend from launching to reaching the *height* of the target, using our vertical launch speed
+    # Note that how far we move horizontally during that time doesn't affect the result, so we can adjust horziontal speed indepentently
+    # Now use the airtime to calculate the horizonal launch velocity
+    local HorizontalDiff=vec2(Target-Start) # ignore z axis (height)
+    local HorizontalVel=HorizontalDiff/Airtime # cover the whole horizontal distance during the flight time
+    
+    # This is adjusted to the projectile moves the exact horizontal difference to the target in the time it needs to reach the target height
+    # So after the airtime, both height and horzontal position will be at the target, which means the projectile arrives perfectly 
+    # finally combine horizontal speed (2d vector), and vertical speed (1d "vector") into a 3d vector
+    return vec(HorizontalVel, VerticalSpeed)
+    
+    # Compact version
+    #local VerticalSpeed = sqrt(2*gravity()*AddHeight + max(Target:z() - Start:z(), 0))
+    #return vec(vec2(Target - Start)/(VerticalSpeed + sqrt(VerticalSpeed^2 - 2*gravity()*(Target:z() - Start:z()))/gravity()), VerticalSpeed)
+}
+
+if (first() | duped()) {
+    holoCreate(1, entity():toWorld(vec(0, 0, 6)), vec(0.5, 0.5, 1), entity():toWorld(ang()), vec(255), "models/sprops/misc/alphanum/alphanum_arrow_b.mdl")
+    holoParent(1, entity())
+    holoMaterial(1, "debug/debugdrawflat")
+    propSpawnUndo(0)
+    Players = players()
+    Num    = 0
+    Target = noentity()
+    P      = noentity()
+    
+    Mdl   = "models/props_phx/misc/potato_launcher_explosive.mdl"
+    Mdl   = "models/props_phx/mk-82.mdl"
+    Drag  = 0
+    Trail = 1
+}
+
+if (~Prev & Prev) { Num-- }
+
+if (~Next & Next) { Num++ }
+
+if (Players[Num, entity]:isValid()) {
+    Target = Players[Num, entity]
+    Name = Target:name()
+} else {
+    Target = noentity()
+    Name = "Invalid"
+}
+
+if (Num > Players:count()) { Num = 1 }
+if (Num < 1) { Num = Players:count() }
+    
+#[
+    if (Target:isValid()) {
+        local Init     = entity():toWorld(vec(0, 0, 36))
+        local Distance = Init:distance(Target:pos())
+        local Calc = calcLaunchVector(Init, Target:pos(), 5000 + Distance/5) 
+    }
+]#
+    
+if (~Launch & Launch) {
+    if (propCanCreate() & Target:isValid() & !P) {
+        local Init     = entity():toWorld(vec(0, 0, 36))
+        local Distance = Init:distance(Target:pos())
+        
+        P = propSpawn(Mdl, Init, ang(90, 0, 0), 0)
+        #P:propNotSolid(1)
+        P:setMass(250)
+        P:propDrag(Drag)
+        if (Trail) {
+            P:setTrails(128, 0, 3, "trails/laser", vec(255, 0, 0), 255)
+        }
+        local Calc = calcLaunchVector(Init, Target:pos() + vec(0, 0, 3) + Target:vel() * tickInterval(), max(3000, Distance/10))
+        entity():setAng(Calc:toAngle() + ang(90, 0, 0))
+        P:applyForce(Calc * P:mass())
+    }
+}
+
+#[
+event tick() {
+    if (!P:isValid()) {
+        stoptimer("dedonate")
+    }
+}
+
+if (clk("dedonate")) {
+    if (P:isValid()) {
+        P:propBreak()
+    }
+}
+]#
+

@@ -1,0 +1,12 @@
+@name Players Info
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@strict
+
+if (first()) {
+    foreach (_:number, V:entity = players()) {
+        print(V:name() + " | " + V:steamID())
+    }
+}

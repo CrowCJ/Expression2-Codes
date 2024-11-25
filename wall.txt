@@ -1,0 +1,26 @@
+@name Wall
+@inputs 
+@outputs 
+@persist Holo:entity Range MaxRange Mid:vector
+@trigger 
+@strict
+
+MaxRange = 8525
+Range = MaxRange
+
+R = rangerOffset(999999, entity():pos(), vec(0, 0, 1))
+Z = R:distance()
+
+holoCreate(1, entity():pos(), vec(), ang(90, 0, 0), vec(255), "models/hunter/plates/plate32x32.mdl")
+holoMaterial(1, "models/flesh")
+
+holoScaleUnits(1, vec(Z, Z, 0.1))
+Mid = (R:pos() + entity():pos())*0.5
+holoPos(1, Mid + vec(MaxRange, 0, 0))
+
+event tick() {
+    if (Range > -MaxRange) {
+        Range -= 10
+    }
+    holoPos(1, Mid + vec(Range, 0, 0))
+}

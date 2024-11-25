@@ -1,0 +1,54 @@
+@name SummonThing
+@inputs 
+@outputs 
+@persist Ent:entity Connected:array
+@trigger 
+
+if (first()) {
+    Ent = entity():isWeldedTo()
+    entity():parentTo(Ent)
+    entity():setAlpha(0)
+    Connected = Ent:bones()
+}
+
+event playerDeath(Victim:entity, _:entity, _:entity) {
+    if (Victim == owner()) {
+        Victim:setMaterial("null")
+        local Goto = owner():boxCenterW()
+        
+        Ent:propFreeze(1)
+        foreach (_, V:bone = Connected) {
+            V:setPos(Goto)
+            #V:propFreeze(1)
+            #V:propSetVelocity(vec())
+        }
+        Ent:setPos(Goto)
+        Ent:setAng(owner():angles())
+        Ent:propSetVelocity(vec())
+        
+        timer("unfreeze", 250)
+    }
+}
+
+event playerSpawn(Player:entity) {
+    if (Player == owner()) {
+        Player:setMaterial("")
+    }
+}
+
+if (clk("unfreeze")) {
+    foreach (_, V:entity = Connected) {
+        V:propFreeze(0)
+    }
+    timer("unfreeze2", 10)
+}
+
+if (clk("unfreeze2")) {
+    Ent:propSetVelocity(vec())
+    Ent:propSetAngVelocity(vec())
+    Ent:propFreeze(0)
+}
+
+event removed(_:number) {
+    owner():setMaterial("")
+}

@@ -1,0 +1,74 @@
+@name PickUpGame
+@inputs 
+@outputs 
+@persist Data:table
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    enableConstraintUndo(0)
+    
+    Data = table(
+        "tick" = 0,
+        "pick_tick" = 0,
+        "max_ent" = 10,
+        "interval" = 0.25,
+        "pick_interval" = 0.1,
+        "lvl_up_remain" = 0,
+        "lvl_up_increment" = array(10, 100, 1000, 25000),
+        "current_lvl" = 1,
+        
+        1 = array("models/hunter/blocks/cube025x025x025.mdl", 1),
+        2 = array("models/hunter/blocks/cube05x05x025.mdl", 4),
+        3 = array("models/hunter/blocks/cube05x05x05.mdl", 8),
+        4 = array("models/hunter/blocks/cube075x075x075.mdl", 16),
+        
+        "ents" = array()
+    )
+    
+    Data["lvl_up_remain", number] = Data["lvl_up_increment", array][Data["current_lvl", number], number]
+}
+
+event tick() {
+    local Curtick = curtime()
+    
+    if (Curtick > Data["tick", number] + Data["interval", number]) {
+        Data["tick", number] = Curtick
+        
+        if (propCanCreate() & Data["ents", array]:count() < Data["max_ent", number]) {
+            local Model = Data[Data["current_lvl", number], array][1, string]
+            local PickUp = propSpawn(Model, entity():pos() + vec(randint(-100, 100), randint(-100, 100), 50), ang(), 0)
+            
+            PickUp:noCollideAll(1)
+        
+            Data["ents", array]:pushEntity(PickUp)
+        }
+    }
+    
+    if (Curtick > Data["pick_tick", number] + Data["pick_interval", number]) {
+        Data["pick_tick", number] = Curtick
+        
+        foreach (_:number, Ply:entity = players())
+        {
+            foreach (ID:number, Pick:entity = Data["ents", array])
+            {
+                if (Pick:isValid() & Ply:pos():distance(Pick:pos()) < Pick:boxSize():z()) {
+                    Pick:propDelete()
+                    Data["ents", array]:remove(ID)
+                    
+                    local Remain = Data["lvl_up_remain", number]
+                    Remain = Remain - Data[Data["current_lvl", number], array][2, number]
+                    Data["lvl_up_remain", number] = Remain
+                }
+            }
+        }
+    }
+    
+    if (Data["lvl_up_remain", number] <= 0) {
+        local Lvl = Data["current_lvl", number]
+        Lvl = Lvl + 1
+        Data["current_lvl", number] = Lvl
+        Data["lvl_up_remain", number] = Data["lvl_up_increment", array][Data["current_lvl", number], number]
+    }
+}

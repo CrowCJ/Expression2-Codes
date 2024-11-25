@@ -1,0 +1,49 @@
+@name Round
+@inputs 
+@outputs 
+@persist Max Count Models:array Model:string Props:array [Prop Chip]:entity
+@trigger 
+
+if (first()) {
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    enableConstraintUndo(0)
+    Chip = entity()
+    
+    Models = array(
+        "models/props_wasteland/rockcliff_cluster03b.mdl",
+        "models/props_wasteland/rockcliff_cluster01b.mdl",
+        "models/props_wasteland/rockcliff_cluster02b.mdl",
+        "models/props_wasteland/rockcliff05f.mdl"
+    )
+    Model = "models/props_phx/huge/evildisc_corp.mdl"
+    
+    Max = 50
+}
+interval(250)
+
+if (propCanCreate() & Count < Max) {
+    Count++
+    Z = 256
+    Rad = 512*11.5*0.5
+    Sin = sin(360/Max*Count)*Rad
+    Cos = cos(360/Max*Count)*Rad
+    
+    Sin2 = sin(360/Max*Count)*(Rad-380)
+    Cos2 = cos(360/Max*Count)*(Rad-380)
+    
+    Sin3 = sin(360/Max*Count)*(Rad-750)
+    Cos3 = cos(360/Max*Count)*(Rad-750)
+    
+    local Pos = Chip:toWorld(vec(Sin, Cos, (512*9)*2.05*0))
+    local Ang = Chip:toWorld(ang(0,-360/Max*Count-90,0))
+    #local Ang = Chip:toWorld(ang(0,randint(0,360),0))
+    #local Model = Models[randint(1, Models:count()), string]
+    
+    Prop = propSpawn(Model, Pos, Ang, 1)
+    Prop:propStatic(1)
+    Props:pushEntity(Prop)
+    if (Props[1, entity]) {
+        noCollide(Props[1, entity], Prop)
+    }
+}

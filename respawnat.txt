@@ -1,4 +1,4 @@
-@name SpawnPoint
+@name ReSpawnAt
 @inputs 
 @outputs 
 @persist Pod:entity
@@ -6,19 +6,22 @@
 @strict
 
 if (first()) {
-    holoCreate(1, entity():pos() + entity():up() * 24, vec(1), ang(), vec(255), "models/sprops/misc/axis_plane.mdl")
-    holoSkin(1, 2)
     propSpawnUndo(0)
     if (propCanCreate()) {
-        Pod = seatSpawn("models/nova/airboat_seat.mdl", entity():pos() - vec(0, 0, 12), ang(), 1)
+        Pod = seatSpawn("models/nova/airboat_seat.mdl", entity():pos(), ang(), 1)
         Pod:noCollideAll(1)
         Pod:setAlpha(0)
         Pod:propNotSolid(1)
     }
+    
+    rangerFilter(owner())
+    rangerPersist(1)
 }
 
 event tick() {
-    holoAng(1, ang(0, curtime() * -35, 0))
+    #local Ranger = rangerOffset(1000, owner():pos(), vec(0, 0, -1))
+    Pod:setPos(owner():pos() - vec(0, 0, 12))
+    
     if (Pod:driver():isValid() & Pod:driver() != owner()) {
         Pod:killPod()
     }
@@ -27,6 +30,7 @@ event tick() {
 event playerDeath(Victim:entity, _:entity, _:entity) {
     if (Victim == owner()) {
         Pod:setAng(Victim:angles())
+        #Pod:setPos(Victim:pos() + vec(0, 0, -12))
     }
 }
 

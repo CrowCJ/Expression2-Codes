@@ -1,0 +1,20 @@
+@name ValueColletor
+@inputs 
+@outputs 
+@persist 
+@trigger 
+@strict
+
+interval(1000)
+
+findIncludePlayerProps(owner())
+findByClass("xdefm_base")
+Arr = findToArray()
+
+for( I = 1, Arr:count()) {
+    Ent = Arr[I, entity]
+    if( !Ent:health() ) {
+        Ent:setPos(entity():pos() + vec(0, 0, 32))
+        Ent:propFreeze(1)
+    }
+}

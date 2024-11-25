@@ -1,0 +1,78 @@
+@name What3
+@inputs  
+@outputs 
+@persist Toggle [Prop Target]:entity Num
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    Prop = propSpawn("models/hunter/plates/plate.mdl", entity():pos() + vec(0, 0, 25), ang(), 1)
+    Prop:noCollideAll(1)
+    Num = 0
+    Toggle = 0
+    
+    #Target = findPlayerByName("kombi")
+    
+    #timer("1000", 1000)
+}
+
+if (clk("1000")) {
+#[
+    Num++
+    if (Num > players():count()) {
+        Num = 1
+    }
+]#
+    if (players()[Num, entity] != owner() & players()[Num, entity]:isValid() & players()[Num, entity]:isAlive()) {
+        Target = players()[Num, entity]
+    } else {
+        Num++
+        if (Num > players():count()) {
+            Num = 1
+        }
+    }
+    
+    
+    #timer("1000", 1000)
+}
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner()) {
+        if (Key == "g" & Down) {
+            Toggle = !Toggle
+        }
+        
+        if (Key == "m" & Down) {
+            Num++
+#[
+            if (Num > players():count()) {
+                Num = 1
+            }
+]#
+            
+            if (players()[Num, entity] != owner() & players()[Num, entity]:isValid() & players()[Num, entity]:isAlive()) {
+                Target = players()[Num, entity]
+                print(Target:name())
+            } else {
+                Num++
+                if (Num > players():count()) {
+                    Num = 1
+                }
+            }
+        }
+    }
+    
+    if (Toggle) {
+        Prop:setAlpha(0)
+    } else {
+        Prop:setAlpha(255)
+    }
+}
+
+event tick() {
+    if (Toggle & Target:isValid() & Target:isAlive()) {
+        Prop:setPos(Target:shootPos() - vec(0, 0, 6) + Target:vel() * tickInterval())
+    } else {
+        Prop:setPos(entity():pos() + vec(0, 0, 24))
+    }
+}

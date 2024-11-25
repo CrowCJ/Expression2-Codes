@@ -1,0 +1,617 @@
+@name RadioURLs
+@inputs  EGP:wirelink Radio:wirelink User:entity
+@outputs URL_Out:string Play Volume Radius Loop Surround Time
+@persist URLs:table Name:string Length W H CurTime NameSize MaxLength CutN Forward Backward N
+@persist [CMD ListCommand PlayCommand LoopCommand VolCommand RadCommand SurCommand NextCommand PrevCommand ShuffleCommand]:string
+@persist MaxPageList LoopMode Shuffle Ended Timer
+@persist Index I_Name I_Loop I_Progress I_WBar I_Volume I_Radius I_3D I_Time I_BG I_Slider Font:string
+@persist [ButtonArray_Index NameArray_Index]:array I_NextPage I_PrevPage I_CurPage MaxListed CurPage I_Cursor I_Stop Control VControl VControlDelay Lock
+@persist I_VolUp I_VolDown Press
+@autoupdate
+
+if (first() | duped() | ~EGP) {
+    Index = 1
+    URLs = table(
+        array("https://dl.dropbox.com/s/b843r3mq3mmlhgr/Faint-LinkinPark.mp3?dl=1", "Faint - Linkin Park", 120 + 47),
+        array("https://dl.dropbox.com/s/edn1a0i7b32gkio/AmongUsTrapBassBoosted.mp3?dl=1", "Amongus - Bass Boosted", 60 + 15),
+        array("https://dl.dropbox.com/s/hgvolu6vxykh8mt/Unravel-TK_TheFirstTake%28Cut%29.mp3?dl=1", "Unravel - TK from Ling Tosite Sigure THE F1RST TAKE", 240 + 30),
+        array("https://dl.dropbox.com/s/9hcmbtyr0n3duz2/JojoPart6OP.mp3?dl=1", "Jojo's Adventure Part 6 Stone Ocean Opening", 180 + 42),
+        array("https://dl.dropbox.com/s/bb13l8kycgigb4e/AaronSmithDancin%28KRONORemix%29.mp3?dl=1", "Dancing - Aaron Smith(KRONO Remix)", 198),
+        array("https://dl.dropbox.com/s/jm70hxi8c6wdzru/AvengersIWOST.mp3?dl=1", "Avengers Inf. War OST", 148.6),
+        array("https://dl.dropbox.com/s/p4deufpty19ob5q/BasshunterDotA.mp3?dl=1", "DotA - Bass Hunter", 200),
+        array("https://dl.dropbox.com/s/x6zzjjd9tqhik3c/bluedabadeefemale.mp3?dl=1", "Blue - Eiffel 65(Female Voice)", 120 + 35),
+        array("https://dl.dropbox.com/s/9uygkorukmveie0/Careless%20Whisper%28Instrumental%29.mp3?dl=1", "Careless Whisper - Instrumental", 300 + 4),
+        array("https://dl.dropbox.com/s/t03pr4ffk4nh2v7/CastleofGlassLinkinpark.mp3?dl=1", "Castle Of Glass - Linkin Park", 240 + 50),
+        array("https://dl.dropbox.com/s/ez6mex2tbg12rl9/giornos_theme.mp3?dl=1", "Giorno's Theme - Jojo's Bizzarre Adventure", 240 + 52),
+        array("https://dl.dropbox.com/s/mjlcixitfmarz91/HaiPhutHon_Marlene%28KAIZ%20Remix%29.mp3?dl=1", "Hai Phut Hon - Phao(KAIZ Remix)", 180 + 32),
+        array("https://dl.dropbox.com/s/x59i95o522n57k9/HalogenUGotThat.mp3?dl=1", "U Got That - Halogen", 180 + 8),
+        array("https://dl.dropbox.com/s/4kpxbg5m59yzptt/UnravelTokyoGhoulOP.mp3?dl=1", "Unravel - Tokyo Ghoul OP(Piano Cover)", 240 + 8),
+        array("https://dl.dropbox.com/s/gu2zq4n17taamy7/Ori%20and%20the%20Blind%20Forest%20%28Gareth%20Coker%29%20-%20Light%20of%20Nibel%20%28Definitive%20Edition%20Mix%29.mp3?dl=1", "Ori & The Blind Forest - Light of Nibel Definitive Edition", 240),
+        array("https://dl.dropbox.com/s/1wegtazu4mi3lwa/unnamedtrack006ori.mp3?dl=1", "Ori & The Blind Forest - Unknown Track", 111),
+        array("https://dl.dropbox.com/s/k5r74lbltldq1qi/ExtraTerra.mp3?dl=1", "Extra Terra - Paradox", 180 + 50),
+        array("https://dl.dropbox.com/s/q1vw1ol7y1h1ygw/IchibannotakaramonoAngelBeatsOSTpiano.mp3?dl=1", "Ichiban no Takaramono - Angel Beats OST", 360 + 5),
+        array("https://dl.dropbox.com/s/ez1mwowvrs4snx7/ImagineDragons-Natural%28BassBoostedRemix%29.mp3?dl=1", "Natural - Imagine Dragons(Bass Boosted)", 180 + 6),
+        array("https://dl.dropbox.com/s/n1oz8dxni5h0feh/InTheEndMellenGi.mp3?dl=1", "In The End - Linkin Park(Mellen Gi Mix)", 180 + 39),
+        array("https://dl.dropbox.com/s/ioc9ybz85cibutc/iridescentlinkinpark.mp3?dl=1", "Iridescent - Linkin Park", 240 + 5),
+        array("https://dl.dropbox.com/s/x77u69m11ejrp3i/kdapop_stars_seraphine.mp3?dl=1", "POP/STARS - KDA(Seraphine Cover)", 120 + 41),
+        array("https://dl.dropbox.com/s/2i0ofxa9eah5ba2/MissionImpossibleTheme.mp3?dl=1", "Mission Impossible Theme", 180 + 37),
+        array("https://dl.dropbox.com/s/eyiwch1s81os9gl/onemorelightlinkinpark.mp3?dl=1", "One More Light - Linkin Park", 240 + 31),
+        array("https://dl.dropbox.com/s/pru9wt2vyr2ojq5/Prezioso%26Marvin-The%20Riddle.mp3?dl=1", "The Riddle - Prezioso & Marvin", 300 + 27),
+        array("https://dl.dropbox.com/s/nb9juahd6zzaj2n/PinkPantherTheme.mp3?dl=1", "Pink Panther Theme", 120 + 38),
+        array("https://dl.dropbox.com/s/ft9jtnuqu9p427t/MySoulyourBeats%21AngelBeatsOPPiano.mp3?dl=1", "My Soul Your Beats - Angel Beats OP(Piano Cover)", 240 + 16),
+        array("https://dl.dropbox.com/s/bx91sbj00b65xnf/senbonzakuraEng.mp3?dl=1", "Senbonsakura - Hatsune Miku(English Cover)", 360 + 12),
+        array("https://dl.dropbox.com/s/6zp8pem86nl888n/Song%20for%20Denise%20%28Maxi%20Version%29%20bass%20boosted.mp3?dl=1", "Song for Denise (Maxi Ver. Bass Boosted)", 420+3),
+        array("https://dl.dropbox.com/s/119w24a8poba7xq/syence_nice_girl.mp3?dl=1", "Nice Girl - Syence", 180 + 2),
+        array("https://dl.dropbox.com/s/0s4turp8xlw6rwu/ThisGameNoGameNoLifeOPPiano.mp3?dl=1", "This Game - No Game No Life OP", 300 + 6),
+        array("https://dl.dropbox.com/s/2e2obimh32f1h7e/undertale_megalovania_oscar_santos_remix.mp3?dl=1", "Megalovania - Undertale(Oscar Santos Remix)", 180 + 54),
+        array("https://dl.dropbox.com/s/cnw9b3gxguqcesw/%C4%90en%20-%20L%E1%BB%91i%20Nh%E1%BB%8F%20ft.%20Ph%C6%B0%C6%A1ng%20Anh%20%C4%90%C3%A0o.mp3?dl=1", "Loi Nho - Den ft. Phuong Anh Dao", 240 + 57),
+        array("https://dl.dropbox.com/s/0m0a2fjk8dkn291/fall_out_boy_centuries_trap_remix.mp3?dl=1", "Centuries - Fall Out Boy(Trap Remix)", 240 + 22),
+        array("https://dl.dropbox.com/s/dxui0snizy6jdmc/pumped_up_kicks_bridge_and_law_remix.mp3?dl=1", "Pumped Up Kicks - Bridge & Law Remix", 240 + 11),
+        array("https://dl.dropbox.com/s/4xqttbga1l0opd3/waiting_for_love.mp3?dl=1", "Waiting For Love - Avicii", 180 + 48),
+        array("https://dl.dropbox.com/s/d169so6iw2k4ao1/QilinsPrance.mp3?dl=1", "Qilin's Prance - Genshin Impact OST", 60 + 40),
+        array("https://dl.dropbox.com/s/3vcayw07ambz4n5/ShenheOpera.mp3?dl=1", "Devastation and Redemption", 120+40),
+        array("https://dl.dropbox.com/s/c0g1xq964im1csb/TheVerkkarsFlashbangdanceftn0thing.mp3?dl=1", "Flashbang Dance - The Verkkars ft. n0thing", 180+22),
+        array("https://dl.dropbox.com/s/pnyjzb470fb989x/Disc1GlazedMoonOvertheTidesGenshinImpact.mp3?dl=1", "Jade Moon Upon a Sea of Clouds - Disc1: Glazed Moon Over the Tides Genshin Impact", 60*47+46),
+        array("https://dl.dropbox.com/s/0qfb96hhxpn06re/ZhonglixRaiden_Theme_EPIC_ORCHESTRAL.mp3?dl=1", "ZhonglixRaiden Theme EPIC ORCHESTRAL", 60*4 + 49),
+        array("https://dl.dropbox.com/s/zow4pcstrujnrts/JPNG.mp3?dl=1", "We Are Japanese Goblin x Write That Down", 180 + 08),
+        array("https://cdn.discordapp.com/attachments/1048222958520377357/1048227350996865035/09_Liurnia_of_the_Lakes.mp3", "Elden Ring OST 09 - Liurnia of the Lakes", 180)
+    )  
+    function number sizeT(Table:table) {
+        return Table:count()
+    }
+    function number sizeA(Array:array) {
+        return Array:count()
+    }
+    function string table:getURL(Nth_array:number) {
+        return This[Nth_array, array][1, string]
+    }
+    function string table:getSongName(Nth_array:number) {
+        return This[Nth_array, array][2, string]
+    }
+    function number table:getTime(Nth_array:number) {
+        return This[Nth_array, array][3, number]
+    }    
+    function number wirelink:isButton(Index:number) {
+        local Cursor = This:egpCursor(User)
+        local Yes = inrange(Cursor, EGP:egpPos(Index), EGP:egpPos(Index)+EGP:egpSize(Index))
+        return changed(Yes) & Yes
+    }    
+    function number wirelink:egpTxt(Text:string, Position:vector2, Font:string, Size, Color:vector) {
+        Index++
+        This:egpText(Index, Text, Position)
+        This:egpFont(Index, Font, Size)
+        This:egpColor(Index, Color)
+        return Index
+    }    
+    function wirelink:egpSetTxt(Index, Text:string, WrapTextWidth) {
+        local Txt = Text
+        local Len = Txt:length()
+        This:egpSetText(Index, Txt)
+        if (WrapTextWidth) {
+            This:egpSize(Index, clamp((WrapTextWidth/Len)*20, 5, 20))
+        }
+    }    
+    function wirelink:egpCol(Index, Color:vector) {
+        This:egpColor(Index, Color)
+    }    
+    function number wirelink:egpCreate(Type:string, Position:vector2, Size:vector2, Color:vector) {
+        Index++
+        local GetType = Type:lower()
+        switch (GetType) {
+            case "box",
+                This:egpBox(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "wedge",
+                This:egpWedge(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "circle",
+                This:egpCircle(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "rbox",
+                This:egpRoundedBox(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "hbox",
+                This:egpBoxOutline(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "hwedge",
+                This:egpWedgeOutline(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "hcircle",
+                This:egpCircleOutline(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            case "hrbox",
+                This:egpRoundedBoxOutline(Index, Position, Size)
+                This:egpColor(Index, Color)
+                break
+            default,
+                assert(0, "EGP 'Type' you put in is not available")
+                break
+        }
+        return Index
+    }
+    
+    if (->EGP) {
+        #UI Initial#
+        EGP:egpClear()
+        EGP:egpDrawTopLeft(1)
+        W = 512
+        H = 512
+    	
+    	   Control     =  1
+        MaxPageList = 15
+    	   MaxLength   = 36
+        NameSize    = 34
+        Font        = "Consolas"
+    	
+        #[
+            Custom Function Usage:
+        		wirelink:egpTxt(Text:string, Position:vector2, Font:string, Size, Color:vector)
+        		wirelink:egpCreate(Type:string, Position:vector2, Size:vector2, Color:vector)
+        ]#
+        
+        I_BG       = EGP:egpCreate("box", vec2(0,0), vec2(W,H), vec(50))
+        I_WBar     = EGP:egpCreate("box", vec2(0,H/2+128+6), vec2(W,12), vec(0))
+        I_Progress = EGP:egpCreate("box", vec2(0,H/2+128+9), vec2(W,0), vec(255))  
+        EGP:egpSize(I_Progress, 5)  
+        I_Time     = EGP:egpTxt("Time", vec2(W-3*50,256+128+25), Font, 25, vec(255))    
+        I_Name     = EGP:egpTxt("Name", vec2(5,256+128-NameSize), Font, NameSize, vec(255))    
+        I_Loop   = EGP:egpTxt("Loop Disabled", vec2(5,256+128+25)  , Font, 25, vec(255))
+        I_Volume = EGP:egpTxt("Volume: "     , vec2(5,256+128+50)  , Font, 25, vec(255))
+        I_Radius = EGP:egpTxt("Radius: "     , vec2(5,256+128+75), Font, 25, vec(255))
+        I_3D     = EGP:egpTxt("3D Sound: On" , vec2(5,256+128+100), Font, 25, vec(255))
+        
+        #Button List#
+        I_Title  = EGP:egpTxt(owner():name()+"'s Song Player", vec2(256,5), Font, 30, vec(255))
+        EGP:egpAlign(I_Title, 1)
+        MaxListed = 10
+        for (I = 1, MaxListed) {
+            local SizeX = W-45
+            local SizeY = 30
+            local Flip  = (I%2==0) ? 1 : 0.5
+            local Color = vec(50,200,255) * Flip
+            local SongName = URLs:getSongName(I)
+    		
+            if (I < 10) { Space = " " } 
+        		  else { Space = "" }
+            
+            In = EGP:egpCreate("rbox", vec2(0,15+I*SizeY), vec2(SizeX, SizeY-2), Color)
+            ButtonArray_Index:pushNumber(In)
+            
+            NameIndex = EGP:egpTxt(I+". "+Space+SongName, vec2(5,30+I*SizeY), "Times New Roman", 18, vec(255))
+            EGP:egpAlign(NameIndex, 0, 1)
+            NameArray_Index:pushNumber(NameIndex)
+        }   
+    	
+        #Page#
+        I_PrevPage = EGP:egpCreate("box", vec2(W-40,15+30*3), vec2(35,30), vec(255))
+        I_PrevText = EGP:egpTxt("Back", EGP:egpPos(I_PrevPage)+vec2(0,5), "Times New Roman", 18, vec())
+        EGP:egpAlign(I_PrevText, 0,0)
+        I_NextPage = EGP:egpCreate("box", vec2(W-40,15+30*8), vec2(35,30), vec(255))
+        I_NextText = EGP:egpTxt("Next", EGP:egpPos(I_NextPage)+vec2(0,5), "Times New Roman", 18, vec())
+        EGP:egpAlign(I_NextText, 0,0)
+        I_CurPage  = EGP:egpTxt("1", vec2(W-20,15+30*5.5), "Tahoma", 25, vec(255))
+        EGP:egpAlign(I_CurPage, 1)    
+    	
+        #Stop Button#
+        I_Stop   = EGP:egpCreate("box", vec2(W-50,H-50), vec2(30), vec(255,0,0))  
+    	
+        #Vol Button#
+        I_VolUp = EGP:egpCreate("box", vec2(W-100,H-50), vec2(35,30), vec(255))
+        I_VolUT = EGP:egpTxt("Vol+", EGP:egpPos(I_VolUp)+vec2(0,5), "Times New Roman", 18, vec())
+        EGP:egpAlign(I_VolUT, 0,0)
+        I_VolDown = EGP:egpCreate("box", vec2(W-150,H-50), vec2(35,30), vec(255))
+        I_VolDTex = EGP:egpTxt("Vol-", EGP:egpPos(I_VolDown)+vec2(0,5), "Times New Roman", 18, vec())
+        EGP:egpAlign(I_VolDTex, 0,0)   
+    	
+        #Slider#
+        I_Slider = EGP:egpCreate("circle", vec2(), vec2(11), vec(0))
+        EGP:egpAlpha(I_Cursor, 250)
+        I_SlidBG = EGP:egpCreate("circle", vec2(), vec2(8), vec(255))
+        EGP:egpFidelity(I_SlidBG, 100)
+        EGP:egpParent(I_SlidBG, I_Slider) 
+    	
+        #Cursor#
+        EGP:egpTriangle(100, vec2(-2,0), vec2(-2,23), vec2(15,14.5))
+        EGP:egpColor(100, vec(0))
+        I_Shadow = 100
+        EGP:egpTriangle(101, vec2(0,0), vec2(0,20), vec2(15,12.5))
+        EGP:egpColor(101, vec(255))
+        I_Cursor = 101
+        EGP:egpParentToCursor(I_Cursor)
+        EGP:egpParentToCursor(I_Shadow)	
+    	
+        #Command#
+        ListCommand 	= ".list"
+        LoopCommand 	= ".loop"
+        PlayCommand 	= ".play"
+        VolCommand  	= ".volume"
+        RadCommand  	= ".radius"
+        SurCommand  	= ".3d"
+        NextCommand 	= ".next"
+        PrevCommand 	= ".prev"
+        ShuffleCommand 	= ".shuffle"
+        
+        #Play Initial#
+        CurPage  = 1
+        Forward  = 1
+        InitSong = 1
+        Shuffle  = 1
+        
+        Length  = Radio["Length", number]
+        CurTime = Radio["Time", number]
+        
+        URL_Out = URLs:getURL(N)
+        Timer   = URLs:getTime(N)
+        Name    = URLs:getSongName(N)
+    	
+        Play        = 0
+        Loop        = 0
+        Volume      = 1
+        Radius      = 5000
+        Surround    = 1
+        VControl    = 1
+        VControlDelay 	= 500
+        
+        EGP:egpSetTxt(I_Volume, "Volume: "+Volume*100, 0)
+        EGP:egpSetTxt(I_Radius, "Radius: "+Radius, 0)
+        
+        if (Shuffle == 1) {
+            N = randint(1, sizeT(URLs))
+        } else {
+            N = InitSong
+        }
+    	
+        timer("Play", 250)
+        timer("Refresh", 0)
+    }
+}
+if (dupefinished()) {reset()}
+
+#Chat Control#
+event chat(Ply:entity, Said:string, N:number) {
+    if (Ply == owner()) {
+        Last = Said:explode(" ")
+    }
+    CMD = Last[1, string]
+    if (CMD == ListCommand) {
+        hideChat(1)
+        GetPage = Last[2, string]
+        if (GetPage != "") {
+            Page = Last[2, string]:toNumber()
+        } elseif (GetPage == "") {
+            Page = 1
+        }
+        for (I = 1+(Page-1)*MaxPageList, Page*MaxPageList) {
+            local GetName = URLs:getSongName(I)
+            if (GetName != "") {
+                print(I+". "+GetName)
+            }
+        }
+    } elseif (CMD == VolCommand) {
+        hideChat(1)
+        local Vol = Last[2, string]:toNumber()
+        if (Vol >= 0 & Vol <= 1) {
+            Volume = Vol
+            Radio["Volume", number] = Volume
+            EGP:egpSetTxt(I_Volume, "Volume: "+Volume, 0)
+        } else {
+            print("Invalid Input!(0 - 1)")
+        }   
+    } elseif (CMD == RadCommand) {
+        hideChat(1)
+        local Rad = Last[2, string]:toNumber()
+        if (Rad >= 0 & Rad <= 5000) {
+            Radius = Rad
+            Radio["Radius", number] = Radius
+            EGP:egpSetTxt(I_Radius, "Radius: "+Radius, 0)
+        } else {
+            print("Invalid Input!(0 - 5000)")
+        }    
+    } elseif (CMD == SurCommand) {
+        hideChat(1)
+        local Sur = Last[2, string]:toNumber()
+        if (Sur == 0 | Sur == 1) {
+            Surround = Sur
+            Radio["3D Sound", number] = Surround
+            if (Surround == 1) {
+                SurroundText = "On"
+            } else {
+                SurroundText = "Off"
+            }
+            EGP:egpSetTxt(I_3D, "3D Sound: "+SurroundText, 0)
+        } else {
+            print("Invalid Input!(0 - 1)")
+        }   
+    } elseif (CMD == ShuffleCommand) {
+        hideChat(1)
+        local Var = Last[2, string]:toNumber()
+        if (Var == 1 | Var == 0) {
+            Shuffle = Var
+            if (Shuffle == 1) {
+                print("Shuffle: On")
+            } else {
+                print("Shuffle: Off")
+            }
+        } else {
+            print("Invalid Input! Try Again(0-1)")
+        }
+    } elseif (CMD == PlayCommand) {
+        hideChat(1)
+        local SongNum = Last[2, string]:toNumber()
+        N = SongNum
+        if (N > 0 & N <= sizeT(URLs)) {
+            URL_Out = URLs:getURL(N)
+            Timer   = URLs:getTime(N)
+            Name    = URLs:getSongName(N)
+            Play = 0
+            stoptimer("Stop")
+            timer("Play", 250)
+            timer("Refresh", 0)
+        } else {
+            print("The Number Too Large or Invalid")
+            print("Type .list <Page> to get the song's number")
+        }
+    } elseif (CMD == NextCommand) {
+        hideChat(1)
+        if (N < sizeT(URLs)) {
+            N++
+        } else {
+            N = 1
+        }
+        if (N > 0 & N <= sizeT(URLs)) {
+            URL_Out = URLs:getURL(N)
+            Timer   = URLs:getTime(N)
+            Name    = URLs:getSongName(N)
+            Play = 0
+            stoptimer("Stop")
+            timer("Play", 250)
+            timer("Refresh", 0)
+        }
+    } elseif (CMD == PrevCommand) {
+        hideChat(1)
+        if (N < 1) {
+            N = sizeT(URLs)
+        } else {
+            N--
+        }
+        if (N > 0 & N <= sizeT(URLs)) {
+            URL_Out = URLs:getURL(N)
+            Timer   = URLs:getTime(N)
+            Name    = URLs:getSongName(N)
+            Play = 0
+            stoptimer("Stop")
+            timer("Play", 250)
+            timer("Refresh", 0)
+        }
+    } elseif (CMD == LoopCommand) {
+        hideChat(1)
+        local Loop = Last[2, string]:toNumber()
+        LoopMode = Loop
+        switch (Loop) {
+            case 0,
+                print("Loop DISABLED")
+                EGP:egpSetTxt(I_Loop, "Loop Disabled", 0)
+                break
+            case 1,
+                print("Loop LIST ENABLED")
+                EGP:egpSetTxt(I_Loop, "Loop List", 0)
+                break
+            case 2,
+                print("Loop SONG ENABLED")
+                EGP:egpSetTxt(I_Loop, "Loop This Song", 0)
+                break
+            default,
+                print("Invalid Input! Try Again.")
+                print("0: Disable Loop")
+                print("1: Loop Entire List")
+                print("2: Loop One Song")
+                break
+        }
+    }
+}
+
+Length  = Radio["Length", number]
+CurTime = Radio["Time", number]
+Ended   = Radio["Ended", number]
+
+#Button#
+if (~User) {
+    if (EGP:isButton(I_Stop) & VControl) {
+        VControl = 0
+        Play = 0
+        EGP:egpSetTxt(I_Name, "Stopped", 0)
+        stoptimer("Refresh")
+        timer("reVControl", VControlDelay)
+    }
+    if (EGP:isButton(I_WBar) & VControl) {
+        VControl = 0 
+        Pos1 = EGP:egpCursor(User)
+        Pos2 = EGP:egpPos(I_WBar)
+        GetLen = Pos1:distance(Pos2)/W * Length
+        Time = GetLen
+        timer("reVControl", VControlDelay/2)
+    }
+    if (EGP:isButton(I_VolUp) & VControl) {
+        VControl = 0        
+        if (Volume < 1) { Volume += 0.1 }
+		      else { Volume = 1 }
+        EGP:egpSetTxt(I_Volume, "Volume: "+round(Volume*100, 1), 0)
+        timer("reVControl", VControlDelay/2)
+    }
+    if (EGP:isButton(I_VolDown) & VControl) {
+        VControl = 0
+        if (Volume > 0) { Volume -= 0.1 }
+		      else { Volume = 0 }
+        EGP:egpSetTxt(I_Volume, "Volume: "+round(Volume*100, 1), 0)
+        timer("reVControl", VControlDelay/2)
+    }
+    if (EGP:isButton(I_PrevPage) & VControl) {
+        VControl = 0
+        EGP:egpColor(I_PrevPage, EGP:egpColor(I_PrevPage)*0.5)
+        CurPage--
+        Rounded = ceil(sizeT(URLs)/MaxListed)
+        if (CurPage < 1) { CurPage = 1 }
+        EGP:egpSetTxt(I_CurPage, CurPage+"", 0)
+        for (I = 1, MaxListed) {
+            local Ind = NameArray_Index[I+10, number]
+            local SongName = URLs:getSongName(I+(CurPage-1)*MaxListed)
+            if (I < 10) { Space = " " }
+			         else { Space = "" }
+            if (I+(CurPage-1)*MaxListed <= sizeT(URLs)) {
+                EGP:egpSetTxt(Ind, I+(CurPage-1)*MaxListed+". "+Space+SongName, 55)
+            } else {
+                EGP:egpSetTxt(Ind, "", 0)
+            }
+        }
+        timer("ReColor", 250)
+        timer("reVControl", VControlDelay)
+    }
+    if (EGP:isButton(I_NextPage) & VControl) {
+        VControl = 0
+        EGP:egpColor(I_NextPage, EGP:egpColor(I_NextPage)*0.5)
+        CurPage++
+        Rounded = ceil(sizeT(URLs)/MaxListed)
+        if (CurPage > Rounded){ CurPage = Rounded }
+        EGP:egpSetTxt(I_CurPage, CurPage+"", 0)
+        for (I = 1, MaxListed) {
+            local Ind = NameArray_Index[I+10, number]
+            local SongName = URLs:getSongName(I+(CurPage-1)*MaxListed)
+            if (I < 10) { Space = " " }
+            else { Space = "" }
+            if (I+(CurPage-1)*MaxListed <= sizeT(URLs)) {
+                EGP:egpSetTxt(Ind, I+(CurPage-1)*MaxListed+". "+Space+SongName, 55)
+            } else {
+                EGP:egpSetTxt(Ind, "", 0)
+            }
+        }
+        timer("ReColor", 250)
+        timer("reVControl", VControlDelay)
+    }
+
+    for (I = 1, MaxListed) {
+        local Index = ButtonArray_Index[I+10, number]
+        if (EGP:isButton(Index)) {
+            if (I+(CurPage-1)*MaxListed <= sizeT(URLs)) {
+                EGP:egpColor(Index, EGP:egpColor(Index)*0.5)
+                Play = 0
+                N = I+(CurPage-1)*MaxListed
+                timer("Chosen", 250)
+                break
+            }
+        }
+    }
+}
+
+if (clk("reVControl")) { VControl = 1 }
+if (clk("Chosen")) {
+    URL_Out = URLs:getURL(N)
+    Timer   = URLs:getTime(N)
+    Name    = URLs:getSongName(N)
+    for (I = 1, MaxListed) {
+        local Index = ButtonArray_Index[I+10, number]
+        local Flip  = (I%2==0) ? 1 : 0.5
+        local Color = vec(50,200,255)*Flip
+        EGP:egpColor(Index, Color)
+    }
+    stoptimer("Stop")
+    timer("Refresh",250)
+    timer("Play", 250)
+}
+if (clk("Stop") | (changed(Ended) & Ended) & !Lock) {
+    Lock = 1
+    Play = 0
+    Radio["Play", number] = Play
+    local Size = sizeT(URLs)
+    if (!Shuffle) {
+        if (LoopMode == 0) {
+            if (N < Size) { N++ }
+			         else { N = Size }
+        } elseif (LoopMode == 1) {
+            if (N < Size) { N++ }
+			         else { N = 1 }
+        } elseif (LoopMode == 2) {}
+    } else {
+        N = randint(1, sizeT(URLs))
+    }
+    timer("Next", 250)
+}
+if (clk("Next")) {
+    URL_Out = URLs:getURL(N)
+    Timer   = URLs:getTime(N)
+    Name    = URLs:getSongName(N)
+    stoptimer("Stop")
+    timer("Refresh",250)
+    timer("Play", 250)
+} 
+if (clk("Play")) {
+    Play = 1   
+    Lock = 0
+    timer("Stop", Timer*1000)
+}
+if (clk("Refresh")) {
+    local Minute = round(CurTime/60)
+    local Second = round(CurTime%60)
+    local MinTot = round(Timer/60)
+    local SecTot = round(Timer%60)
+    EGP:egpSetTxt(I_Time, format("%02d:%02d/%02d:%02d", Minute, Second, MinTot, SecTot), 0)
+	
+    if (Name:length() <= 30) {
+        EGP:egpSetTxt(I_Name, Name, 0)
+    } else {
+        if (CutN > 0 & Backward) { CutN-- }
+        if (CutN+30 < Name:length() & Forward) { CutN++ }
+		      if (CutN < 1) { M = 1 }
+		      else { M = CutN }
+		
+        if (CutN+30 == Name:length()) {
+            Forward  = 0
+            Backward = 1
+        }
+        if (CutN == 0) {
+            Forward  = 1
+            Backward = 0
+        }
+        
+        local RunName = Name:sub(M, M+30)
+        EGP:egpSetTxt(I_Name, RunName, 0)
+    }
+    EGP:egpSize(I_Progress, vec2(CurTime/Length * W,6))
+    EGP:egpPos(I_Slider, vec2(CurTime/Length * W,EGP:egpPos(I_Progress):y()+EGP:egpSize(I_Progress):y()/2))
+    timer("Refresh", 250)
+	
+    for (I = 1, MaxListed) {
+        local Index = ButtonArray_Index[I+10, number]
+        local Flip  = (I%2==0) ? 1 : 0.5
+        local Color = vec(50,200,255) * Flip
+        if (inrange(EGP:egpPos(I_Cursor), EGP:egpPos(Index), EGP:egpPos(Index)+EGP:egpSize(Index))) {
+            EGP:egpColor(Index, Color*0.5)
+        } else {
+            EGP:egpColor(Index, Color)
+        }
+    }
+}
+if (clk("ReColor")) {
+    EGP:egpColor(I_PrevPage, vec(255))
+    EGP:egpColor(I_NextPage, vec(255))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

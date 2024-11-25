@@ -1,0 +1,699 @@
+@name music player for a server without starfall + EGP
+@inputs  EGP:wirelink User:entity
+@persist [MaxListed EGPID Page]:number EGPTable:table
+@persist [Stage PlaylistName FLParse_String SongRequest]:string
+@persist [FLParse_Pointer Loaded]:number
+@persist [Songs Shuffle_SongsCopy Songs_Shuffled SR_Possible]:table
+@persist WA:webaudio [WAFFTAvg Skip Play Volume MAX_VOLUME Radius Shuffle SongIndex SR_Itr]:number
+@outputs WA:webaudio Stage:string SongIndex:number Songs:table
+@strict
+
+if(duped()){ reset() }
+if(first() | ~EGP){
+    PlaylistName = "playlist.txt"
+    Songs = table()
+    Songs_Shuffled = table()
+    Loaded = 0
+    EGPID  = 0
+    EGPTable = table()
+    Page = 1
+    WA = nowebaudio()
+    Songs = table()
+    Songs_Shuffled = table()
+    Shuffle_SongsCopy = table()
+    
+    SongRequest = ""
+    SR_Itr = 0
+    SR_Possible = table()
+    Skip = 0
+    WAFFTAvg = 0
+    #########################################################################
+    SongIndex = 0
+    Play = 1
+    Shuffle = 1
+    Volume = 100
+    MAX_VOLUME = 300 #set this to wa_max_volume or else error if you go above 
+    Radius = 500
+    
+    printColor(vec(0,161,255),"Loading playlist file...")
+    Stage = "loadfile"
+    holoCreate(0)
+    holoPos(0,entity():toWorld(vec(0,0,20)))
+    holoAng(0,entity():angles())
+    holoScale(0,vec(1,2,0.1))
+    holoParent(0,entity())
+    
+    for(I=1,32){
+        holoCreate(I)
+        holoPos(I,holoEntity(0):toWorld(vec(0,(I-16.5)*2.5,-50)))
+        holoAng(I,holoEntity(0):angles())
+        holoScale(I,vec(0.2,0.2,5))
+        holoDisableShading(I,1)
+        holoParent(I,entity())
+        holoClipEnabled(I,1,1)
+        holoMaterial(I, "debug/debugdrawflat")
+        holoClip(I,1,vec(0,0,0),vec(0,0,1),holoEntity(0))
+        
+        holoAlpha(I, 100)
+    }
+    
+    #slider bg
+    holoCreate(100)
+    holoPos(100,holoEntity(0):toWorld(vec(5,0,5)))
+    holoAng(100,holoEntity(0):angles())
+    holoScale(100,vec(0.1,8,0.1))
+    holoParent(100,entity())
+    holoDisableShading(100,1)
+    
+    #song position
+    holoCreate(101)
+    holoModel(101,"icosphere")
+    holoPos(101,holoEntity(100):toWorld(vec(0,-48,0)))
+    holoAng(101,holoEntity(100):angles())
+    holoScale(101,vec(0.4))
+    holoParent(101,100)
+    holoDisableShading(101,1)
+    
+    holoCreate(102)
+    holoModel(102,"hq_sphere")
+    holoPos(102,holoEntity(101):toWorld(vec(0,0,0)))
+    holoAng(102,holoEntity(101):angles())
+    holoScale(102,vec(-0.5))
+    holoParent(102,101)
+    holoDisableShading(102,1)
+    
+    #slider fg
+    holoCreate(103)
+    holoPos(103,holoEntity(100):toWorld(vec(0,0,0)))
+    holoAng(103,holoEntity(100):angles())
+    holoScale(103,vec(0.2,8,0.2))
+    holoParent(103,entity())
+    holoClipEnabled(103,1,1)
+    holoClip(103,1,vec(0,0,0),vec(0,-1,0),holoEntity(101))
+    holoDisableShading(103,1)
+}
+
+function number wirelink:egpCreate(Type:string, Position:vector2, Scale:vector2) {
+    EGPID++
+    switch(Type){
+        case "box",
+            This:egpBox(EGPID, Position, Scale)
+        break
+        case "box_outline",
+            This:egpBoxOutline(EGPID, Position, Scale)
+        break
+        case "rbox",
+            This:egpRoundedBox(EGPID, Position, Scale)
+        break
+        case "rbox_outline",
+            This:egpRoundedBoxOutline(EGPID, Position, Scale)
+        break
+        case "circle",
+            This:egpCircle(EGPID, Position, Scale)
+        break
+        case "circle_outline",
+            This:egpCircleOutline(EGPID, Position, Scale)
+        break
+        default,
+            print("Invalid type?")
+        break
+    }
+    
+    return EGPID
+}
+
+function number wirelink:egpCreate(Type:string, Position:vector2, Scale:vector2, Thickness:number) {
+    EGPID++
+    switch(Type){
+        case "box",
+            This:egpBox(EGPID, Position, Scale)
+        break
+        case "box_outline",
+            This:egpBoxOutline(EGPID, Position, Scale)
+        break
+        case "rbox",
+            This:egpRoundedBox(EGPID, Position, Scale)
+        break
+        case "rbox_outline",
+            This:egpRoundedBoxOutline(EGPID, Position, Scale)
+        break
+        case "circle",
+            This:egpCircle(EGPID, Position, Scale)
+        break
+        case "circle_outline",
+            This:egpCircleOutline(EGPID, Position, Scale)
+        break
+        default,
+            print("Invalid type?")
+        break
+    }
+    EGP:egpSize(EGPID, Thickness)
+    
+    return EGPID
+}
+
+function number wirelink:egpCreate(Type:string, Position1:vector2,  Position2:vector2, Position3:vector2) {
+    EGPID++
+    switch(Type){
+        case "tri",
+            This:egpTriangle(EGPID, Position1, Position2, Position3)
+        break
+        default,
+            print("Invalid type?")
+        break
+    }
+    
+    return EGPID
+}
+
+function number wirelink:egpCreate(Type:string, Text:string, Size:number, Position:vector2) {
+    if (Type != "text") {
+        print("Invalid arguments")
+        exit()
+    }
+    EGPID++
+    This:egpText(EGPID, Text, Position)
+    This:egpSize(EGPID, Size)
+    
+    return EGPID
+}
+
+function number wirelink:egpCreate(Type:string, Text:string, Size:number, Position:vector2, Scale:vector2) {
+    if (Type != "text_layout") {
+        print("Invalid arguments")
+        exit()
+    }
+    EGPID++
+    This:egpTextLayout(EGPID, Text, Position, Scale)
+    This:egpSize(EGPID, Size)
+    
+    return EGPID
+}
+
+function number wirelink:isButton(Index:number){
+    return This:egpObjectContainsPoint(Index, This:egpCursor(User)) ? 1 : 0
+}
+
+############################################
+
+function reshuffle(){
+    printColor(vec(0,161,255),"Shuffling songs...")
+    Songs_Shuffled = table()
+    Stage = "cloneSongs"
+}
+
+function number newSong(ChosenIndex:number, DoShuffle:number){
+    local SongName = DoShuffle ? Songs_Shuffled[ChosenIndex,table]["SongName",string] : Songs[ChosenIndex,table]["SongName",string]
+    local URL = DoShuffle ? Songs_Shuffled[ChosenIndex,table]["URL",string] : Songs[ChosenIndex,table]["URL",string]
+
+    if(webAudioCanCreate(URL)){
+        printColor(vec(0,161,255),"Now playing:",vec(255,255,255)," [" + SongName + "]")
+        
+        WA:destroy()
+        WA = webAudio(URL)
+        WA:setParent(entity())
+        WA:setVolume(Volume)
+        WA:setRadius(Radius)
+        WA:play()
+        EGP:egpSetText(EGPTable["SongName", number], "Playing: " + SongName)
+    }else{
+        printColor(vec(255,0,0),"SONG [" + SongName + "] HAS UNUSABLE URL [" + URL + "]")
+        printColor(vec(255,0,0),"Stopping playback to prevent filehost request traffic spam. (this makes them ban you!!)")
+        
+        Play = 0
+        if(WA:isValid()){
+            WA:destroy()
+            printColor(vec(0,161,255),"Music stopped.")
+        }
+        EGP:egpSetText(EGPTable["SongName", number], "Stopped")
+    }
+    
+    return ChosenIndex
+}
+
+if(first() | ~EGP){
+    EGP:egpClear()
+    EGP:egpDrawTopLeft(1)
+    #EGP:egpText(1, "Loading", vec2(0, 0))
+    
+    MaxListed = 8
+    for(I=1, MaxListed){
+        local ID = EGP:egpCreate("rbox_outline", vec2(3, 3+(360/MaxListed) * (I-1)), vec2(400-3, 360/MaxListed-3), 2)
+        EGPTable["bListID" + I, number] = ID
+        local ID2 = EGP:egpCreate("text_layout", format("%03d. Name Holder", I), 15, vec2(12, 6+(360/MaxListed) * (I-1)), vec2(400, 360/MaxListed))
+        EGPTable:pushNumber(ID2)
+    }
+    
+    #Play/Pause
+    EGPTable["Play/Pause", number] = EGP:egpCreate("rbox_outline", vec2(160, 380), vec2(80), 2)
+    
+    #Indicators
+    EGPTable["Playing1", number] = EGP:egpCreate("box", vec2(180, 390), vec2(10, 60))
+    EGPTable["Playing2", number] = EGP:egpCreate("box", vec2(210, 390), vec2(10, 60))
+    
+    EGPTable["Paused", number]   = EGP:egpCreate("tri", vec2(180, 390), vec2(220, 420), vec2(180, 450))
+    
+    #Skip
+    EGPTable["Skip", number] = EGP:egpCreate("rbox_outline", vec2(260, 390), vec2(60), 2)
+    
+    EGPTable["SkipIcon1", number] = EGP:egpCreate("tri", vec2(270, 400), vec2(300, 420), vec2(270, 440))
+    EGPTable["SkipIcon2", number] = EGP:egpCreate("tri", vec2(270+15, 400), vec2(300+15, 420), vec2(270+15, 440))
+
+    #Pages
+    EGP:egpCreate("rbox_outline", vec2(430, 60), vec2(60), 2)
+    EGPTable["PrevPage", number] = EGPID
+    EGP:egpCreate("text", "Page#", 20, vec2(460, 180))
+    EGP:egpAlign(EGPID, 1)
+    EGPTable["CurPage", number]  = EGPID
+    EGP:egpCreate("rbox_outline", vec2(430, 270), vec2(60), 2)
+    EGPTable["NextPage", number] = EGPID
+    #Volume Indicator
+    EGPTable["Volume", number] = EGP:egpCreate("text", "Volume: " + Volume, 20, vec2(380, 420))
+    #Shuffle Indicator
+    local Indicator = Shuffle == 1 ? "On" : "Off"
+    EGPTable["Shuffle", number] = EGP:egpCreate("text", "Shuffle: " + Indicator, 20, vec2(380, 460))
+    
+    EGPTable["SongName", number] = EGP:egpCreate("text", "Name Holder", 14, vec2(24, 480))
+}
+
+function pageChange(){
+    EGP:egpSetText(EGPTable["CurPage", number], Page:toString())
+    
+    for(I=1, MaxListed){
+        local NameID = EGPTable[I, number]
+        local Number = I + (Page-1)*MaxListed
+        local Name = Songs[Number, table]["SongName", string]
+        EGP:egpSetText(NameID, format("%s", Name))
+    }
+}
+
+for(I=1, MaxListed){
+    local Pressed = 0
+    if(EGP:isButton(EGPTable["bListID" + I, number]) & !Pressed){
+        Pressed = 1
+        
+        local Chosen = I + (Page-1)*MaxListed
+        if(Songs[Chosen, table]["SongName", string]){
+            SongIndex = Chosen
+            Play = 1
+            newSong(Chosen, 0)
+        }
+        
+        EGP:egpColor(EGPTable["bListID" + I, number], vec(0, 255, 255))
+        
+        timer("release" + I, 250)
+    }
+    
+    if(clk("release" + I)){
+        EGP:egpColor(EGPTable["bListID" + I, number], vec(255))
+        Pressed = 0
+    }
+}
+
+local Pressed = 0
+if(EGP:isButton(EGPTable["PrevPage", number]) & !Pressed){
+    Pressed = 1
+    Page--
+    if(Page < 1){ Page = EGPTable["MaxPage", number] }
+    EGP:egpColor(EGPTable["PrevPage", number], vec(0, 255, 255))
+    pageChange()
+    
+    timer("release" + EGPTable["PrevPage", number], 250)
+}
+elseif(EGP:isButton(EGPTable["NextPage", number]) & !Pressed){
+    Pressed = 1
+    Page++
+    if(Page > EGPTable["MaxPage", number]){ Page = 1 }
+    EGP:egpColor(EGPTable["NextPage", number], vec(0, 255, 255))
+    pageChange()
+    
+    timer("release" + EGPTable["NextPage", number], 250)
+}
+elseif(EGP:isButton(EGPTable["Play/Pause", number]) & !Pressed){
+    Pressed = 1
+    EGP:egpColor(EGPTable["Play/Pause", number], vec(0, 255, 255))
+    if(WA:isValid()){
+        local WAState = WA:getState()
+        switch(WAState){
+            case _CHANNEL_PAUSED,
+                printColor(vec(0,161,255),"Music resumed.")
+                WA:play()
+                Play = 1
+            break
+            
+            case _CHANNEL_PLAYING,
+                WA:pause()
+                printColor(vec(0,161,255),"Music paused.")
+                Play = 0
+            break
+                    
+            case _CHANNEL_STOPPED,
+                printColor(vec(255,0,0),"Cannot pause or resume. Player is currently stopped.")
+                Play = 0
+            break
+        }
+    }
+        
+    timer("release" + EGPTable["Play/Pause", number], 250)
+}
+elseif(EGP:isButton(EGPTable["Skip", number]) & !Pressed){
+    Pressed = 1
+    
+    SongIndex++
+    if(SongIndex > Songs:count()){ SongIndex = 1 }
+    SongIndex = newSong(SongIndex, Shuffle)
+    
+    EGP:egpColor(EGPTable["Skip", number], vec(0, 255, 255))
+    EGP:egpColor(EGPTable["SkipIcon1", number], vec(0, 255, 255))
+    EGP:egpColor(EGPTable["SkipIcon2", number], vec(0, 255, 255))
+    
+    timer("release" + EGPTable["Skip", number], 250)
+}
+
+EGP:egpAlpha(EGPTable["Playing1", number], 255 * Play)
+EGP:egpAlpha(EGPTable["Playing2", number], 255 * Play)
+EGP:egpAlpha(EGPTable["Paused", number],   255 *!Play)
+EGP:egpSetText(EGPTable["Shuffle", number], Shuffle == 1 ? "Shuffle: On" : "Shuffle: Off")
+
+if(clk("release" + EGPTable["PrevPage", number])){
+    EGP:egpColor(EGPTable["PrevPage", number], vec(255))
+    Pressed = 0
+}
+elseif(clk("release" + EGPTable["NextPage", number])){
+    EGP:egpColor(EGPTable["NextPage", number], vec(255))
+    Pressed = 0
+}
+elseif(clk("release" + EGPTable["Play/Pause", number])){
+    EGP:egpColor(EGPTable["Play/Pause", number], vec(255))
+    Pressed = 0
+}
+elseif(clk("release" + EGPTable["Skip", number])){
+    EGP:egpColor(EGPTable["Skip", number], vec(255))
+    EGP:egpColor(EGPTable["SkipIcon1", number], vec(255))
+    EGP:egpColor(EGPTable["SkipIcon2", number], vec(255))
+    Pressed = 0
+}
+
+############################################
+
+event fileLoaded(Path:string, Data:string){
+    if(Loaded){exit()}
+    if(Path == PlaylistName){
+        FLParse_String = Data
+        FLParse_Pointer = 0
+
+        Stage = "parse_filedata"
+        Loaded = 1
+    }
+}
+
+event fileErrored(Path:string, State:number){
+    if(Path == PlaylistName){
+        switch(State){
+            case _FILE_404,
+                printColor(vec(255,0,0),"PLAYLIST FILE NOT FOUND")
+            break
+            default,
+                printColor(vec(255,0,0),"FILELOAD ERR [" + State + "]")
+            break
+        }
+    }
+}
+
+event chat(P:entity, M:string, _:number) {
+    if(P == owner() | P:isSteamFriend(owner())){
+        local CommandEnd = M:find(" ")
+        
+        switch(M:sub(1,CommandEnd-1)){
+            case "!volume",
+                hideChat(1)
+                Volume = clamp(M:sub(8):toNumber(),0,300)
+                WA:setVolume(MAX_VOLUME)
+                WA:update()
+                
+                EGP:egpSetText(EGPTable["Volume", number], "Volume: " + Volume)
+                
+                printColor(vec(0,161,255),"Volume: %" + Volume)
+            break
+                            
+            case "!song",
+                hideChat(1)
+                SongRequest = M:sub(7):lower():trim()
+                
+                SR_Itr = 0
+                SR_Possible = table()
+                
+                printColor(vec(0,161,255),"Searching songlist...")
+    
+                Stage = "song_request"
+            break
+            
+            case "!songnum",
+                hideChat(1)
+                local SongNum = M:sub(9):toNumber()
+                
+                if(SongNum != 0 & SongNum <= Songs:count()){
+                    newSong(SongNum,0)
+                }else{
+                    printColor(vec(255,0,0),"Invalid song index.")
+                }
+            break
+            
+            case "!songcustom",
+                hideChat(1)
+                local URL = M:sub(13):replace("www.dropbox.com","dl.dropboxusercontent.com"):replace("?dl=0","?dl=1")
+                
+                if(webAudioCanCreate(URL)){
+                    printColor(vec(0,161,255),"Now playing:",vec(255,255,255)," [CUSTOM SONG]")
+
+                    WA:destroy()
+                    WA = webAudio(URL)
+                    WA:setParent(entity())
+                    WA:setVolume(Volume)
+                    WA:setRadius(Radius)
+                    WA:play()
+                }else{
+                    printColor(vec(255,0,0),"SONG HAS UNUSABLE URL [" + URL + "]")
+                }
+            break
+            
+            case "!play",
+                hideChat(1)
+
+                Play = 1
+                if(WA:isValid() & WA:getState() == _CHANNEL_PAUSED){
+                    printColor(vec(0,161,255),"Music resumed.")
+                    WA:play()
+                }
+            break
+                            
+            case "!pause",
+                hideChat(1)
+                
+                local WAState = WA:getState()
+                switch(WAState){
+                    case _CHANNEL_PLAYING,
+                        WA:pause()
+                        printColor(vec(0,161,255),"Music paused.")
+                    break
+                    
+                    case _CHANNEL_STOPPED,
+                        printColor(vec(255,0,0),"Cannot pause or resume. Player is currently stopped.")
+                    break
+                }
+            break
+            
+            case "!stop",
+                hideChat(1)
+
+                Play = 0
+                if(WA:isValid()){
+                    WA:destroy()
+                    printColor(vec(0,161,255),"Music stopped.")
+                }
+            break
+            
+            case "!skip",
+                hideChat(1)
+
+                Skip = 1
+            break
+            
+            case "!shuffle",
+                hideChat(1)
+                Shuffle = !Shuffle
+                EGP:egpSetText(EGPTable["Shuffle", number], Shuffle == 1 ? "Shuffle: On" : "Shuffle: Off")
+                if(Shuffle){
+                    printColor(vec(0,161,255),"Shuffle on.")
+                }else{
+                    printColor(vec(0,161,255),"Shuffle off.")
+                }
+            break
+        }
+    }
+}
+
+event tick() {
+     switch(Stage){
+        case "loadfile",
+            if(fileCanLoad() & !Loaded){
+                fileLoad(PlaylistName)
+            }
+        break
+        
+        case "parse_filedata",
+            while(perf(80)){
+                local NewSongData_EndPointer = FLParse_String:find("\n", FLParse_Pointer)
+                local ListEnd = (NewSongData_EndPointer == 0)
+                
+                if(ListEnd){ #list end reached
+                    NewSongData_EndPointer = FLParse_String:length()
+                    printColor(vec(0,161,255),"Playlist loaded successfully.")
+                    
+                    reshuffle()
+                }
+                         
+                local NewSongData = FLParse_String:sub(FLParse_Pointer,NewSongData_EndPointer)
+                local DataExpTab = NewSongData:explode(",")
+                local URL = DataExpTab[1,string]:trim()
+
+                if(URL:sub(1,8) != "https://"){
+                    printColor(vec(255,0,0),"INVALID URL AFTER SONG " + Songs:count())
+                }elseif(!DataExpTab:exists(2)){
+                    printColor(vec(255,0,0),"MISSING SONGNAME AFTER SONG " + Songs:count())
+                }else{
+                    local SongName = DataExpTab[2,string]:trim()
+                    
+                    local NewSong = table()
+                    NewSong["SongName",string] = SongName
+                    NewSong["URL",string] = URL:replace("www.dropbox.com","dl.dropboxusercontent.com"):replace("?dl=0","?dl=1")
+                    Songs:pushTable(NewSong)
+                }
+                
+                FLParse_Pointer = NewSongData_EndPointer + 1
+                
+                if(ListEnd){
+                    break
+                }
+            }
+        break
+        
+        case "cloneSongs",
+            while(perf(80)){
+                local SSC = Shuffle_SongsCopy:count()
+                if(SSC < Songs:count()){
+                    Shuffle_SongsCopy[SSC+1,table] = Songs[SSC+1,table]
+                }else{
+                    Stage = "shuffle"
+                    break   
+                }
+            }
+        break
+        
+        case "shuffle",
+            while(perf(80)){
+                if(Songs_Shuffled:count() < Songs:count()){
+                    local RandIndex = randint(1,Shuffle_SongsCopy:count())
+                    Songs_Shuffled:pushTable(Shuffle_SongsCopy[RandIndex,table])
+                    Shuffle_SongsCopy:remove(RandIndex)
+                }else{
+                    printColor(vec(0,161,255),"Playlist shuffled.")
+                    Stage = "ui"
+                    break
+                }
+            }
+        break
+        
+        case "ui",
+            local MaxPage = ceil(Songs:count()/MaxListed)
+            EGPTable["MaxPage", number] = MaxPage
+            for (I = 1, MaxListed) {
+                local NameID = EGPTable[I, number]
+                local Number = I + (Page-1)*MaxListed
+                local Name = Songs[Number, table]["SongName", string]
+                EGP:egpSetText(NameID, format("%s", Name))
+            }
+            pageChange()
+            Stage = "ready"
+        break
+        
+        case "ready",
+            local WA_Valid = WA:isValid()
+            
+            if(Play){
+                if((Skip | !WA_Valid | (WA_Valid & WA:getState() == _CHANNEL_STOPPED)) & webAudioCanCreate()){ #time for new song
+                    Skip = 0
+                    SongIndex = SongIndex + 1
+                    if(SongIndex > Songs:count()){
+                        SongIndex = 1
+                        reshuffle()
+                    }
+    
+                    newSong(SongIndex,Shuffle)
+                }
+                
+                if(changed(floor(systime()*15))){
+                    local FFT = WA:getFFT()
+                    for(I=1,32){
+                        local HoloFFTVal = 0
+                        for(J=1,2){
+                            local CurrVal = FFT[I*J,number]
+                            if(CurrVal > HoloFFTVal){
+                                HoloFFTVal = CurrVal
+                            }
+                        }
+                        WAFFTAvg += HoloFFTVal
+                        HoloFFTVal = HoloFFTVal/255
+                        holoPos(I,holoEntity(0):toWorld(vec(0,(I-16.5)*3,-28+(HoloFFTVal)*50)))
+                        holoColor(I,hsv2rgb(180+angnorm(HoloFFTVal*200+systime()*20),0.9,1))
+                    }
+                    holoPos(101,holoEntity(100):toWorld(vec(0,-48+96*clamp(WA:getTime()/WA:getLength(),0,1),0)))
+                    
+                    local Ang = angnorm(WAFFTAvg/100 + systime()*5)
+                    local BarColor = hsv2rgb(Ang,0.9,1)
+                    holoColor(102,BarColor)
+                    holoColor(103,BarColor)
+                    
+                    holoAng(100,holoEntity(0):toWorld(ang(Ang,0,0)))
+                    holoAng(103,holoEntity(0):toWorld(ang(-Ang,0,0)))
+                }
+            }
+        break
+        
+        case "song_request",
+            while(perf(80)){
+                if(SR_Itr < Songs:count()){
+                    SR_Itr = SR_Itr + 1
+                    local SongName = Songs[SR_Itr,table]["SongName",string]
+
+                    if(SongName:lower():find(SongRequest)){
+                        SR_Possible:pushNumber(SR_Itr)
+                    }
+                }else{
+                    if(SR_Possible:count() >= 2){
+                        printColor(vec(0,161,255),"Multiple songs found, please specify further: ")
+                        for(I=1,SR_Possible:count()){
+                            printColor(vec(0,161,255),"[" + I + "] ",vec(255,255,255),Songs[SR_Possible[I,number],table]["SongName",string])
+                        }
+                        Stage = "ready"
+                    }elseif(SR_Possible:count() == 1){
+                        printColor(vec(0,161,255),"Found song.")
+                        Stage = "song_request_awaitaudio"
+                    }else{
+                        printColor(vec(255,0,0),"No matches found.")
+                        Stage = "ready"
+                    }
+                    break
+                }
+            }
+        break
+        
+        case "song_request_awaitaudio",
+            if(webAudioCanCreate()){
+                newSong(SR_Possible[1,number],0)
+                Stage = "ready"
+            }
+        break
+    }
+}
+

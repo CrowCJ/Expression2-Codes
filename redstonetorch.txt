@@ -1,0 +1,32 @@
+@name RedstoneTorch
+@inputs  A B C D E
+@outputs Out
+@persist [Chip]:entity Num [LightCube_ID]
+@trigger 
+@model models/hunter/blocks/cube025x025x025.mdl
+
+if (first() | duped()) {
+    Chip = entity()
+    Chip:setAlpha(0)
+    
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, 0.25*12)), vec(0.25, 0.25, 1.5), Chip:toWorld(ang()), vec(255), "cube")
+    local Last = holoEntity(Num)
+    Num++, holoCreate(Num, Last:toWorld(vec(0, 0, 10.5)), vec(0.25, 0.25, 0.25), Chip:toWorld(ang()), vec(255, 0, 0), "cube")
+    holoMaterial(Num, "debug/debugdrawflat")
+    
+    LightCube_ID = Num
+    
+    for (I = 1, Num) {
+        holoParent(I, Chip)
+    }
+    
+    runOnTick(1)
+}
+
+if (tickClk()) {
+    holoColor(LightCube_ID, vec(255*Out, 0, 0))
+}
+
+local Inputs = array(A, B, C, D, E)
+
+Out = Inputs:sum() == 0

@@ -1,0 +1,50 @@
+@name OrbitalStrike
+@inputs 
+@outputs 
+@persist Table:table
+@trigger 
+@strict
+
+if (first()) {
+    Table = table()
+    Table = table(
+        "aim_pos"  = vec(),
+        "bomb_mdl" = "models/props_phx/mk-82.mdl",
+        "holo_mdl" = "models/hunter/tubes/tube2x2x8.mdl",
+        "timer" = 5000,
+        "launch"= 0
+    )
+    
+    print(_HUD_PRINTCENTER, "Orbital Strike Ready")
+}
+
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner() & Key == "h" & Down & !Table["launch", number]) {
+        Table["launch", number] = 1
+        timer("launch", Table["timer", number])
+        
+        local AimPos = owner():aimPos()
+        Table["aim_pos", vector] = AimPos
+        
+        holoCreate(1, AimPos, vec(0.1, 0.1, 50), ang(), vec(255, 0, 0), Table["holo_mdl", string])
+        holoEntity(1):emitSound("apc_moving_siren1")
+        holoMaterial(1, "debug/debugdrawflat")
+    }
+}
+
+if (clk("launch")) {
+    for (_ = 1, 4) {
+        if (propCanCreate()) {
+            local AimPos = Table["aim_pos", vector]
+            
+            Prop = propSpawn(Table["bomb_mdl", string], AimPos + vec(random(-250, 250), random(-250, 250), 0), ang(), 1)
+            Prop:setAlpha(0)
+            Prop:propBreak()
+            
+            holoDelete(1)
+        }
+    }
+    
+    Table["launch", number] = 0
+    print(_HUD_PRINTCENTER, "Orbital Strike Ready")
+}

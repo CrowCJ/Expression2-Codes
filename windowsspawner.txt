@@ -1,0 +1,31 @@
+@name WindowsSpawner
+@inputs 
+@outputs 
+@persist Interval GlassMdl:string Glass:entity
+@trigger 
+@strict
+@model models/hunter/plates/plate1.mdl
+
+if (first()) {
+    propSpawnUndo(0)
+    GlassMdl = "models/props_phx/construct/glass/glass_plate1x1.mdl"
+    #GlassMdl = "models/props_phx/construct/glass/glass_plate1x2.mdl"
+        
+    Glass = noentity()
+    Interval = 0.1
+    timer("refresh", Interval * 1000)
+}
+
+event tick() {
+    if (Glass) {
+        Glass:setPos(entity():toWorld(vec(-1.5, 0, 48*0.5 + 3)))
+        Glass:setAng(entity():toWorld(ang(90, 0, 0)))
+    }
+}
+
+if (clk("refresh")) {
+    if (!Glass & propCanCreate()) {
+        Glass = propSpawn(GlassMdl, entity():toWorld(vec(0, 0, 48*0.5)), entity():toWorld(ang(90, 0, 0)), 1)
+    }
+    timer("refresh", Interval * 1000)
+}

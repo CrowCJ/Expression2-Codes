@@ -1,0 +1,33 @@
+@name TruckDoor
+@inputs  [LGimbal RGimbal]:wirelink [Base]:entity Toggle
+@outputs 
+@persist Open Array:array Clamp
+@trigger 
+@strict
+
+if (first() | duped() | ~Base) {
+    Open = 0
+    Clamp = 0
+    
+    if (Base & ->RGimbal & ->LGimbal) {
+        Array = array(LGimbal, RGimbal)
+        foreach (_, WL:wirelink = Array) {
+            WL["On", number] = 1
+            #WL["Angle", angle] = Base:toWorld(ang(0, 45 * ((-1)^I), 0))
+        }
+    }
+}
+
+if (->Base & ->LGimbal & ->RGimbal) {
+    if (~Toggle & Toggle) {
+        Open = !Open
+    }
+}
+
+event tick() {
+    Clamp += clamp(Open * 135 - Clamp, -5, 5)
+    
+    foreach (K, WL:wirelink = Array) {
+        WL["Angle", angle] = Base:toWorld(ang(0, Clamp * ((-1)^K), 0))
+    }
+}

@@ -1,0 +1,274 @@
+@name Teleport[Sparta]
+@persist [Prop_Decoy Make_Sound Decoy_Time Locked ChunkSize]
+@persist [Cmd_Prefix TP_Cmd TP_Key Save_Cmd Load_Cmd SaveList_Cmd Locate_Cmd Secret_Cmd Help_Cmd TP_Pos_Cmd TPChunk_Cmd]:string
+@persist [Prop_Decoy_Model]:string
+@persist [PropsArray Prop_Decoy_Models SaveNames Help_Print]:array [SavePoint Map]:table
+@persist [Owner]:entity
+@trigger 
+
+if (first()) {
+    entity():setName("heh")
+    entity():propDraw(0)
+    propSpawnEffect(0)
+    propSpawnUndo(0)
+    #propSpawnASync(1)
+    Map               = table()
+    Owner             = owner()
+    Locked            = 0
+    SaveNames         = array()
+    SavePoint         = table()
+    PropsArray        = array()
+    Prop_Decoy_Model  = ""
+    Prop_Decoy_Models = array()
+    
+    function shiftEnt_Del(Array:array)  { Array:shiftEntity():propDelete() }
+    function number sizeof(Array:array) { return Array:count() }
+    function number sizeof(Table:table) { return Table:count() }
+    function string entity:cmd(String:string, Number:number) {
+        if (This == owner()) {
+            local Array = String:explode(" ")
+            return Array[Number, string] 
+        } else {
+            return ""
+        }
+    }
+    function entity:teleporta(Position:vector, Angle:angle, Spawn_Prop:number, Sound:number, Array:array) {
+        if (propCanCreate()) {
+            if (Spawn_Prop) {
+                local Mdl = ""
+                if (Array:count()) {
+                    Mdl = Array[randint(1, Array:count()), string]
+                } else {
+                    Mdl = Prop_Decoy_Model
+                }
+                
+                local Prop = propSpawn(Mdl, This:boxCenterW(), ang(0, owner():angles():yaw(), 0), 0)
+                Prop:setMass(500)
+                #Prop:applyForce(Prop:up() * Prop:mass() * 250)
+                PropsArray:pushEntity(Prop)
+            }
+            if (Sound) {
+                This:soundPlay(1, 0, "garrysmod/balloon_pop_cute.wav")
+            }
+            local Seat = seatSpawn("models/props_phx/carseat.mdl", Position, Angle, 1)
+            Seat:propNotSolid(1)
+            Seat:propDraw(0)
+            Seat:use()
+            Seat:propDelete()
+        }
+    }
+    function angle quatAng(Entity:entity) {
+        local CurQ = quat(Entity:angles())
+        local TarQ = quat(Entity)
+        local Q = CurQ/TarQ
+        local Ang = Q:toAngle()
+        return Ang
+    }
+
+    Map = table(
+        "gm_functional_flatgrass3" = array(
+            vec( 8154, 8154,14720),
+            vec( 8154,-8154,14720),
+            vec(-8154, 8154,14720),
+            vec(-8154,-8154,14720)
+        ),
+        "gm_excess_island_night" = array(
+            vec(1535,8,12272)
+        )
+    )
+    Prop_Decoy_Models = array(
+        "models/maxofs2d/companion_doll.mdl",
+        "models/props_phx/games/chess/white_pawn.mdl",
+        "models/props_phx/games/chess/white_bishop.mdl",
+        "models/props_phx/games/chess/white_king.mdl",
+        "models/props_phx/games/chess/white_queen.mdl",
+        "models/props_phx/games/chess/white_knight.mdl",
+        "models/props_phx/games/chess/white_rook.mdl",
+        "models/noesis/donut.mdl",
+        "models/xqm/modernchair.mdl",
+        "models/props_phx/misc/soccerball.mdl"
+    )
+    
+    #Prop_Decoy_Model = "models/props_borealis/bluebarrel001.mdl"
+    #Prop_Decoy_Model = "models/Lamarr.mdl"
+    #Prop_Decoy_Model = "models/props_interiors/Furniture_chair03a.mdl"
+    Prop_Decoy_Model = "models/props_phx/games/chess/white_pawn.mdl"
+    #Prop_Decoy_Model = "models/gman_high.mdl"
+    
+    Prop_Decoy   = 0
+    Decoy_Time   = 3    
+    Make_Sound   = 0
+    Cmd_Prefix   = "-"
+    Help_Cmd     = "help"
+    Secret_Cmd   = "secret"
+    Locate_Cmd   = "locate"
+    TP_Cmd       = "goto"
+    TP_Pos_Cmd   = "tp"
+    TPChunk_Cmd  = "gotoChunk"
+    ChunkSize    = 16269.6875*1.23
+    TP_Key       = "m"
+    Save_Cmd     = "save"
+    Load_Cmd     = "load"
+    SaveList_Cmd = "savelist"
+    Help_Print = array(
+        Cmd_Prefix+TP_Cmd      +" <Player Name> to teleport to Specific player",
+        Cmd_Prefix+Secret_Cmd  +" <Number> to teleport to Specific secret points",
+        Cmd_Prefix+Locate_Cmd  +" <Leave a blank or Player Name> to show your location/player location",
+        Cmd_Prefix+Save_Cmd    +" <Save Name> to save a location",
+        Cmd_Prefix+Load_Cmd    +" <Load Name> to load a location",
+        Cmd_Prefix+SaveList_Cmd+" to show all saved locations"
+    )
+}
+
+event keyPressed(E:entity, Key:string, IsDown:number, _:string) {
+    if (E == Owner & Key == TP_Key & !Locked & !Owner:isTyping() & IsDown & !Owner:isTyping()) {
+        Locked = 1
+        timer("Unlock", 250)
+        local Pos = Owner:aimPos() + Owner:aimNormal() * 25
+        local Ang = quatAng(Owner)
+        Owner:teleporta(Pos, Ang, Prop_Decoy, Make_Sound, Prop_Decoy_Models)
+        #Owner:teleport(Pos)
+    }
+}
+
+event chat(_:entity, String:string, _:number) {
+    if (Owner:cmd(String, 1) == Cmd_Prefix+Help_Cmd) { #SHOW HELP#
+        hideChat(1)
+        foreach (_:number, String:string = Help_Print) {
+            print(String)
+        }
+    } elseif (Owner:cmd(String, 1) == Cmd_Prefix+TP_Cmd) { #TELEPORTATION#
+        hideChat(1)
+        if (Owner:cmd(String, 3) == "") {
+            local Target = findPlayerByName(Owner:cmd(String, 2))
+            local Pos = Target:toWorld(vec(-50, 0, 0))
+            #local Ang = quatAng(Owner)
+            local Ang = quatAng(Target)
+            
+            Owner:teleporta(Pos, Ang, Prop_Decoy, Make_Sound, Prop_Decoy_Models)
+            #Owner:teleport(Pos)
+        } else {
+            local X = Owner:cmd(String, 2):toNumber()
+            local Y = Owner:cmd(String, 3):toNumber()
+            local Z = Owner:cmd(String, 4):toNumber()
+            local Pos = vec(X, Y, Z)
+            local Ang = quatAng(Owner)
+            
+            Owner:teleporta(Pos, Ang, Prop_Decoy, Make_Sound, Prop_Decoy_Models)
+        }
+    } elseif (Owner:cmd(String, 1) == Cmd_Prefix+TPChunk_Cmd) { #INFMAP TELEPORTATION#
+        hideChat(1)
+        local X = Owner:cmd(String, 2):toNumber()
+        local Y = Owner:cmd(String, 3):toNumber()
+        local Z = Owner:cmd(String, 4):toNumber()
+        local Pos = vec(X, Y, Z) * ChunkSize
+        local Ang = quatAng(Owner)
+        
+        Owner:teleporta(Pos, Ang, Prop_Decoy, Make_Sound, Prop_Decoy_Models)
+    } elseif (Owner:cmd(String, 1) == Cmd_Prefix+Locate_Cmd) { #LOCATING#
+        hideChat(1)
+        if (Owner:cmd(String, 2) == "") {
+            local Pos = round(Owner:pos())
+            local X = Pos:x()
+            local Y = Pos:y()
+            local Z = Pos:z()
+            
+            print("Location: " + "["+X +","+Y+","+Z+"]")        
+        } else {
+            local Target = findPlayerByName(Owner:cmd(String, 2))
+            local Pos = round(Target:pos())
+            local X = Pos:x()
+            local Y = Pos:y()
+            local Z = Pos:z()
+            
+            print("Target Location: " + "["+X +","+Y+","+Z+"]")  
+        }        
+    } elseif (Owner:cmd(String, 1) == Cmd_Prefix+Secret_Cmd) { #SECRETS TELEPORTATION#
+        hideChat(1)
+        if (Map[map(), array]) {
+            local GetSecret = Map[map(), array]
+            Num = Owner:cmd(String, 2):toNumber()
+            if (Num > 0 & Num <= GetSecret:count()) {
+                local Pos = Map[map(), array][Num, vector]
+                local Ang = quatAng(Owner)
+                Owner:teleporta(Pos, Ang, Prop_Decoy, Make_Sound, Prop_Decoy_Models)
+            } else {
+                print("Invalid Number!")
+            }
+        } else {
+            print("No Info Found!")
+        }
+    } elseif (Owner:cmd(String, 1) == Cmd_Prefix+Save_Cmd) {
+        hideChat(1)
+        Name = Owner:cmd(String, 2)
+        SaveNames:pushString(Name)
+        if (Name != "") {        
+            SavePoint[Name+"Pos",vector] = Owner:pos()
+            SavePoint[Name+"Ang",angle]  = quatAng(Owner)
+            print("Point name " +Name+ " saved" + "[" +round(SavePoint[Name+"Pos",vector])+ "]")
+        } else {
+            print("You need to fill the format: " +Save_Cmd+ " <Name>")
+        }
+    } elseif (Owner:cmd(String, 1) == Cmd_Prefix+Load_Cmd) {
+        hideChat(1)
+        Name = Owner:cmd(String, 2)
+        if (Name != "") {
+            Pos = SavePoint[Name+"Pos",vector]
+            Ang = SavePoint[Name+"Ang",angle]
+            Owner:teleporta(Pos, Ang, Prop_Decoy, Make_Sound, Prop_Decoy_Models)
+        } else {
+            print("Invalid or blank save name!")
+        }
+    } elseif (Owner:cmd(String, 1) == Cmd_Prefix+SaveList_Cmd) {
+        hideChat(1)
+        for (I = 1, sizeof(SaveNames)) {
+            Name = SaveNames[I,string]
+            Pos  = round(SavePoint[Name+"Pos",vector])
+            print("Save name: '" +Name+ "' at X:" +Pos:x()+ " Y:" +Pos:y()+ " Z:" +Pos:z())
+        }
+    } elseif (Owner:cmd(String, 1) == Cmd_Prefix+TP_Pos_Cmd) {
+        hideChat(1)
+        if (Owner:cmd(String, 2):sub(1, 1) == "~") {
+            X = Owner:pos():x() + Owner:cmd(String, 2):sub(2):toNumber()
+        } else {
+            X = Owner:cmd(String, 2):sub(2):toNumber()
+        }
+        
+        if (Owner:cmd(String, 3):sub(1, 1) == "~") {
+            Y = Owner:pos():y() + Owner:cmd(String, 3):sub(2):toNumber()
+        } else {
+            Y = Owner:cmd(String, 3):sub(2):toNumber()
+        }
+        
+        if (Owner:cmd(String, 4):sub(1, 1) == "~") {
+            Z = Owner:pos():z() + Owner:cmd(String, 4):sub(2):toNumber()
+        } else {
+            Z = Owner:cmd(String, 4):sub(2):toNumber()
+        }
+        
+        local Pos = vec(X, Y, Z)
+        local Ang = quatAng(Owner)
+        
+        Owner:teleporta(Pos, Ang, Prop_Decoy, Make_Sound, Prop_Decoy_Models)
+    }
+}
+
+event tick() {
+    if (changed(sizeof(PropsArray))) {
+        if (sizeof(PropsArray) > 3) {
+            shiftEnt_Del(PropsArray)
+            stoptimer("Decoy_Delete")
+        } elseif (sizeof(PropsArray) == PropsArray:count()) {
+            timer("Decoy_Delete", Decoy_Time*1000)
+        }
+    }
+}
+
+if (clk("Decoy_Delete")) {
+    shiftEnt_Del(PropsArray)
+    timer("Decoy_Delete", Decoy_Time*1000)
+}
+
+if (clk("Unlock")) {
+    Locked = 0
+}

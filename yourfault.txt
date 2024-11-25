@@ -1,0 +1,76 @@
+@name YourFault
+@inputs 
+@outputs 
+@persist Settings:table
+@trigger 
+@strict
+
+if (first()) {
+    Settings = table(
+        "created" = 0,
+        "max" = 10,
+        "maxA"= 8,
+        "rad" = 64,
+        "scl" = 0.5,
+        "mdl" = "models/fasteroid/pointer.mdl",
+        #"mdl" = "models/sprops/misc/cones/size_1/cone_12x24.mdl",
+        
+        "key" = "g"
+    )
+}
+
+function point(Pos:vector) {
+    local Max = Settings["max", number]
+    local MaxA= Settings["maxA", number]
+    local R   = Settings["rad", number]
+    local Scl = Settings["scl", number]
+    local Mdl = Settings["mdl", string]
+    local Color = vec(255)
+    
+    if (!Settings["created", number]) {
+        local Num = 0
+        for (I = 1, MaxA) {
+            for (J = 1, Max) {
+                if (holoCanCreate()) {
+                    Num++
+                    local X = R * Scl * sin(360/Max * J) * cos(360/MaxA * I)
+                    local Y = R * Scl * sin(360/Max * J) * sin(360/MaxA * I)
+                    local Z = R * Scl * cos(360/Max * J)
+                    local Pos = Pos + vec(X, Y, Z)
+                    local Ang = (Pos + vec(X, Y, Z) - Pos):toAngle() + ang(90, 0, 180)
+                    holoCreate(Num, Pos, vec(Scl), Ang, Color, Mdl)
+                }
+            }
+        }
+    }
+    
+    Settings["created", number] = 1
+    
+    if (Settings["created", number]) {
+        local Num = 0
+        for (I = 1, MaxA) {
+            for (J = 1, Max) {
+                Num++
+                local X = R * Scl * sin(360/Max * J) * cos(360/MaxA * I)
+                local Y = R * Scl * sin(360/Max * J) * sin(360/MaxA * I)
+                local Z = R * Scl * cos(360/Max * J)
+                local Pos = Pos + vec(X, Y, Z)
+                #local Ang = (Pos + vec(X, Y, Z) - Pos):toAngle() + ang(90, 0, 180)
+                holoPos(Num, Pos)
+            }
+        }
+    }
+}
+    
+event keyPressed(Player:entity, Key:string, Down:number, _:string) {
+    if (Player == owner() & Key == Settings["key", string] & Down) {
+        local Aim    = owner():aimPos()
+        local AimEnt = owner():aimEntity()
+        if (AimEnt:isValid()) {
+            point(AimEnt:pos() + vec(0, 0, AimEnt:height() * 0.7))
+        } else {
+            point(Aim)
+        }
+    }
+}
+

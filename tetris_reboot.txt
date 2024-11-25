@@ -1,0 +1,205 @@
+@name Tetris Reboot
+@inputs 
+@outputs Collide
+@persist [Tetrimino BoardData PixelData]:table [NameBag TempArray]:array HoloIndex
+@persist Screen_Done CurW CurH WIDTH HEIGHT Chip:entity [Screen_Model Screen_Material Name]:string Rotation Set
+@persist M N CurX CurY
+@trigger 
+
+if (first() | duped()) {
+    WIDTH  = 10
+    HEIGHT = 20
+    
+    Chip = entity()
+    Screen_Model    = "cube"
+    Screen_Material = "debug/debugdrawflat"
+        
+    CurH = 20
+    function screen_create(ScreenW, ScreenH) {
+        if (holoCanCreate() & !Screen_Done) {
+            CurW++
+            if (CurW > ScreenW) {
+                CurH--
+                CurW = 1
+                PixelData:pushArray(TempArray)
+                TempArray = array()
+                
+                BoardData:pushArray(array(0,0,0,0,0,0,0,0,0,0))
+            }
+            if (CurH > 0) {
+                HoloIndex++
+                holoCreate(HoloIndex, Chip:toWorld(vec((CurW-(ScreenW/2+0.5))*12,0,(CurH)*12)), vec(0.5), Chip:toWorld(ang()), vec(100), Screen_Model)
+                holoMaterial(HoloIndex, Screen_Material)
+                holoParent(HoloIndex, Chip)
+                TempArray:pushNumber(HoloIndex)
+            } else {
+                Screen_Done = 1
+            }
+        }
+    }
+    
+    #I, L, J, N, S, Z, T
+    
+    Tetrimino["I", table] = table(
+        array(0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0),
+        array(0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0),
+        array(0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0),
+        array(0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0)
+    )
+    Tetrimino["L", table] = table(
+        array(0,0,0,0,0,0,1,0,1,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,0,0,0,1,0,0,0,1,1,0),
+        array(0,0,0,0,0,0,0,0,1,1,1,0,1,0,0,0),
+        array(0,0,0,0,1,1,0,0,0,1,0,0,0,1,0,0)
+    )
+    Tetrimino["J", table] = table(
+        array(0,0,0,0,1,0,0,0,1,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,1,0,0,1,0,0,0,1,0,0),
+        array(0,0,0,0,0,0,0,0,1,1,1,0,0,0,1,0),
+        array(0,0,0,0,0,1,0,0,0,1,0,0,1,1,0,0)
+    )
+    Tetrimino["N", table] = table(
+        array(0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0)
+    )
+    Tetrimino["S", table] = table(
+        array(0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0),
+        array(0,0,0,0,0,1,0,0,0,1,1,0,0,0,1,0),
+        array(0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,0),
+        array(0,0,0,0,1,0,0,0,1,1,0,0,0,1,0,0)
+    )
+    Tetrimino["Z", table] = table(
+        array(0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,0,1,0,0,1,1,0,0,1,0,0),
+        array(0,0,0,0,0,0,0,0,1,1,0,0,0,1,1,0),
+        array(0,0,0,0,0,1,0,0,1,1,0,0,1,0,0,0)
+    )
+    Tetrimino["T", table] = table(
+        array(0,0,0,0,0,1,0,0,1,1,1,0,0,0,0,0),
+        array(0,0,0,0,0,1,0,0,0,1,1,0,0,1,0,0),
+        array(0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,0),
+        array(0,0,0,0,0,1,0,0,1,1,0,0,0,1,0,0)
+    )
+        
+    NameBag = array("I","L","J","N","S","Z","T")
+    
+    function draw(Num) {
+        local Index = 0
+        for (I = CurY-1, CurY+4) {
+            for (J = CurX-1, CurX+4) {
+                local Pixel = PixelData[I, array][J, number]
+                
+                if (I >= CurY & I <= CurY+3 & J >= CurX & J <= CurX+3) {
+                    Index++
+                    local IsTet = Tetrimino[Name, table][Rotation, array][Index, number]
+                    if (IsTet) {
+                        holoColor(Pixel, vec(255,0,0))
+                    } else {
+                        holoColor(Pixel, vec(100))
+                    }
+                }
+                
+                if (I > 0 & ( I < CurY | I > CurY+3 )) {
+                    if (J > 0 & J <= WIDTH & ( J < CurX | J > CurX+3 )) {
+                        holoColor(Pixel, vec(100))
+                    }
+                    
+                }
+            }
+        }
+    }
+    
+    function number collided(OffsetX, OffsetY, OffsetRotation) {
+        local Index = 0
+        for (I = CurY, CurY+3) {
+            for (J = CurX, CurX+3) {
+                Index++
+                local IsTet = Tetrimino[Name, table][Rotation, array][Index, number]
+                
+                if (!BoardData[I, array][J, number]) {
+                    continue
+                }
+                
+                local X = CurX + OffsetX
+                local Y = CurY + OffsetY
+                
+                if (Y >= HEIGHT || X < 0 || X >= WIDTH) {
+                    return 1
+                }
+                
+                if (Y < 0) {
+                    continue
+                }
+                                
+                if (IsTet & BoardData[Y, array][X, number]) {
+                    return 1
+                }
+            }
+        }
+        
+        return 0
+    }
+    
+    function settle() {
+        local Index = 0
+        for (I = CurY, CurY+3) {
+            for (J = CurX, CurX+3) {
+                Index++
+                local IsTet = Tetrimino[Name, table][Rotation, array][Index, number]
+                
+                if (IsTet) {
+                    BoardData[I, array][J, number] = 1
+                }
+            }
+        }
+    }
+    
+    function refresh() {
+        local Index = 0
+        for (I = 1, HEIGHT) {
+            for (J = 1, WIDTH) {
+                local Pixel = PixelData[I, array][J, number]
+                
+                if (BoardData[I, array][J, number]) {
+                    BoardData[I, array][J, number] = 1
+                    holoColor(Pixel, vec(255, 0, 0))
+                } else {
+                    BoardData[I, array][J, number] = 0
+                    holoColor(Pixel, vec(100))
+                }
+            }
+        }
+    }
+    
+    runOnTick(1)
+    
+    CurY = 1
+    CurX = 4
+    
+    Name = NameBag[randint(1,7), string]
+}
+
+if (perf()) { 
+    if (!Screen_Done) {
+        screen_create(WIDTH,HEIGHT)    
+    } else {
+        runOnTick(0)
+        interval(250)
+        
+        Rotation = 1
+        CurY++
+
+        if (collided(0, 1, 0)) {
+            settle()
+            refresh()
+            
+            CurY = 1
+        }
+        
+        draw(1)
+    }
+}
+
+

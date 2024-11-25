@@ -1,0 +1,26 @@
+@name SoundEmitter
+@inputs  SoundEmitter:wirelink
+@outputs
+@persist [Pitch Volume Sample]:array Num
+@trigger 
+@strict
+
+if (first() | changed(SoundEmitter)) {
+    SoundEmitter["A", number] = 1
+    SoundEmitter["Volume", number] = 1
+    SoundEmitter["SampleName", string] = "synth/saw.wav"
+    
+    Pitch  = array(1, 0.5, 0.6, 0.4, 0.5, 0.3, 0.4, 0.2, 0.3, 0.1, 0.2, 0.05)
+    
+    Sample = array("synth/sine.wav", "synth/saw.wav", "synth/square.wav")
+}
+
+interval(random(200))
+
+Num++
+if (Num > Pitch:count()) {
+    Num = 1
+}
+
+#SoundEmitter["SampleName", string] = Sample[randint(1, Sample:count()), string]
+SoundEmitter["PitchRelative", number] = Pitch[Num, number]

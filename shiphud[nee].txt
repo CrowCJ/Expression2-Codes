@@ -1,0 +1,53 @@
+@name ShipHUD[nee]
+@inputs Dist [Seat Base]:entity
+@outputs 
+@persist Speed Screen:entity
+@trigger
+@strict
+@model models/sprops/rectangles/size_1/rect_3x3x3.mdl
+
+if (first() | dupefinished()) {
+    if (Seat) {
+        H=25
+        holoCreate(1,Seat:toWorld(vec(0,30,H)),vec(1,1.05,0),Seat:toWorld(ang(0,0,75)),vec(25,250,25),"plane")
+        holoAlpha(1,200)
+        holoMaterial(1,"debug/debugdrawflat")
+        holoParent(1,Seat)
+        Screen=holoEntity(1)
+        holoCreate(2,Screen:toWorld(vec(0,0,0)),vec(0.25,0.025,0),Screen:toWorld(ang(0,0,0)),vec(50,255,50),"plane")
+        holoAlpha(2,255)
+        holoMaterial(2,"debug/debugdrawflat")
+        holoParent(2,Seat)
+        holoCreate(3,Screen:toWorld(vec(0,0,0)),vec(0.5,0.0125,0),Screen:toWorld(ang(0,0,0)),vec(0,255,0),"plane")
+        holoAlpha(3,255)
+        holoMaterial(3,"debug/debugdrawflat")
+        holoParent(3,Seat)
+        holoCreate(4,Screen:toWorld(vec(6,0,0)),vec(1.05,0.0125,0),Screen:toWorld(ang(0,90,0)),vec(0,255,0),"plane")
+        holoAlpha(4,255)
+        holoMaterial(4,"debug/debugdrawflat")
+        holoParent(4,Seat)
+        holoCreate(5,Screen:toWorld(vec(-6,0,0)),vec(1.05,0.0125,0),Screen:toWorld(ang(0,90,0)),vec(0,255,0),"plane")
+        holoAlpha(5,255)
+        holoMaterial(5,"debug/debugdrawflat")
+        holoParent(5,Seat)
+        holoCreate(6,Screen:toWorld(vec(5.5,0,0)),vec(0.01),Screen:toWorld(ang(0,45,0)),vec(0,255,0),"models/props_phx/construct/metal_plate1_tri.mdl")
+        holoAlpha(6,255)
+        holoMaterial(6,"debug/debugdrawflat")
+        holoParent(6,Seat)
+        holoCreate(7,Screen:toWorld(vec(-5.5,0,0)),vec(0.01),Screen:toWorld(ang(0,-135,0)),vec(0,255,0),"models/props_phx/construct/metal_plate1_tri.mdl")
+        holoAlpha(7,255)
+        holoMaterial(7,"debug/debugdrawflat")
+        holoParent(7,Seat)
+    }
+}
+
+event tick() {
+    if (!Base) { exit() }
+    Speed=round(toUnit("km/h", Base:vel():length()))
+
+    Height=clamp((Dist/1000)-6,-6,6)
+    Speedo=clamp((Speed/5)-6,-6,6)
+    holoAng(3,Screen:toWorld(ang(0,-Base:angles():pitch(),0)))
+    holoPos(6,Screen:toWorld(vec(5.5,Height,0)))
+    holoPos(7,Screen:toWorld(vec(-5.5,Speedo,0)))
+}

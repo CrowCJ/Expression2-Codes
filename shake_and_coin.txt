@@ -1,0 +1,47 @@
+@name Shake and Coin
+@persist MaxCoins CoinModel:string Cache:array OldPos:vector Collision Clk ClkDelay
+
+if (first()) {
+    Clk = 0
+    ClkDelay = 0.2
+    propSpawnUndo(0)
+    OldPos = vec()
+    Cache  = array()
+    CoinModel = "models/sprops/cylinders/size_4/cylinder_9x3.mdl"
+    Collision = 0
+    MaxCoins  = 10
+}
+
+function coin(Collision:number) {
+    local Coin = propSpawn(CoinModel, owner():pos(), ang(90, 0, 0), 0)
+    Coin:applyForce(owner():vel():normalized() * Coin:mass() * 10)
+    Coin:applyAngForce(ang(0, 0, 1) * 5000)
+    Coin:noCollideAll(!Collision)
+    Coin:setMaterial("models/debug/debugwhite")
+    Coin:setColor(vec(255, 200, 0))
+    Coin:emitSound("phx/hmetal1.wav", 100, 200, 255)
+    Coin:propPhysicalMaterial("metal")
+    Cache:pushEntity(Coin)
+    
+    if (Cache:count() > MaxCoins) {
+        Cache:shiftEntity():propDelete()
+    }
+}
+
+event tick() {
+    local Check = 0
+    foreach (_:number, V:entity = players()) {
+        if (V != owner() & V:weapon():type() == "weapon_physgun" & V:aimEntity() == owner() & V:keyAttack1()) {
+            Check = 1
+        }
+    }
+    local Cur = curtime()
+    if (Cur > Clk + ClkDelay) {
+        Clk = Cur
+        if (OldPos:distance(owner():pos()) > 5 & propCanCreate() & Check) {
+            coin(Collision)
+        }
+        
+        OldPos = owner():pos()
+    }
+}

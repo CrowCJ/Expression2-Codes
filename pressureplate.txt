@@ -1,0 +1,64 @@
+@name PressurePlate
+@inputs  
+@outputs Out
+@persist [Chip]:entity Num Count BaseTick
+@trigger 
+@model models/sprops/rectangles/size_3/rect_24x24x3.mdl
+
+if (first() | duped()) {
+    Chip = entity()
+    Chip:setAlpha(0)
+    Num = 0
+    Out = 0
+    
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, -1.5)), vec(1.9, 1.9, 0.1), Chip:toWorld(ang()), vec(100), "cube")
+    Num++, holoCreate(Num, Chip:toWorld(vec(0, 0, -1.0)), vec(2, 2, 0.1), Chip:toWorld(ang()), vec(50), "cube")
+    
+    holoParent(1, Chip)
+    holoParent(2, Chip)
+    
+    findInBox(Chip:pos() + Chip:aabbMin(), Chip:pos() + Chip:aabbMax())
+    findExcludeEntities(array(Chip, holoEntity(1), holoEntity(2)))
+    #findExcludeClass("prop_*")
+    Ents = findToArray()
+    
+    Count = Ents:count()
+        
+    BaseTick = 150
+}
+
+holoPos(1, Chip:toWorld(vec(0, 0, 0.2-(Out > 0))))
+
+interval(150)
+
+if (clk("interval")) {
+    #findInSphere(entity():pos(), 3)
+    findInBox(Chip:pos() + Chip:aabbMin(), Chip:pos() + Chip:aabbMax())
+    findExcludeEntities(array(Chip, holoEntity(1)))
+    #findExcludeClass("prop_*")
+    Ents = findToArray()
+    
+    Count = Ents:count()
+}
+local Tick = BaseTick*3
+
+if (Count & !Out) {
+    Out = 1
+    
+    Chip:emitSound("buttons/lightswitch2.wav")
+    soundPitch(1, 80)
+       
+    timer("off", Tick)
+}
+
+if (clk("off") & Count) {
+    timer("off", Tick)
+}
+
+if (clk("off") & !Count) {
+    Chip:emitSound("buttons/lightswitch2.wav")
+    soundPitch(1, 100)
+    
+    Out = 0
+}
+

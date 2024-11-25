@@ -1,0 +1,41 @@
+@name StoveCreator
+@inputs 
+@outputs 
+@persist Bounding:vector Side M N X Y Cache:array
+@trigger 
+@strict
+
+if (first()) {
+    propSpawnUndo(0)
+    Cache = array()
+    Bounding = vec(36, 53.5, 41)
+    Side = 20
+    X = 0
+    Y = 0
+    N = 0
+    M = 0
+}
+
+event tick() {
+    if (propCanCreate() & N < (Side * Side)) {
+        N++
+        local P = propSpawn("models/maxofs2d/logo_gmod_b.mdl", entity():pos() + vec((X-1) * Bounding:x(), (Y-1) * Bounding:y(), 1024), ang(), 1)
+        P:propPhysicalMaterial("metal_bouncy")
+        P:setMass(50000)
+        
+        X++
+        if (X > Side - 1) {
+            X = 0
+            Y++
+        }
+        
+        Cache:pushEntity(P)
+    }
+    
+    if (N >= (Side * Side)) {
+        if (M < Cache:count()) {
+            M++
+            Cache[M, entity]:propFreeze(0)
+        }
+    }
+}

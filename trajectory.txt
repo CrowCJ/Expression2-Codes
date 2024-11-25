@@ -1,0 +1,107 @@
+@name Trajectory
+@inputs  
+@outputs 
+@persist Max [P A]:array Prop:entity Tick
+@trigger 
+@strict
+
+if (first()) {
+    P = array()
+    A = array()
+    Max = 40
+
+    Prop = entity():isWeldedTo()
+    Prop:propGravity(0)
+    Prop:propDrag(0)
+    Prop:propPhysicalMaterial("metal_bouncy")
+    
+    #Prop:makeSpherical(5)
+    if (!Prop) {
+        selfDestruct()
+    }
+    
+    entity():parentTo(Prop)
+    entity():propDraw(0)
+    entity():setMass(0.001)
+    entity():propNotSolid(1)
+
+    #Prop = findPlayerByName("SkyBlade")
+    #Prop = owner()
+
+
+    Mat = "debug/debugdrawflat"
+    #Mat = "debug/debugportals"
+    #Mat = "debug/debugempty"
+    #Mat = ""
+    
+    foreach (_, V:entity = Prop:getConnectedEntities()) {
+        if (V:owner():isValid()) {
+            V:setMaterial(Mat)
+            V:setColor(vec(255))
+        }
+    }
+    
+    for (I = 1, Max) {
+        holoCreate(I)
+        #holoScale(I, vec(I*0.5))
+        holoAlpha(I, I*(255/Max))
+        #holoColor(I, vec(255, 0, 0)*((-1)^I))
+        #holoColor(I, vec(255, 50, 255))
+        #holoColor(I, vec(I*(255/Max)))
+        #holoScale(I, vec(I*0.025))
+        holoModel(I, Prop:model())
+        #holoModel(I, "cube")
+        #holoClipEnabled(I, 1)
+        holoClip(I, vec(), vec(1, 0, 0), 0)
+
+        holoMaterial(I, Mat)
+    }
+    Tick = 0
+}
+
+event tick() {
+    Tick++
+    if (Prop & Tick%4 == 0) {
+        local Pos = vec()
+        local Ang = ang()
+        if (Prop:isPlayer() & Prop:inVehicle()) {
+            Pos = Prop:vehicle():pos()
+            Ang = Prop:vehicle():angles()
+        } else {            
+            Pos = Prop:pos() + Prop:vel()*tickInterval()
+            Ang = Prop:angles() + Prop:angVel()*tickInterval()
+        }
+        #local X = Pos:x()
+        #local Y = Pos:y()
+        #local Z = Pos:z()
+            
+        
+        P:pushVector(Pos)
+        A:pushAngle(Ang)
+        if (P:count() > Max) {
+            P:shift()
+        }
+        if (A:count() > Max) {
+            A:shift()
+        }
+    }
+    
+    Prop:applyForce(Prop:vel()*Prop:mass()*0.01)
+    
+    for (I = 1, Max) {
+        holoPos(I, P[I, vector])
+        holoAng(I, A[I, angle])
+        if (Prop:isPlayer()) {
+            if (Prop:inVehicle()) {
+                holoModel(I, Prop:vehicle():model())
+            } else {
+                holoModel(I, "cube")
+            }
+        }
+        holoColor(I, hsv2rgb((360/Max*I)%360, 1, 1))
+        #holoAlpha(I, I*(clamp(Prop:vel():length(), 0, 255)/Max))
+    }
+    
+    #Prop:applyForce(Prop:vel()*Prop:mass()*0.02)
+    #Prop:applyAngForce(ang(0, 1000*Prop:mass(), 0))
+}

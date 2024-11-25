@@ -1,0 +1,42 @@
+@name Sky
+@inputs 
+@outputs 
+@persist MaxHolo:number Chip:entity
+@trigger 
+@strict
+
+if (first()) {
+    Chip = entity()
+    MaxHolo = 79
+    
+    Mdl = "models/props_phx/construct/glass/glass_dome360.mdl"
+    Mdl = "models/hunter/misc/sphere375x375.mdl"
+    Mdl = "models/hunter/tubes/tube2x2x05.mdl"
+    #Mdl = "models/hunter/tubes/tube4x4x1to2x2.mdl"
+    #Mdl = "models/mechanics/solid_steel/sheetmetal_box_4.mdl"
+    Mdl = "models/hunter/tubes/tube4x4x05.mdl"
+    Mat = "debug/debugdrawflat"
+    
+    Z = 12
+    R = 50
+    Factor = 1
+    SkyColor = vec(50, 127, 255)
+    
+    for (I = 1, MaxHolo + 1) {
+        local OffsetX = 0
+        local OffsetY = 0
+        local Inc = I * 0.1
+        local Color = I*vec(SkyColor:x()/MaxHolo, SkyColor:y()/MaxHolo, SkyColor:z()/MaxHolo)
+        
+        if (I <= MaxHolo) {
+            local Pos = Chip:toWorld(vec(OffsetX, OffsetY, (I)*Z) * Factor)
+            holoCreate(I, Pos, vec(R - Inc, R - Inc, 10) * Factor, Chip:angles(), Color, Mdl)
+        } else {
+            local Pos = Chip:toWorld(vec(OffsetX, OffsetY, (I-1)*Z) * Factor)
+            holoCreate(I, Pos, vec(R - Inc, R - Inc, 0) * Factor, Chip:angles(), Color, "models/hunter/tubes/circle4x4.mdl")
+        }
+        
+        holoMaterial(I, Mat)
+        holoParent(I, Chip)
+    }
+}
